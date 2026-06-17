@@ -1,0 +1,69 @@
+<app-page-header title="My Exam Results" subtitle="Track your progress, average marks, performance grades, and tests history"></app-page-header>
+
+<div class="results-container">
+  <div *ngIf="isLoading$ | async" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Loading your exam scores...</p>
+  </div>
+
+  <div *ngIf="!(isLoading$ | async)" class="results-content">
+    <!-- Performance Summary Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card card">
+        <p class="metric-label">Tests Evaluated</p>
+        <h3 class="metric-value">{{ testsCount$ | async }}</h3>
+        <p class="metric-desc">Registered mock/exam scores</p>
+      </div>
+      <div class="metric-card card">
+        <p class="metric-label">Average Score</p>
+        <h3 class="metric-value text-indigo">{{ averagePercent$ | async }}%</h3>
+        <p class="metric-desc">Cumulative performance average</p>
+      </div>
+      <div class="metric-card card">
+        <p class="metric-label">Highest Score</p>
+        <h3 class="metric-value text-green">{{ highestPercent$ | async }}%</h3>
+        <p class="metric-desc">Best exam attempt score</p>
+      </div>
+    </div>
+
+    <!-- Exam Performance Table -->
+    <div class="table-card card">
+      <div class="card-header">
+        <h3>Exam Performance Logs</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th>Test / Exam Name</th>
+                <th>Subject</th>
+                <th>Date Attempted</th>
+                <th>Marks Obtained</th>
+                <th>Percentage</th>
+                <th>Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let res of results$ | async">
+                <td><strong>{{ res.testName }}</strong></td>
+                <td>{{ res.subjectName }}</td>
+                <td>{{ res.testDate | date:'mediumDate' }}</td>
+                <td>{{ res.marksObtained }} / {{ res.maxMarks }}</td>
+                <td class="font-semibold">{{ (res.marksObtained / res.maxMarks) * 100 | number:'1.0-1' }}%</td>
+                <td>
+                  <span class="status-badge" [class]="getGradeClass(getGrade(res.marksObtained, res.maxMarks))">
+                    Grade {{ getGrade(res.marksObtained, res.maxMarks) }}
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="((results$ | async) || []).length === 0">
+                <td colspan="6" class="empty-row">No exam results have been published yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

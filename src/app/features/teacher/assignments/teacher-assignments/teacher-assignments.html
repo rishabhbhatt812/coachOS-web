@@ -1,0 +1,94 @@
+<div class="assignments-container p-6">
+  <div class="header-section mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Assignments</h1>
+      <p class="text-gray-500 mt-1">Manage and grade assignments for your batches.</p>
+    </div>
+    <button mat-flat-button color="primary" class="create-btn" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
+      <mat-icon>add</mat-icon> New Assignment
+    </button>
+  </div>
+
+  <!-- Create Form -->
+  <mat-card class="create-form-card mb-8" *ngIf="showCreateForm">
+    <mat-card-header>
+      <mat-card-title>Create New Assignment</mat-card-title>
+      <button mat-icon-button class="close-btn" (click)="toggleCreateForm()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-card-header>
+    
+    <mat-card-content class="mt-4">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Assignment Title</mat-label>
+          <input matInput [(ngModel)]="newAssignment.title" placeholder="e.g. Chapter 1 Exercises">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Select Batch</mat-label>
+          <mat-select [(ngModel)]="newAssignment.batchId">
+            <mat-option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description / Instructions</mat-label>
+          <textarea matInput [(ngModel)]="newAssignment.description" rows="3"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Due Date</mat-label>
+          <input matInput [matDatepicker]="picker" [(ngModel)]="newAssignment.dueDate">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Total Marks</mat-label>
+          <input matInput type="number" [(ngModel)]="newAssignment.marks">
+        </mat-form-field>
+      </div>
+
+      <div class="upload-section mt-4">
+        <h4 class="text-gray-700 font-medium mb-2">Attach File (Max 25MB)</h4>
+        <app-file-upload 
+          [maxSizeBytes]="25 * 1024 * 1024"
+          [allowedTypes]="['.pdf', '.docx', '.jpg', '.png', '.zip']"
+          (fileSelected)="onFileSelected($event)">
+        </app-file-upload>
+      </div>
+
+      <div class="form-actions mt-6 flex justify-end gap-4">
+        <button mat-button (click)="toggleCreateForm()">Cancel</button>
+        <button mat-flat-button color="primary" (click)="submitAssignment()">Create Assignment</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- List -->
+  <div class="assignments-list" *ngIf="!showCreateForm">
+    <mat-card class="assignment-card" *ngFor="let item of assignments">
+      <div class="card-status-bar"></div>
+      <mat-card-content class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-gray-800 m-0">{{ item.title }}</h3>
+          <p class="text-sm text-gray-500 mt-1 mb-3">{{ item.batch }}</p>
+          <div class="meta-info flex gap-4 text-sm text-gray-600">
+            <span class="flex items-center gap-1">
+              <mat-icon inline>event</mat-icon> Due: {{ item.dueDate | date:'mediumDate' }}
+            </span>
+            <span class="flex items-center gap-1">
+              <mat-icon inline>groups</mat-icon> Submissions: {{ item.submissions }}/{{ item.totalStudents }}
+            </span>
+          </div>
+        </div>
+        <div class="actions flex gap-2">
+          <button mat-stroked-button color="primary">
+            <mat-icon>grading</mat-icon> Grade
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

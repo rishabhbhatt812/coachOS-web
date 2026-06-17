@@ -1,0 +1,211 @@
+<div class="wizard-container">
+  <h2 class="wizard-title">New Student Admission</h2>
+  
+  <mat-stepper [linear]="true" #stepper>
+    <!-- Step 1: Student Details -->
+    <mat-step [stepControl]="studentForm">
+      <form [formGroup]="studentForm" class="form-grid-layout">
+        <ng-template matStepLabel>Student Details</ng-template>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Student Code</mat-label>
+          <input matInput formControlName="studentCode" placeholder="STU-001" (blur)="onStudentCodeBlur()">
+          <mat-error *ngIf="studentForm.get('studentCode')?.hasError('required')">Student code is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Full Name</mat-label>
+          <input matInput formControlName="fullName" placeholder="e.g. Jane Smith">
+          <mat-error *ngIf="studentForm.get('fullName')?.hasError('required')">Full name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mobile</mat-label>
+          <input matInput formControlName="mobile" placeholder="10-digit number">
+          <mat-error *ngIf="studentForm.get('mobile')?.hasError('required')">Mobile is required</mat-error>
+          <mat-error *ngIf="studentForm.get('mobile')?.hasError('pattern')">Enter valid 10-digit mobile number</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" placeholder="e.g. jane@gmail.com">
+          <mat-error *ngIf="studentForm.get('email')?.hasError('email')">Enter valid email address</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" (click)="dobPicker.open()" readonly>
+          <mat-datepicker-toggle matIconSuffix [for]="dobPicker"></mat-datepicker-toggle>
+          <mat-datepicker #dobPicker></mat-datepicker>
+          <mat-error *ngIf="studentForm.get('dateOfBirth')?.hasError('required')">DOB is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Admission Date</mat-label>
+          <input matInput [matDatepicker]="admissionPicker" formControlName="admissionDate" (click)="admissionPicker.open()" readonly>
+          <mat-datepicker-toggle matIconSuffix [for]="admissionPicker"></mat-datepicker-toggle>
+          <mat-datepicker #admissionPicker></mat-datepicker>
+          <mat-error *ngIf="studentForm.get('admissionDate')?.hasError('required')">Admission date is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Admission Type</mat-label>
+          <mat-select formControlName="admissionType">
+            <mat-option value="Permanent">Permanent</mat-option>
+            <mat-option value="Demo">Demo</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="studentForm.get('admissionType')?.value === 'Demo'">
+          <mat-label>Demo Duration (Days)</mat-label>
+          <input matInput formControlName="demoDurationDays" type="number" min="1">
+          <mat-error *ngIf="studentForm.get('demoDurationDays')?.hasError('required')">Required for demo</mat-error>
+          <mat-error *ngIf="studentForm.get('demoDurationDays')?.hasError('min')">Must be at least 1</mat-error>
+        </mat-form-field>
+
+        <div class="full-width-field step-actions justify-end">
+          <button mat-raised-button color="primary" matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2: Parent Details -->
+    <mat-step [stepControl]="parentForm">
+      <form [formGroup]="parentForm" class="form-grid-layout">
+        <ng-template matStepLabel>Parent / Guardian</ng-template>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Parent Name</mat-label>
+          <input matInput formControlName="parentName" placeholder="e.g. John Smith">
+          <mat-error *ngIf="parentForm.get('parentName')?.hasError('required')">Parent name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Parent Mobile</mat-label>
+          <input matInput formControlName="parentMobile" placeholder="10-digit number">
+          <mat-error *ngIf="parentForm.get('parentMobile')?.hasError('required')">Parent mobile is required</mat-error>
+          <mat-error *ngIf="parentForm.get('parentMobile')?.hasError('pattern')">Enter valid 10-digit mobile number</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Parent Email</mat-label>
+          <input matInput formControlName="parentEmail" type="email" placeholder="e.g. parent@gmail.com">
+          <mat-error *ngIf="parentForm.get('parentEmail')?.hasError('email')">Enter valid email address</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Relationship</mat-label>
+          <mat-select formControlName="parentRelationship">
+            <mat-option value="Father">Father</mat-option>
+            <mat-option value="Mother">Mother</mat-option>
+            <mat-option value="Guardian">Guardian</mat-option>
+          </mat-select>
+          <mat-error *ngIf="parentForm.get('parentRelationship')?.hasError('required')">Relationship is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width-field">
+          <mat-label>Occupation</mat-label>
+          <input matInput formControlName="parentOccupation" placeholder="e.g. Business Owner">
+        </mat-form-field>
+
+        <div class="full-width-field step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-raised-button color="primary" matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 3: Academic -->
+    <mat-step [stepControl]="academicForm">
+      <form [formGroup]="academicForm" class="form-grid-layout">
+        <ng-template matStepLabel>Course & Batch</ng-template>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Course</mat-label>
+          <mat-select formControlName="courseId">
+            <mat-option *ngFor="let c of courses$ | async" [value]="c.id">{{c.name}}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="academicForm.get('courseId')?.hasError('required')">Please select a course</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Batch</mat-label>
+          <mat-select formControlName="batchId">
+            <mat-option *ngFor="let b of batches$ | async" [value]="b.id">{{b.name}}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="academicForm.get('batchId')?.hasError('required')">Please select a batch</mat-error>
+        </mat-form-field>
+
+        <div class="full-width-field step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-raised-button color="primary" matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 4: Fees -->
+    <mat-step [stepControl]="feeForm">
+      <form [formGroup]="feeForm" class="form-grid-layout">
+        <ng-template matStepLabel>Fee Plan</ng-template>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Total Course Fee</mat-label>
+          <input matInput formControlName="totalFee" type="number" min="1">
+          <mat-error *ngIf="feeForm.get('totalFee')?.hasError('required')">Total course fee is required</mat-error>
+          <mat-error *ngIf="feeForm.get('totalFee')?.hasError('min')">Must be greater than 0</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Discount (if any)</mat-label>
+          <input matInput formControlName="discountAmount" type="number" min="0">
+          <mat-error *ngIf="feeForm.get('discountAmount')?.hasError('min')">Must be 0 or positive</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fee Plan Type</mat-label>
+          <mat-select formControlName="planType">
+            <mat-option value="Lumpsum">Lumpsum (One Time)</mat-option>
+            <mat-option value="Installments">Installments</mat-option>
+          </mat-select>
+          <mat-error *ngIf="feeForm.get('planType')?.hasError('required')">Please select a fee plan type</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Initial Payment Amount</mat-label>
+          <input matInput formControlName="initialPaymentAmount" type="number" min="0">
+          <mat-error *ngIf="feeForm.get('initialPaymentAmount')?.hasError('min')">Must be 0 or positive</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="feeForm.get('initialPaymentAmount')?.value > 0">
+          <mat-label>Payment Mode</mat-label>
+          <mat-select formControlName="paymentMode">
+            <mat-option value="Cash">Cash</mat-option>
+            <mat-option value="Card">Card</mat-option>
+            <mat-option value="UPI">UPI / NetBanking</mat-option>
+            <mat-option value="Cheque">Cheque</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="full-width-field step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-raised-button color="primary" matStepperNext>Review</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 5: Review -->
+    <mat-step>
+      <ng-template matStepLabel>Confirm</ng-template>
+      <div class="review-step">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 20px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <h3>Ready to Submit Admission</h3>
+        <p>Please review all information before submitting. Once completed, a student profile will be generated, and fee structures will be set up automatically.</p>
+        
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-raised-button color="accent" (click)="submitAdmission()">Complete Admission</button>
+        </div>
+      </div>
+    </mat-step>
+  </mat-stepper>
+</div>

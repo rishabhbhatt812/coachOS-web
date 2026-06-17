@@ -1,0 +1,112 @@
+<app-page-header title="My Fee Details" subtitle="Track your installments, discounts, payments, and pending dues"></app-page-header>
+
+<div class="fees-container">
+  <div *ngIf="isLoading$ | async" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Loading fee details...</p>
+  </div>
+
+  <div *ngIf="!(isLoading$ | async)" class="fees-content">
+    <div *ngFor="let fee of fees$ | async" class="fee-plan-section">
+      <!-- Fee Overview Summary Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card card">
+          <p class="metric-label">Course / Program</p>
+          <h3 class="metric-value">{{ fee.courseName }}</h3>
+          <p class="metric-desc">Batch: {{ fee.batchName }}</p>
+        </div>
+        <div class="metric-card card">
+          <p class="metric-label">Total Final Fee</p>
+          <h3 class="metric-value">{{ fee.finalFee | currency:'INR' }}</h3>
+          <p class="metric-desc">Original: {{ fee.totalFee | currency:'INR' }} (Disc: {{ fee.discountAmount | currency:'INR' }})</p>
+        </div>
+        <div class="metric-card card">
+          <p class="metric-label">Paid Amount</p>
+          <h3 class="metric-value text-green">{{ fee.paidAmount | currency:'INR' }}</h3>
+          <p class="metric-desc">Cleared Receipts</p>
+        </div>
+        <div class="metric-card card">
+          <p class="metric-label">Due Amount</p>
+          <h3 class="metric-value" [class.text-red]="fee.dueAmount > 0" [class.text-green]="fee.dueAmount === 0">
+            {{ fee.dueAmount | currency:'INR' }}
+          </h3>
+          <p class="metric-desc">Pending Balance</p>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <!-- Installments List -->
+        <div class="details-card card">
+          <div class="card-header">
+            <h3>Installment Schedule</h3>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="detail-table">
+                <thead>
+                  <tr>
+                    <th>Installment</th>
+                    <th>Due Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let inst of fee.installments">
+                    <td>Installment #{{ inst.installmentNo }}</td>
+                    <td>{{ inst.dueDate | date:'mediumDate' }}</td>
+                    <td>{{ inst.amount | currency:'INR' }}</td>
+                    <td>
+                      <span class="status-badge" [class]="getDueDateClass(inst.status)">
+                        {{ inst.status }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="(!fee.installments || fee.installments.length === 0)">
+                    <td colspan="4" class="empty-row">No installment schedules found.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payments List -->
+        <div class="details-card card">
+          <div class="card-header">
+            <h3>Payment History / Receipts</h3>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="detail-table">
+                <thead>
+                  <tr>
+                    <th>Receipt No</th>
+                    <th>Date</th>
+                    <th>Mode</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let pmt of fee.payments">
+                    <td><strong>{{ pmt.receiptNo }}</strong></td>
+                    <td>{{ pmt.paymentDate | date:'mediumDate' }}</td>
+                    <td>{{ pmt.paymentMode }}</td>
+                    <td class="text-green font-semibold">{{ pmt.amount | currency:'INR' }}</td>
+                  </tr>
+                  <tr *ngIf="(!fee.payments || fee.payments.length === 0)">
+                    <td colspan="4" class="empty-row">No payment receipts found.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="((fees$ | async) || []).length === 0" class="no-records-card card">
+      <p>No fee accounts associated with your enrollment were found.</p>
+    </div>
+  </div>
+</div>

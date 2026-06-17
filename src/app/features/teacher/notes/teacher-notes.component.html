@@ -1,0 +1,70 @@
+<div class="teacher-notes-container p-6">
+  <div class="header-section mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Study Material & Notes</h1>
+      <p class="text-gray-500 mt-1">Upload and manage course syllabus resources.</p>
+    </div>
+    <button mat-flat-button color="primary" class="create-btn" (click)="toggleUploadForm()" *ngIf="!showUploadForm">
+      <mat-icon>upload_file</mat-icon> Upload Material
+    </button>
+  </div>
+
+  <!-- Upload Form -->
+  <mat-card class="create-form-card mb-8" *ngIf="showUploadForm">
+    <mat-card-header>
+      <mat-card-title>Upload Study Material</mat-card-title>
+      <button mat-icon-button class="close-btn ml-auto" (click)="toggleUploadForm()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-card-header>
+    
+    <mat-card-content class="mt-4">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Title</mat-label>
+          <input matInput [(ngModel)]="newNote.title" placeholder="e.g. Chapter 1 Notes">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Select Batch</mat-label>
+          <mat-select [(ngModel)]="newNote.batchId">
+            <mat-option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="col-span-2">
+          <mat-label>Description (Optional)</mat-label>
+          <textarea matInput [(ngModel)]="newNote.description" rows="2"></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="upload-section mt-4">
+        <h4 class="text-gray-700 font-medium mb-2">Select File (Max 10MB)</h4>
+        <app-file-upload 
+          [maxSizeBytes]="10 * 1024 * 1024"
+          [allowedTypes]="['.pdf', '.docx', '.pptx', '.zip']"
+          (fileSelected)="onFileSelected($event)">
+        </app-file-upload>
+      </div>
+
+      <div class="form-actions mt-6 flex justify-end gap-4">
+        <button mat-button (click)="toggleUploadForm()">Cancel</button>
+        <button mat-flat-button color="primary" (click)="submitNote()">Upload</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="table-card card shadow-sm rounded-xl border border-gray-100 overflow-hidden" *ngIf="!showUploadForm">
+    <div *ngIf="isLoading$ | async" class="loading-indicator p-8 text-center text-gray-500">
+      <div class="spinner"></div>
+      <p>Loading files list...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!(isLoading$ | async)"
+      [columns]="columns" 
+      [data]="(notes$ | async) || []"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

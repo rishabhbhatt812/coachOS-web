@@ -1,0 +1,321 @@
+<!-- Institute Admin View -->
+<ng-container *ngIf="!isGlobalView">
+  <app-page-header title="Institute Operations Dashboard" subtitle="Overview of your coaching center's performance, student growth, and fee collections"></app-page-header>
+
+  <div class="dashboard-content" *ngIf="metrics$ | async as metrics">
+    <!-- Stats Grid -->
+    <div class="metrics-grid">
+      <app-stat-card 
+        title="Total Students" 
+        [value]="metrics.totalStudents" 
+        icon="people">
+      </app-stat-card>
+      
+      <app-stat-card 
+        title="Active Batches" 
+        [value]="metrics.activeBatches" 
+        icon="layers">
+      </app-stat-card>
+      
+      <app-stat-card 
+        title="Pending Collections" 
+        [value]="(metrics.pendingFees | currency:'INR':'symbol':'1.0-0') || '₹0'" 
+        icon="payments">
+      </app-stat-card>
+      
+      <app-stat-card 
+        title="Today's Attendance" 
+        [value]="metrics.todayAttendancePercent + '%'" 
+        [progress]="metrics.todayAttendancePercent" 
+        icon="rule">
+      </app-stat-card>
+    </div>
+
+    <!-- Analytics & Graphical Charts Section -->
+    <div class="charts-section-grid">
+      <!-- Student Enrollment Chart -->
+      <div class="chart-card card">
+        <div class="chart-header">
+          <h3>Student Admissions Trend</h3>
+          <p class="muted-text">New registrations over the last 6 months</p>
+        </div>
+        <div class="chart-body">
+          <div class="custom-bar-chart" *ngIf="metrics.monthlyRegistrations && metrics.monthlyRegistrations.length > 0; else noRegistrationsData">
+            <div class="chart-y-axis">
+              <span>Max</span>
+              <span>Min</span>
+            </div>
+            <div class="chart-bars-container">
+              <div class="chart-bar-item" *ngFor="let item of metrics.monthlyRegistrations">
+                <div class="bar-wrapper">
+                  <span class="bar-tooltip">{{ item.count }} Students</span>
+                  <div class="bar-fill primary-gradient" [style.height.%]="getPercent(item.count, getMaxValue(metrics.monthlyRegistrations, 'count'))"></div>
+                </div>
+                <span class="bar-label">{{ item.month }}</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #noRegistrationsData>
+            <div class="no-chart-data">
+              <span class="icon">bar_chart</span>
+              <p>No enrollment data recorded in the last 6 months.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Revenue Collections Chart -->
+      <div class="chart-card card">
+        <div class="chart-header">
+          <h3>Monthly Fee Collections</h3>
+          <p class="muted-text">Monthly collection amounts collected in INR</p>
+        </div>
+        <div class="chart-body">
+          <div class="custom-bar-chart" *ngIf="metrics.monthlyCollections && metrics.monthlyCollections.length > 0; else noCollectionsData">
+            <div class="chart-y-axis">
+              <span>Max</span>
+              <span>Min</span>
+            </div>
+            <div class="chart-bars-container">
+              <div class="chart-bar-item" *ngFor="let item of metrics.monthlyCollections">
+                <div class="bar-wrapper">
+                  <span class="bar-tooltip">{{ item.amount | currency:'INR':'symbol':'1.0-0' }}</span>
+                  <div class="bar-fill success-gradient" [style.height.%]="getPercent(item.amount, getMaxValue(metrics.monthlyCollections, 'amount'))"></div>
+                </div>
+                <span class="bar-label">{{ item.month }}</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #noCollectionsData>
+            <div class="no-chart-data">
+              <span class="icon">payments</span>
+              <p>No payment collections recorded in the last 6 months.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Widgets -->
+    <div class="dashboard-widgets">
+      <!-- Recent Enquiries -->
+      <div class="widget-card card">
+        <div class="widget-header">
+          <h3>Recent CRM Enquiries</h3>
+          <button class="view-all-btn" (click)="navigateToCRM()">
+            View CRM 
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Course</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let enquiry of metrics.recentEnquiries">
+                <td class="font-bold">{{ enquiry.name }}</td>
+                <td>{{ enquiry.courseName }}</td>
+                <td>{{ enquiry.date | date:'dd MMM yyyy' }}</td>
+                <td>
+                  <app-status-badge [color]="getStatusBadgeColor(enquiry.status)">
+                    {{ enquiry.status }}
+                  </app-status-badge>
+                </td>
+              </tr>
+              <tr *ngIf="!metrics.recentEnquiries || metrics.recentEnquiries.length === 0">
+                <td colspan="4" class="no-data">No recent enquiries found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Upcoming Classes -->
+      <div class="widget-card card">
+        <div class="widget-header">
+          <h3>Upcoming Classes</h3>
+        </div>
+        
+        <div class="schedule-list">
+          <div class="schedule-item" *ngFor="let cls of metrics.upcomingClasses">
+            <div class="time-block">
+              <span class="time">{{ cls.time }}</span>
+              <span class="label">Time</span>
+            </div>
+            <div class="class-details">
+              <h4>{{ cls.subjectName }}</h4>
+              <p class="muted-details">
+                <span>Room: <strong>{{ cls.room }}</strong></span>
+                <span class="separator">•</span>
+                <span>Faculty: <strong>{{ cls.teacherName }}</strong></span>
+              </p>
+            </div>
+          </div>
+          <div *ngIf="!metrics.upcomingClasses || metrics.upcomingClasses.length === 0" class="no-schedule">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <p>No more classes scheduled for today.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- Super Admin Global View -->
+<ng-container *ngIf="isGlobalView">
+  <app-page-header title="System Administration Dashboard" subtitle="Global overview of system operations, subscriptions, and active coaching centers"></app-page-header>
+
+  <div class="dashboard-content" *ngIf="globalMetrics$ | async as globalMetrics">
+    <!-- Stats Grid -->
+    <div class="metrics-grid">
+      <app-stat-card 
+        title="Total Coaching Centers" 
+        [value]="globalMetrics.totalInstitutes" 
+        icon="domain">
+      </app-stat-card>
+      
+      <app-stat-card 
+        title="Active Sign-ups" 
+        [value]="globalMetrics.activeInstitutes" 
+        icon="check_circle">
+      </app-stat-card>
+      
+      <app-stat-card 
+        title="Registered Students" 
+        [value]="globalMetrics.totalStudents" 
+        icon="people">
+      </app-stat-card>
+      
+      <app-stat-card 
+        title="Registered Teachers" 
+        [value]="globalMetrics.totalTeachers" 
+        icon="school">
+      </app-stat-card>
+
+      <app-stat-card 
+        title="Estimated Monthly Revenue" 
+        [value]="(globalMetrics.totalRevenue | currency:'INR':'symbol':'1.0-0') || '₹0'" 
+        icon="payments">
+      </app-stat-card>
+    </div>
+
+    <!-- Analytics & Graphical Charts Section -->
+    <div class="charts-section-grid">
+      <!-- Institute Growth Chart -->
+      <div class="chart-card card">
+        <div class="chart-header">
+          <h3>Coaching Center Growth</h3>
+          <p class="muted-text">Monthly sign-up trends over the last 6 months</p>
+        </div>
+        <div class="chart-body">
+          <div class="custom-bar-chart" *ngIf="globalMetrics.monthlyGrowth && globalMetrics.monthlyGrowth.length > 0; else noGrowthData">
+            <div class="chart-y-axis">
+              <span>Max</span>
+              <span>Min</span>
+            </div>
+            <div class="chart-bars-container">
+              <div class="chart-bar-item" *ngFor="let item of globalMetrics.monthlyGrowth">
+                <div class="bar-wrapper">
+                  <span class="bar-tooltip">{{ item.count }} Institutes</span>
+                  <div class="bar-fill purple-gradient" [style.height.%]="getPercent(item.count, getMaxValue(globalMetrics.monthlyGrowth, 'count'))"></div>
+                </div>
+                <span class="bar-label">{{ item.month }}</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #noGrowthData>
+            <div class="no-chart-data">
+              <span class="icon">show_chart</span>
+              <p>No signup growth data recorded in the last 6 months.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Plan Distribution progress lists -->
+      <div class="chart-card card plan-distribution-card">
+        <div class="chart-header">
+          <h3>Subscription Plans Distribution</h3>
+          <p class="muted-text">Overview of distribution of active tiers</p>
+        </div>
+        <div class="chart-body plan-list" *ngIf="globalMetrics.planDistribution && globalMetrics.planDistribution.length > 0; else noPlansData">
+          <div class="plan-stat-item" *ngFor="let plan of globalMetrics.planDistribution">
+            <div class="plan-info">
+              <span class="plan-name font-bold">{{ plan.planName || 'Unknown Plan' }}</span>
+              <span class="plan-count">{{ plan.count }} Institutes ({{ getPercent(plan.count, getPlanTotalCount(globalMetrics.planDistribution)) }}%)</span>
+            </div>
+            <div class="plan-progress-bar">
+              <div class="progress-fill" 
+                [style.width.%]="getPercent(plan.count, getPlanTotalCount(globalMetrics.planDistribution))"
+                [ngClass]="(plan.planName || 'trial').toLowerCase().includes('free') || (plan.planName || 'trial').toLowerCase().includes('trial') ? 'trial' : ((plan.planName || '').toLowerCase().includes('basic') ? 'basic' : ((plan.planName || '').toLowerCase().includes('standard') ? 'standard' : 'premium'))">
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noPlansData>
+          <div class="no-chart-data">
+            <span class="icon">pie_chart</span>
+            <p>No active subscription plan data available.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Recent Registered Institutes -->
+    <div class="widget-card card full-width-widget mt-8">
+      <div class="widget-header">
+        <h3>New Coaching Centers</h3>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Institute Name</th>
+              <th>Code</th>
+              <th>Est. Year</th>
+              <th>Plan Name</th>
+              <th>Status</th>
+              <th>Registered Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inst of globalMetrics.recentInstitutes">
+              <td class="font-bold">{{ inst.instituteName }}</td>
+              <td><code>{{ inst.instituteCode }}</code></td>
+              <td>{{ inst.establishedYear || 'N/A' }}</td>
+              <td>
+                <span class="badge purple">{{ inst.planName }}</span>
+              </td>
+              <td>
+                <app-status-badge [color]="inst.isActive ? 'green' : 'red'">
+                  {{ inst.isActive ? 'Active' : 'Inactive' }}
+                </app-status-badge>
+              </td>
+              <td>{{ inst.createdAt | date:'dd MMM yyyy' }}</td>
+            </tr>
+            <tr *ngIf="!globalMetrics.recentInstitutes || globalMetrics.recentInstitutes.length === 0">
+              <td colspan="6" class="no-data text-center">No coaching centers registered yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- Loading Indicator -->
+<div *ngIf="isLoading$ | async" class="loading-state">
+  <div class="spinner-wrapper">
+    <div class="double-bounce1"></div>
+    <div class="double-bounce2"></div>
+  </div>
+  <p>Loading analytics and charts...</p>
+</div>

@@ -1,0 +1,237 @@
+.student-dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.dashboard-widgets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.widget-card {
+  background: white;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--box-shadow);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  
+  .widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0;
+    }
+  }
+}
+
+.course-box {
+  display: flex;
+  gap: 20px;
+  
+  .course-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  
+  .course-details {
+    flex: 1;
+    
+    h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: var(--text-main);
+    }
+    
+    .details-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      
+      li {
+        font-size: 13px;
+        color: var(--text-muted);
+        
+        strong {
+          color: var(--text-main);
+        }
+      }
+    }
+  }
+}
+
+.class-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+    
+    strong {
+      color: var(--text-main);
+    }
+  }
+  
+  .action-row {
+    margin-top: 16px;
+    
+    button {
+      height: 40px;
+    }
+  }
+}
+
+.notices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  
+  .notice-item {
+    background: #f8fafc;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 0 0 6px 0;
+    }
+    
+    p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+  
+  .no-notices {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 32px;
+    font-size: 14px;
+  }
+}
+
+.app-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+  
+  th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-table);
+  }
+  
+  td {
+    border-bottom: 1px solid var(--border-table);
+    color: var(--text-main);
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .no-data {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 32px;
+  }
+}
+
+// Loading and spinner animation
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-muted);
+  
+  p {
+    margin-top: 16px;
+    font-size: 14px;
+  }
+}
+
+.spinner-wrapper {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  
+  .double-bounce1, .double-bounce2 {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--primary);
+    opacity: 0.6;
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: sk-bounce 2.0s infinite ease-in-out;
+  }
+  
+  .double-bounce2 {
+    animation-delay: -1.0s;
+  }
+}
+
+@keyframes sk-bounce {
+  0%, 100% { transform: scale(0.0) }
+  50% { transform: scale(1.0) }
+}
+
+@media (max-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-widgets {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 580px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

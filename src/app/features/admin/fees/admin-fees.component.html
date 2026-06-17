@@ -1,0 +1,97 @@
+<app-page-header title="Fees" subtitle="Manage student pricing, discounts, and payment tracking">
+  <button class="btn btn-primary" (click)="toggleForm()">
+    {{ showAddForm ? 'Close Form' : '+ Create Fee Plan' }}
+  </button>
+</app-page-header>
+
+<div class="fees-container">
+  <!-- Collapsible Fee Plan Form -->
+  <div class="form-card card" *ngIf="showAddForm">
+    <div class="card-header">
+      <h3>Create New Fee Plan</h3>
+    </div>
+    
+    <form [formGroup]="feeForm" (ngSubmit)="onSubmit()" class="fee-form">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Select Student</mat-label>
+          <select matNativeControl formControlName="studentId">
+            <option value="" disabled selected>Choose a student</option>
+            <option *ngFor="let student of students$ | async" [value]="student.id">
+              {{ student.fullName }}
+            </option>
+          </select>
+          <mat-error *ngIf="feeForm.get('studentId')?.hasError('required')">Student selection is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Select Course</mat-label>
+          <select matNativeControl formControlName="courseId">
+            <option value="" disabled selected>Choose a course</option>
+            <option *ngFor="let course of courses$ | async" [value]="course.id">
+              {{ course.name }}
+            </option>
+          </select>
+          <mat-error *ngIf="feeForm.get('courseId')?.hasError('required')">Course selection is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Select Batch</mat-label>
+          <select matNativeControl formControlName="batchId">
+            <option value="" disabled selected>Choose a batch</option>
+            <option *ngFor="let batch of batches$ | async" [value]="batch.id">
+              {{ batch.name }}
+            </option>
+          </select>
+          <mat-error *ngIf="feeForm.get('batchId')?.hasError('required')">Batch selection is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Total Fee (INR)</mat-label>
+          <input matInput type="number" formControlName="totalFee" placeholder="e.g. 25000" />
+          <mat-error *ngIf="feeForm.get('totalFee')?.hasError('required')">Total fee is required</mat-error>
+          <mat-error *ngIf="feeForm.get('totalFee')?.hasError('min')">Fee must be positive</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Discount Amount (INR)</mat-label>
+          <input matInput type="number" formControlName="discountAmount" placeholder="e.g. 2000" />
+          <mat-error *ngIf="feeForm.get('discountAmount')?.hasError('required')">Discount amount is required</mat-error>
+          <mat-error *ngIf="feeForm.get('discountAmount')?.hasError('min')">Discount cannot be negative</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Plan Type</mat-label>
+          <select matNativeControl formControlName="planType">
+            <option value="OneTime">One Time Payment</option>
+            <option value="Installments">Installments</option>
+            <option value="Monthly">Monthly Recurring</option>
+          </select>
+          <mat-error *ngIf="feeForm.get('planType')?.hasError('required')">Plan type selection is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="feeForm.invalid || (isLoading$ | async)">
+          Create Plan
+        </button>
+        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Fee Plans List -->
+  <div class="table-card card">
+    <div *ngIf="isLoading$ | async" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Loading student fee structures...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!(isLoading$ | async)"
+      [columns]="columns" 
+      [data]="(feePlans$ | async) || []"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

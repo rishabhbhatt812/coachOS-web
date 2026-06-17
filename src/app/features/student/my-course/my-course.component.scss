@@ -1,0 +1,97 @@
+.courses-container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.course-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-header {
+    position: relative;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 1rem;
+    
+    h3 {
+      font-size: 1.25rem;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .batch-name {
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #64748b;
+
+      &.active {
+        background: #dcfce7;
+        color: #15803d;
+      }
+    }
+  }
+
+  .card-body {
+    padding-top: 1rem;
+
+    .description {
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+
+    .details-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+
+      .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #334155;
+        font-size: 0.9rem;
+
+        svg {
+          color: #6366f1;
+          flex-shrink: 0;
+        }
+      }
+    }
+  }
+}
+
+.no-records-card {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+}

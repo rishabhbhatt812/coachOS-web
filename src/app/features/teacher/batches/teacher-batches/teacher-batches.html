@@ -1,0 +1,54 @@
+<div class="batches-container p-6">
+  <div class="header-section mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">My Batches</h1>
+      <p class="text-gray-500 mt-1">Manage your assigned classes and monitor student performance.</p>
+    </div>
+  </div>
+
+  <div class="batches-grid">
+    <mat-card class="batch-card" *ngFor="let batch of batches">
+      <div class="card-top-accent"></div>
+      <mat-card-header>
+        <div class="batch-status" [class.active]="batch.status === 'Active'">{{ batch.status }}</div>
+        <mat-card-title>{{ batch.name }}</mat-card-title>
+        <mat-card-subtitle>{{ batch.course }} • {{ batch.subject }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="batch-info-grid">
+          <div class="info-item">
+            <mat-icon>schedule</mat-icon>
+            <div class="info-text">
+              <span class="label">Timing</span>
+              <span class="value">{{ batch.timing }}</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <mat-icon>groups</mat-icon>
+            <div class="info-text">
+              <span class="label">Students</span>
+              <span class="value">{{ batch.studentCount }} Enrolled</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <mat-icon>date_range</mat-icon>
+            <div class="info-text">
+              <span class="label">Duration</span>
+              <span class="value">{{ batch.startDate | date:'MMM yyyy' }} - {{ batch.endDate | date:'MMM yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions class="card-actions">
+        <button mat-button color="primary" class="action-btn">
+          <mat-icon>visibility</mat-icon> View Students
+        </button>
+        <button mat-button color="accent" class="action-btn">
+          <mat-icon>how_to_reg</mat-icon> Mark Attendance
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

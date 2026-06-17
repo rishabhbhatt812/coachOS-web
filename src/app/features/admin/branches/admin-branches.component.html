@@ -1,0 +1,70 @@
+<app-page-header title="Branches" subtitle="Create and modify coaching branches and centers">
+  <button class="btn btn-primary" (click)="toggleForm()">
+    {{ showForm ? 'Close Form' : '+ Add Branch' }}
+  </button>
+</app-page-header>
+
+<div class="branches-container">
+  <!-- Collapsible Branch Form -->
+  <div class="form-card card" *ngIf="showForm">
+    <div class="card-header">
+      <h3>{{ editingId ? 'Edit Branch' : 'Add New Branch' }}</h3>
+    </div>
+    
+    <form [formGroup]="branchForm" (ngSubmit)="onSubmit()" class="branch-form p-4">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Branch Code *</mat-label>
+          <input matInput formControlName="code" placeholder="e.g. BR-DEL-01" />
+          <mat-error *ngIf="branchForm.get('code')?.hasError('required')">Branch code is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Branch Name *</mat-label>
+          <input matInput formControlName="name" placeholder="e.g. Delhi Connaught Place" />
+          <mat-error *ngIf="branchForm.get('name')?.hasError('required')">Branch name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contact Number</mat-label>
+          <input matInput formControlName="contactNumber" placeholder="e.g. 9876543210" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address</mat-label>
+          <textarea matInput formControlName="address" rows="1" placeholder="Enter branch full address..."></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="editingId">
+          <mat-label>Status</mat-label>
+          <select matNativeControl formControlName="isActive">
+            <option [value]="true">Active</option>
+            <option [value]="false">Inactive</option>
+          </select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="branchForm.invalid || isLoading">
+          {{ editingId ? 'Update Branch' : 'Create Branch' }}
+        </button>
+        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Branches Table List -->
+  <div class="table-card card">
+    <div *ngIf="isLoading" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Loading branches list...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!isLoading"
+      [columns]="columns" 
+      [data]="branches"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

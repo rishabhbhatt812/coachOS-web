@@ -1,0 +1,78 @@
+<div class="results-container p-6">
+  <div class="header-section mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Test Results</h1>
+      <p class="text-gray-500 mt-1">Enter marks and publish results for your classes.</p>
+    </div>
+  </div>
+
+  <mat-card class="filter-card mb-8">
+    <mat-card-content class="filter-flex">
+      <mat-form-field appearance="outline" class="flex-1">
+        <mat-label>Select Test</mat-label>
+        <mat-select [(ngModel)]="selectedTestId">
+          <mat-option *ngFor="let test of tests" [value]="test.id">
+            {{ test.name }} ({{ test.batch }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" class="load-btn" [disabled]="!selectedTestId" (click)="loadStudents()">
+        <mat-icon>search</mat-icon> Load Students
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="results-card" *ngIf="isLoaded">
+    <mat-card-header class="mb-4">
+      <mat-card-title>{{ selectedTestDetails?.name }}</mat-card-title>
+      <mat-card-subtitle>Max Marks: {{ selectedTestDetails?.maxMarks }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <table mat-table [dataSource]="students" class="w-full results-table">
+        
+        <ng-container matColumnDef="rollNo">
+          <th mat-header-cell *matHeaderCellDef> Roll No </th>
+          <td mat-cell *matCellDef="let element"> {{element.rollNo}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef> Name </th>
+          <td mat-cell *matCellDef="let element" class="font-medium text-gray-800"> {{element.name}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="marks">
+          <th mat-header-cell *matHeaderCellDef> Marks Obtained </th>
+          <td mat-cell *matCellDef="let element">
+            <mat-form-field appearance="outline" class="w-24 marks-input" subscriptSizing="dynamic">
+              <input matInput type="number" [(ngModel)]="element.marks" [max]="selectedTestDetails?.maxMarks" min="0">
+            </mat-form-field>
+            <span class="text-gray-500 text-sm ml-2">/ {{ selectedTestDetails?.maxMarks }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="remarks">
+          <th mat-header-cell *matHeaderCellDef> Teacher Remarks </th>
+          <td mat-cell *matCellDef="let element">
+            <mat-form-field appearance="outline" class="w-full remarks-input" subscriptSizing="dynamic">
+              <input matInput [(ngModel)]="element.remarks" placeholder="Optional remark">
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+
+    <mat-card-actions class="flex justify-end gap-4 p-4 border-t border-gray-100">
+      <button mat-button (click)="saveDraft()">
+        Save as Draft
+      </button>
+      <button mat-flat-button color="accent" class="publish-btn" (click)="publishResults()">
+        <mat-icon>publish</mat-icon> Publish Results
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

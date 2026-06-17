@@ -1,0 +1,74 @@
+.notices-container {
+  padding: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.notices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.notice-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-left: 4px solid #6366f1;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateX(4px);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 0.75rem;
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      
+      h3 {
+        font-size: 1.15rem;
+        color: #1e293b;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .bell-icon {
+        color: #6366f1;
+        flex-shrink: 0;
+      }
+    }
+
+    .notice-date {
+      font-size: 0.8rem;
+      color: #64748b;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+  }
+
+  .card-body {
+    padding-top: 0.75rem;
+
+    .message {
+      color: #334155;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+  }
+}
+
+.no-records-card {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+}

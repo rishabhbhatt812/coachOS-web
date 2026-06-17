@@ -1,0 +1,183 @@
+<app-page-header title="Staff Management" subtitle="Manage and add coaching center staff, branch admins, receptionists, teachers, and operators.">
+  <button class="btn btn-primary" (click)="toggleForm()">
+    {{ showForm ? 'Close Form' : '+ Add Staff member' }}
+  </button>
+</app-page-header>
+
+<div class="staff-container">
+  <!-- Collapsible Staff Form -->
+  <div class="form-card card animate-slide" *ngIf="showForm">
+    <div class="card-header">
+      <h3>{{ editingId ? 'Edit Staff Details' : 'Add New Staff Member' }}</h3>
+    </div>
+    
+    <form [formGroup]="staffForm" (ngSubmit)="onSubmit()" class="staff-form p-4">
+      <h4 class="section-title">Personal & Account Information</h4>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Full Name *</mat-label>
+          <input matInput formControlName="fullName" placeholder="e.g. John Doe" />
+          <mat-error *ngIf="staffForm.get('fullName')?.hasError('required')">Full name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email Address</mat-label>
+          <input matInput formControlName="email" type="email" placeholder="e.g. john@apex.com" />
+          <mat-error *ngIf="staffForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mobile Number</mat-label>
+          <input matInput formControlName="mobileNumber" placeholder="e.g. 9876543210" />
+          <mat-error *ngIf="staffForm.get('mobileNumber')?.hasError('pattern')">Enter valid 10-digit mobile number</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Role *</mat-label>
+          <mat-select formControlName="roleId" placeholder="Select role">
+            <mat-option *ngFor="let role of roles" [value]="role.id">
+              {{ role.roleName }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="staffForm.get('roleId')?.hasError('required')">Role selection is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Branch Assignment *</mat-label>
+          <mat-select formControlName="branchId" placeholder="Select branch">
+            <mat-option *ngFor="let branch of branches" [value]="branch.id">
+              {{ branch.name }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="staffForm.get('branchId')?.hasError('required')">Branch assignment is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Staff Code</mat-label>
+          <input matInput formControlName="staffCode" placeholder="Optional (e.g. STF-001)" />
+        </mat-form-field>
+      </div>
+
+      <h4 class="section-title">Employment & Profile Details</h4>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Employment Type *</mat-label>
+          <mat-select formControlName="staffType">
+            <mat-option value="Full-Time">Full-Time</mat-option>
+            <mat-option value="Part-Time">Part-Time</mat-option>
+            <mat-option value="Contract">Contract</mat-option>
+            <mat-option value="Intern">Intern</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Joining Date *</mat-label>
+          <input matInput [matDatepicker]="joinPicker" formControlName="joiningDate" (click)="joinPicker.open()" readonly>
+          <mat-datepicker-toggle matIconSuffix [for]="joinPicker"></mat-datepicker-toggle>
+          <mat-datepicker #joinPicker></mat-datepicker>
+          <mat-error *ngIf="staffForm.get('joiningDate')?.hasError('required')">Joining date is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Designation</mat-label>
+          <input matInput formControlName="designation" placeholder="e.g. Senior Counsellor" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Department</mat-label>
+          <input matInput formControlName="department" placeholder="e.g. Sales, Academics" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Qualification</mat-label>
+          <input matInput formControlName="qualification" placeholder="e.g. B.Tech, MBA" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Experience (Years)</mat-label>
+          <input matInput type="number" formControlName="experienceYears" min="0" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address</mat-label>
+          <textarea matInput formControlName="address" rows="2" placeholder="Residential address..."></textarea>
+        </mat-form-field>
+      </div>
+
+      <!-- Teacher-specific Fields (Dynamic Section) -->
+      <div *ngIf="isTeacherSelected()" class="teacher-specific-section animate-slide mt-4">
+        <h4 class="section-title text-primary">Teacher-specific Information</h4>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Subject Expertise *</mat-label>
+            <input matInput formControlName="subjectExpertise" placeholder="e.g. Physics, Calculus" />
+            <mat-error *ngIf="staffForm.get('subjectExpertise')?.hasError('required')">Subject expertise is required for teachers</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Teacher Type *</mat-label>
+            <mat-select formControlName="teacherType">
+              <mat-option value="Permanent">Permanent</mat-option>
+              <mat-option value="Contract">Contract</mat-option>
+              <mat-option value="Guest">Guest Faculty</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Teaching Experience (Years)</mat-label>
+            <input matInput type="number" formControlName="teachingExperienceYears" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Bio / Description</mat-label>
+            <textarea matInput formControlName="bio" rows="2" placeholder="Brief professional bio..."></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <h4 class="section-title">Emergency Contact</h4>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Emergency Contact Name</mat-label>
+          <input matInput formControlName="emergencyContactName" placeholder="Name of contact person" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Emergency Contact Number</mat-label>
+          <input matInput formControlName="emergencyContactNumber" placeholder="Contact number" />
+          <mat-error *ngIf="staffForm.get('emergencyContactNumber')?.hasError('pattern')">Enter valid 10-digit contact number</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="editingId">
+          <mat-label>Account Status</mat-label>
+          <mat-select formControlName="isActive">
+            <mat-option [value]="true">Active</mat-option>
+            <mat-option [value]="false">Inactive</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions mt-4">
+        <button mat-raised-button color="primary" type="submit" [disabled]="staffForm.invalid || isLoading">
+          {{ editingId ? 'Update Staff Member' : 'Register Staff Member' }}
+        </button>
+        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Staff Table List -->
+  <div class="table-card card">
+    <div *ngIf="isLoading" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Loading staff list...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!isLoading"
+      [columns]="columns" 
+      [data]="staff"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

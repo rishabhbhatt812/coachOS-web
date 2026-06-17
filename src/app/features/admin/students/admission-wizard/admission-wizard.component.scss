@@ -1,0 +1,137 @@
+.wizard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: calc(100vh - 120px);
+}
+
+.wizard-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+mat-stepper {
+  background: var(--bg-card);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--border-radius-lg) !important;
+  box-shadow: var(--box-shadow);
+  padding: 24px;
+}
+
+.form-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 16px 0;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width-field {
+  grid-column: 1 / -1;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+
+  &.justify-end {
+    justify-content: flex-end;
+  }
+
+  button[mat-raised-button] {
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    padding: 12px 32px !important;
+    min-width: 200px; /* wide */
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--border-radius-md) !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25) !important;
+    border: none !important;
+    transition: var(--transition);
+    
+    &:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4) !important;
+      transform: translateY(-1px);
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none !important;
+    }
+  }
+
+  button[mat-button] {
+    color: var(--text-muted) !important;
+    font-weight: 600;
+    padding: 12px 24px !important;
+    border-radius: var(--border-radius-md) !important;
+    transition: var(--transition);
+    
+    &:hover {
+      color: var(--text-main) !important;
+      background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+  }
+}
+
+::ng-deep {
+  /* Completed step icons and edit state icons */
+  .mat-step-header .mat-step-icon-state-done,
+  .mat-step-header .mat-step-icon-state-edit {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+  }
+
+  /* Sibling connection line following a completed step */
+  .mat-step-header:has(.mat-step-icon-state-done) + .mat-stepper-horizontal-line,
+  .mat-step-header:has(.mat-step-icon-state-edit) + .mat-stepper-horizontal-line {
+    border-top-color: #10b981 !important;
+    border-top-width: 2px !important;
+  }
+
+  /* Label color of completed steps */
+  .mat-step-header:has(.mat-step-icon-state-done) .mat-step-text-label,
+  .mat-step-header:has(.mat-step-icon-state-edit) .mat-step-text-label {
+    color: #10b981 !important;
+    font-weight: 600 !important;
+  }
+}
+
+.review-step {
+  text-align: center;
+  padding: 40px 20px;
+
+  h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-main);
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}

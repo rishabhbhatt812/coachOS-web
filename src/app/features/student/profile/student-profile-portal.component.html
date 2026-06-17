@@ -1,0 +1,158 @@
+<div class="profile-container">
+  <div *ngIf="profileData" class="profile-header-card">
+    <div class="profile-header-content">
+      
+      <!-- Avatar Section with Hover Photo Upload -->
+      <div class="avatar-container">
+        <div class="avatar-wrapper" [class.uploading]="isUploading">
+          <img [src]="getProfileUrl()" alt="Student Avatar" class="avatar-image" />
+          <div class="avatar-upload-overlay" (click)="fileInput.click()" title="Click to upload profile photo">
+            <mat-icon style="color: white;">photo_camera</mat-icon>
+            <span style="color: white;">UPLOAD</span>
+          </div>
+          <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;" />
+          <div class="avatar-spinner" *ngIf="isUploading"></div>
+        </div>
+      </div>
+
+      <!-- Info Section -->
+      <div class="profile-title-section">
+        <h1 class="profile-name">{{profileData.fullName}}</h1>
+        <p class="profile-meta">
+          <span class="meta-item code"><mat-icon>badge</mat-icon> {{profileData.studentCode}}</span>
+          <span class="meta-divider">|</span>
+          <span class="meta-item"><mat-icon>phone</mat-icon> {{profileData.mobile}}</span>
+        </p>
+        <div class="badge-row">
+          <span class="profile-status-badge active">
+            Active Student
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tabs Panel -->
+  <mat-tab-group class="profile-tabs-card">
+    
+    <!-- TAB 1: Overview -->
+    <mat-tab label="Overview">
+      <div class="tab-padding" *ngIf="profileData">
+        <div class="overview-grid">
+          
+          <div class="overview-column">
+            <h3 class="details-heading">Personal Details</h3>
+            <ul class="details-list">
+              <li>
+                <span class="detail-label">Email Address</span>
+                <span class="detail-value">{{profileData.email || 'N/A'}}</span>
+              </li>
+              <li>
+                <span class="detail-label">Date of Birth</span>
+                <span class="detail-value">{{profileData.dateOfBirth || 'N/A'}}</span>
+              </li>
+              <li>
+                <span class="detail-label">Admission Date</span>
+                <span class="detail-value">{{profileData.admissionDate || 'N/A'}}</span>
+              </li>
+              <li>
+                <span class="detail-label">Gender</span>
+                <span class="detail-value" style="text-transform: capitalize;">{{profileData.gender || 'N/A'}}</span>
+              </li>
+              <li>
+                <span class="detail-label">Address</span>
+                <span class="detail-value">{{profileData.address || 'N/A'}}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="overview-column">
+            <h3 class="details-heading">Parents & Guardians</h3>
+            <div *ngFor="let p of profileData.parents" class="parent-card">
+              <div class="parent-relationship">{{p.relationshipType}}</div>
+              <div class="parent-info">
+                <span class="parent-name">{{p.fullName}}</span>
+                <span class="parent-mobile"><mat-icon>phone</mat-icon> {{p.mobile}}</span>
+              </div>
+            </div>
+            <div *ngIf="!profileData.parents || profileData.parents.length === 0" class="empty-state">
+              No parent details recorded.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- TAB 2: Program & Batches -->
+    <mat-tab label="My Batches">
+      <div class="tab-padding">
+        <h3 class="details-heading">Enrolled Batches</h3>
+        
+        <div class="table-responsive" *ngIf="batchHistory">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Course Program</th>
+                <th>Assigned Batch</th>
+                <th>Joined Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let b of batchHistory">
+                <td>{{b.courseName}}</td>
+                <td class="font-medium">{{b.batchName}}</td>
+                <td>{{b.joinedDate}}</td>
+                <td>
+                  <span class="badge-status" [ngClass]="b.isActive ? 'active' : 'inactive'">
+                    {{b.isActive ? 'Active' : 'Completed/Left'}}
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="batchHistory.length === 0">
+                <td colspan="4" class="text-center empty-text">No batch assignments found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div *ngIf="!batchHistory" class="loading-state">
+          <div class="small-spinner"></div>
+          <p>Loading batch details...</p>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- TAB 3: My Fees -->
+    <mat-tab label="Fees History">
+      <div class="tab-padding" *ngIf="feeHistory">
+        
+        <h3 class="details-heading">Assigned Fee Program</h3>
+        <div class="plans-grid">
+          <div *ngFor="let fp of feeHistory.feePlans" class="fee-plan-card">
+            <div class="fee-plan-header">
+              <span class="plan-course">{{fp.courseName}} <small>({{fp.batchName}})</small></span>
+              <span class="plan-amount">{{fp.finalFee | currency:'INR'}}</span>
+            </div>
+            <div class="fee-plan-details">
+              <span><strong>Plan Type:</strong> {{fp.planType}}</span>
+              <span><strong>Scholarship/Discount:</strong> {{fp.discountAmount | currency:'INR'}}</span>
+            </div>
+          </div>
+          <div *ngIf="!feeHistory.feePlans || feeHistory.feePlans.length === 0" class="empty-state">
+            No fee plan assigned.
+          </div>
+        </div>
+
+      </div>
+      
+      <div *ngIf="!feeHistory" class="tab-padding loading-state">
+        <div class="small-spinner"></div>
+        <p>Loading fee details...</p>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>

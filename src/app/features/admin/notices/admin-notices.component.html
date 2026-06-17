@@ -1,0 +1,72 @@
+<app-page-header title="Announcements & Notices" subtitle="Broadcast updates, schedules and alerts to your institute">
+  <button class="btn btn-primary" (click)="toggleForm()">
+    {{ showAddForm ? 'Close Form' : '+ Create Notice' }}
+  </button>
+</app-page-header>
+
+<div class="notices-container">
+  <!-- Collapsible Notice Form -->
+  <div class="form-card card" *ngIf="showAddForm">
+    <div class="card-header">
+      <h3>Create New Announcement</h3>
+    </div>
+    
+    <form [formGroup]="noticeForm" (ngSubmit)="onSubmit()" class="notice-form">
+      <div class="form-grid">
+        <mat-form-field appearance="outline" class="col-span-2">
+          <mat-label>Notice Title</mat-label>
+          <input matInput formControlName="title" placeholder="e.g. Schedule Change for Physics Test" />
+          <mat-error *ngIf="noticeForm.get('title')?.hasError('required')">Notice title is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Target Course (Optional)</mat-label>
+          <select matNativeControl formControlName="courseId">
+            <option value="">All Courses</option>
+            <option *ngFor="let course of courses$ | async" [value]="course.id">
+              {{ course.name }}
+            </option>
+          </select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Target Batch (Optional)</mat-label>
+          <select matNativeControl formControlName="batchId">
+            <option value="">All Batches</option>
+            <option *ngFor="let batch of batches$ | async" [value]="batch.id">
+              {{ batch.name }}
+            </option>
+          </select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="col-span-3">
+          <mat-label>Notice Message</mat-label>
+          <textarea matInput formControlName="message" rows="3" placeholder="Enter notice body message..."></textarea>
+          <mat-error *ngIf="noticeForm.get('message')?.hasError('required')">Message body is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="noticeForm.invalid || (isLoading$ | async)">
+          Post Announcement
+        </button>
+        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Notices List -->
+  <div class="table-card card">
+    <div *ngIf="isLoading$ | async" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Loading announcement logs...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!(isLoading$ | async)"
+      [columns]="columns" 
+      [data]="(notices$ | async) || []"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

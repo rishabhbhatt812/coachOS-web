@@ -1,0 +1,550 @@
+<div class="institutes-container">
+  <app-page-header 
+    title="Coaching Centers" 
+    subtitle="Register and manage coaching centers / institutes in the system.">
+    <button class="btn btn-primary" (click)="toggleForm()" *ngIf="!showAddForm">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Add Coaching Center
+    </button>
+  </app-page-header>
+
+  <!-- Multi-step Registration Wizard -->
+  <div class="card form-card" *ngIf="showAddForm">
+    <div class="form-header">
+      <h3>Register New Coaching Center</h3>
+      <button class="btn btn-light btn-close" (click)="toggleForm()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Wizard Step Progress -->
+    <div class="wizard-progress">
+      <div class="step-item" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+        <div class="step-icon">1</div>
+        <span class="step-title">Basic Info</span>
+      </div>
+      <div class="step-line" [class.completed]="currentStep > 1"></div>
+      <div class="step-item" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+        <div class="step-icon">2</div>
+        <span class="step-title">Contact & Address</span>
+      </div>
+      <div class="step-line" [class.completed]="currentStep > 2"></div>
+      <div class="step-item" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
+        <div class="step-icon">3</div>
+        <span class="step-title">Owner & Subscription</span>
+      </div>
+      <div class="step-line" [class.completed]="currentStep > 3"></div>
+      <div class="step-item" [class.active]="currentStep === 4" [class.completed]="currentStep > 4">
+        <div class="step-icon">4</div>
+        <span class="step-title">Settings & Login</span>
+      </div>
+    </div>
+
+    <form [formGroup]="instituteForm" (ngSubmit)="onSubmit()" class="glass-form">
+      
+      <!-- STEP 1: Basic & Academic Information -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <h4 class="section-title">1. Basic & Academic Details</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="instituteCode">Institute Code *</label>
+            <input 
+              type="text" 
+              id="instituteCode" 
+              formControlName="instituteCode" 
+              class="form-control" 
+              placeholder="e.g. APEX01">
+            <span class="error-msg" *ngIf="instituteForm.get('instituteCode')?.touched && instituteForm.get('instituteCode')?.invalid">
+              Code is required (min 2 chars).
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="instituteName">Institute / Coaching Name *</label>
+            <input 
+              type="text" 
+              id="instituteName" 
+              formControlName="instituteName" 
+              class="form-control" 
+              placeholder="e.g. Apex Coaching Academy">
+            <span class="error-msg" *ngIf="instituteForm.get('instituteName')?.touched && instituteForm.get('instituteName')?.invalid">
+              Coaching Name is required (min 3 chars).
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="shortName">Short Name</label>
+            <input 
+              type="text" 
+              id="shortName" 
+              formControlName="shortName" 
+              class="form-control" 
+              placeholder="e.g. ACA">
+          </div>
+
+          <div class="form-group">
+            <label for="instituteType">Institute Type *</label>
+            <select id="instituteType" formControlName="instituteType" class="form-control">
+              <option *ngFor="let type of instituteTypes" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="establishedYear">Established Year</label>
+            <input 
+              type="number" 
+              id="establishedYear" 
+              formControlName="establishedYear" 
+              class="form-control" 
+              placeholder="e.g. 2020">
+            <span class="error-msg" *ngIf="instituteForm.get('establishedYear')?.touched && instituteForm.get('establishedYear')?.invalid">
+              Enter a valid year between 1900 and current year.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="logo">Logo URL</label>
+            <input 
+              type="text" 
+              id="logo" 
+              formControlName="logo" 
+              class="form-control" 
+              placeholder="/assets/images/logo.png">
+          </div>
+
+          <div class="form-group">
+            <label for="academicSessionStartMonth">Session Start Month *</label>
+            <select id="academicSessionStartMonth" formControlName="academicSessionStartMonth" class="form-control">
+              <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="academicSessionEndMonth">Session End Month *</label>
+            <select id="academicSessionEndMonth" formControlName="academicSessionEndMonth" class="form-control">
+              <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="description">Description</label>
+            <textarea 
+              id="description" 
+              formControlName="description" 
+              class="form-control" 
+              rows="3" 
+              placeholder="Brief overview of the coaching center..."></textarea>
+          </div>
+
+          <!-- Academic Subjects Manager -->
+          <div class="form-group full-width">
+            <label>Academic Subjects Offered (Press Enter to add)</label>
+            <div class="input-group mb-2" style="display: flex; gap: 8px;">
+              <input 
+                type="text" 
+                #subjectInput
+                class="form-control" 
+                placeholder="e.g. Physics, Chemistry, English"
+                (keyup.enter)="addSubject(subjectInput.value); subjectInput.value = ''">
+              <button type="button" class="btn btn-secondary" (click)="addSubject(subjectInput.value); subjectInput.value = ''">Add</button>
+            </div>
+            <div class="tags-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+              <span *ngFor="let subject of subjectsList; let idx = index" class="tag" style="background: rgba(100, 116, 139, 0.1); border: 1px solid rgb(100, 116, 139); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: #334155;">
+                {{ subject }}
+                <button type="button" (click)="removeSubject(idx)" style="background: none; border: none; padding: 0; cursor: pointer; color: #334155; display: flex; align-items: center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </span>
+              <span *ngIf="subjectsList.length === 0" class="text-muted" style="font-size: 13px; font-style: italic;">No subjects added yet. These will seed the default course subjects.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Contact & Address Information -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <h4 class="section-title">2. Contact & Address Details</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="contactPersonName">Contact Person Name *</label>
+            <input 
+              type="text" 
+              id="contactPersonName" 
+              formControlName="contactPersonName" 
+              class="form-control" 
+              placeholder="e.g. Rishabh Sharma">
+            <span class="error-msg" *ngIf="instituteForm.get('contactPersonName')?.touched && instituteForm.get('contactPersonName')?.invalid">
+              Contact person is required.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="mobileNumber">Mobile Number *</label>
+            <input 
+              type="text" 
+              id="mobileNumber" 
+              formControlName="mobileNumber" 
+              class="form-control" 
+              placeholder="10-15 digit mobile number">
+            <span class="error-msg" *ngIf="instituteForm.get('mobileNumber')?.touched && instituteForm.get('mobileNumber')?.invalid">
+              Enter a valid 10-15 digit mobile number.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="alternateMobileNumber">Alternate Mobile Number</label>
+            <input 
+              type="text" 
+              id="alternateMobileNumber" 
+              formControlName="alternateMobileNumber" 
+              class="form-control" 
+              placeholder="Alternate mobile number">
+            <span class="error-msg" *ngIf="instituteForm.get('alternateMobileNumber')?.touched && instituteForm.get('alternateMobileNumber')?.invalid">
+              Enter a valid mobile number format.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="emailAddress">Email Address *</label>
+            <input 
+              type="email" 
+              id="emailAddress" 
+              formControlName="emailAddress" 
+              class="form-control" 
+              placeholder="e.g. contact@apex.com">
+            <span class="error-msg" *ngIf="instituteForm.get('emailAddress')?.touched && instituteForm.get('emailAddress')?.invalid">
+              Enter a valid email address.
+            </span>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="websiteUrl">Website URL</label>
+            <input 
+              type="text" 
+              id="websiteUrl" 
+              formControlName="websiteUrl" 
+              class="form-control" 
+              placeholder="e.g. https://apex.com">
+            <span class="error-msg" *ngIf="instituteForm.get('websiteUrl')?.touched && instituteForm.get('websiteUrl')?.invalid">
+              Enter a valid URL format.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="addressLine1">Address Line 1 *</label>
+            <input 
+              type="text" 
+              id="addressLine1" 
+              formControlName="addressLine1" 
+              class="form-control" 
+              placeholder="Street name, floor, area">
+            <span class="error-msg" *ngIf="instituteForm.get('addressLine1')?.touched && instituteForm.get('addressLine1')?.invalid">
+              Address Line 1 is required.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="addressLine2">Address Line 2</label>
+            <input 
+              type="text" 
+              id="addressLine2" 
+              formControlName="addressLine2" 
+              class="form-control" 
+              placeholder="Apartment, suite, landmark">
+          </div>
+
+          <div class="form-group">
+            <label for="city">City *</label>
+            <input 
+              type="text" 
+              id="city" 
+              formControlName="city" 
+              class="form-control" 
+              placeholder="e.g. Delhi">
+            <span class="error-msg" *ngIf="instituteForm.get('city')?.touched && instituteForm.get('city')?.invalid">
+              City is required.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="state">State *</label>
+            <input 
+              type="text" 
+              id="state" 
+              formControlName="state" 
+              class="form-control" 
+              placeholder="e.g. Delhi">
+            <span class="error-msg" *ngIf="instituteForm.get('state')?.touched && instituteForm.get('state')?.invalid">
+              State is required.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="country">Country *</label>
+            <input 
+              type="text" 
+              id="country" 
+              formControlName="country" 
+              class="form-control">
+            <span class="error-msg" *ngIf="instituteForm.get('country')?.touched && instituteForm.get('country')?.invalid">
+              Country is required.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="pincode">Pincode / Postal Code *</label>
+            <input 
+              type="text" 
+              id="pincode" 
+              formControlName="pincode" 
+              class="form-control" 
+              placeholder="6-digit code">
+            <span class="error-msg" *ngIf="instituteForm.get('pincode')?.touched && instituteForm.get('pincode')?.invalid">
+              Enter a valid 6-digit pincode.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Owner & Subscription Info -->
+      <div class="step-content" *ngIf="currentStep === 3">
+        <h4 class="section-title">3. Owner & Subscription Details</h4>
+        
+        <h5 class="sub-section-title">Owner / Director Info</h5>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ownerName">Owner Name *</label>
+            <input 
+              type="text" 
+              id="ownerName" 
+              formControlName="ownerName" 
+              class="form-control" 
+              placeholder="e.g. Rishabh Owner">
+            <span class="error-msg" *ngIf="instituteForm.get('ownerName')?.touched && instituteForm.get('ownerName')?.invalid">
+              Owner Name is required.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="ownerMobile">Owner Mobile *</label>
+            <input 
+              type="text" 
+              id="ownerMobile" 
+              formControlName="ownerMobile" 
+              class="form-control" 
+              placeholder="Owner mobile number">
+            <span class="error-msg" *ngIf="instituteForm.get('ownerMobile')?.touched && instituteForm.get('ownerMobile')?.invalid">
+              Enter valid owner mobile number.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="ownerEmail">Owner Email</label>
+            <input 
+              type="email" 
+              id="ownerEmail" 
+              formControlName="ownerEmail" 
+              class="form-control" 
+              placeholder="e.g. owner@apex.com">
+            <span class="error-msg" *ngIf="instituteForm.get('ownerEmail')?.touched && instituteForm.get('ownerEmail')?.invalid">
+              Enter a valid email.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="aadhaarNumber">Aadhaar Number</label>
+            <input 
+              type="text" 
+              id="aadhaarNumber" 
+              formControlName="aadhaarNumber" 
+              class="form-control" 
+              placeholder="12-digit Aadhaar number">
+            <span class="error-msg" *ngIf="instituteForm.get('aadhaarNumber')?.touched && instituteForm.get('aadhaarNumber')?.invalid">
+              Enter valid 12-digit Aadhaar.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="panNumber">PAN Number</label>
+            <input 
+              type="text" 
+              id="panNumber" 
+              formControlName="panNumber" 
+              class="form-control" 
+              placeholder="10-digit PAN (ABCDE1234F)">
+            <span class="error-msg" *ngIf="instituteForm.get('panNumber')?.touched && instituteForm.get('panNumber')?.invalid">
+              Enter a valid PAN format.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="gstNumber">GST Number</label>
+            <input 
+              type="text" 
+              id="gstNumber" 
+              formControlName="gstNumber" 
+              class="form-control" 
+              placeholder="15-character GST Number">
+          </div>
+        </div>
+
+        <h5 class="sub-section-title">Plan & License Info</h5>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="planName">Subscription Plan *</label>
+            <select id="planName" formControlName="planName" class="form-control">
+              <option *ngFor="let p of plans" [value]="p.name">{{ p.name }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maxStudentsAllowed">Max Students *</label>
+            <input 
+              type="number" 
+              id="maxStudentsAllowed" 
+              formControlName="maxStudentsAllowed" 
+              class="form-control">
+            <span class="error-msg" *ngIf="instituteForm.get('maxStudentsAllowed')?.touched && instituteForm.get('maxStudentsAllowed')?.invalid">
+              Max Students must be at least 1.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="maxTeachersAllowed">Max Teachers *</label>
+            <input 
+              type="number" 
+              id="maxTeachersAllowed" 
+              formControlName="maxTeachersAllowed" 
+              class="form-control">
+            <span class="error-msg" *ngIf="instituteForm.get('maxTeachersAllowed')?.touched && instituteForm.get('maxTeachersAllowed')?.invalid">
+              Max Teachers must be at least 1.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="expiryDate">Expiry Date *</label>
+            <input 
+              type="date" 
+              id="expiryDate" 
+              formControlName="expiryDate" 
+              class="form-control">
+            <span class="error-msg" *ngIf="instituteForm.get('expiryDate')?.touched && instituteForm.get('expiryDate')?.invalid">
+              Expiry Date is required.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Settings & Security Info -->
+      <div class="step-content" *ngIf="currentStep === 4">
+        <h4 class="section-title">4. Settings & Security Details</h4>
+        
+        <h5 class="sub-section-title">Communication Settings</h5>
+        <div class="checkbox-grid">
+          <label class="checkbox-container">
+            <input type="checkbox" formControlName="smsEnabled">
+            <span class="checkbox-label">Enable SMS Communications</span>
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" formControlName="emailEnabled">
+            <span class="checkbox-label">Enable Email Communications</span>
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" formControlName="whatsAppEnabled">
+            <span class="checkbox-label">Enable WhatsApp Communications</span>
+          </label>
+        </div>
+
+        <h5 class="sub-section-title">Localization & Login Credentials</h5>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="currency">Base Currency *</label>
+            <select id="currency" formControlName="currency" class="form-control">
+              <option *ngFor="let cur of currencies" [value]="cur">{{ cur }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Admin Login Password *</label>
+            <input 
+              type="password" 
+              id="password" 
+              formControlName="password" 
+              class="form-control" 
+              placeholder="Minimum 6 characters">
+            <span class="error-msg" *ngIf="instituteForm.get('password')?.touched && instituteForm.get('password')?.invalid">
+              Password is required (min 6 characters).
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-light" (click)="toggleForm()" *ngIf="currentStep === 1">Cancel</button>
+        <button type="button" class="btn btn-light" (click)="prevStep()" *ngIf="currentStep > 1">Previous</button>
+        <button type="button" class="btn btn-primary" (click)="nextStep()" *ngIf="currentStep < 4">Next</button>
+        <button type="submit" class="btn btn-primary" *ngIf="currentStep === 4" [disabled]="instituteForm.invalid || isLoading">
+          Register Center
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Institutes List Table -->
+  <div class="card table-card" *ngIf="!showAddForm">
+    <div class="spinner-container" *ngIf="isLoading">
+      <div class="spinner"></div>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!isLoading"
+      [columns]="columns" 
+      [data]="institutes"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+
+  <!-- Slide-over Drawer for Managing Modules -->
+  <div class="drawer-overlay" *ngIf="activeInstituteForModules" (click)="closeModulesDrawer()"></div>
+  <div class="drawer" [class.open]="activeInstituteForModules">
+    <div class="drawer-header">
+      <div>
+        <h3>Manage Modules</h3>
+        <p class="subtitle">{{ activeInstituteForModules?.name }}</p>
+      </div>
+      <button class="btn-icon-close" (click)="closeModulesDrawer()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    
+    <div class="drawer-body">
+      <div class="spinner-container" *ngIf="isLoadingModules">
+        <div class="spinner"></div>
+      </div>
+      
+      <div class="modules-list" *ngIf="!isLoadingModules">
+        <div class="module-card" *ngFor="let mod of instituteModules">
+          <div class="module-info">
+            <h4 class="module-name">{{ mod.name }}</h4>
+            <p class="module-desc">{{ mod.description || 'Access to ' + mod.name + ' features.' }}</p>
+            <span class="module-code-badge">{{ mod.code }}</span>
+          </div>
+          <div class="module-action">
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="mod.isEnabled">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="drawer-footer" *ngIf="!isLoadingModules">
+      <button class="btn btn-light" (click)="closeModulesDrawer()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveInstituteModules()" [disabled]="isSavingModules">
+        {{ isSavingModules ? 'Saving...' : 'Save Modules' }}
+      </button>
+    </div>
+  </div>
+</div>

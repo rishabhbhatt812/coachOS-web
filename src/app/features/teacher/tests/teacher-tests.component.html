@@ -1,0 +1,73 @@
+<div class="teacher-tests-container p-6">
+  <div class="header-section mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Tests & Assessments</h1>
+      <p class="text-gray-500 mt-1">Manage class tests and grade submissions.</p>
+    </div>
+    <button mat-flat-button color="primary" class="create-btn" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
+      <mat-icon>add</mat-icon> Schedule Test
+    </button>
+  </div>
+
+  <!-- Create Form -->
+  <mat-card class="create-form-card mb-8" *ngIf="showCreateForm">
+    <mat-card-header>
+      <mat-card-title>Schedule New Test</mat-card-title>
+      <button mat-icon-button class="close-btn ml-auto" (click)="toggleCreateForm()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-card-header>
+    
+    <mat-card-content class="mt-4">
+      <div class="form-grid grid grid-cols-2 gap-4">
+        <mat-form-field appearance="outline">
+          <mat-label>Test Name</mat-label>
+          <input matInput [(ngModel)]="newTest.testName" placeholder="e.g. Chapter 1 Quiz">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Select Batch</mat-label>
+          <mat-select [(ngModel)]="newTest.batchId">
+            <mat-option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" [(ngModel)]="newTest.testDate">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Max Marks</mat-label>
+          <input matInput type="number" [(ngModel)]="newTest.maxMarks">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="col-span-2">
+          <mat-label>Syllabus / Instructions</mat-label>
+          <textarea matInput [(ngModel)]="newTest.syllabus" rows="2"></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions mt-6 flex justify-end gap-4">
+        <button mat-button (click)="toggleCreateForm()">Cancel</button>
+        <button mat-flat-button color="primary" (click)="submitTest()">Schedule Test</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="table-card card shadow-sm rounded-xl border border-gray-100 overflow-hidden" *ngIf="!showCreateForm">
+    <div *ngIf="isLoading$ | async" class="loading-indicator p-8 text-center text-gray-500">
+      <div class="spinner"></div>
+      <p>Loading assessment records...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!(isLoading$ | async)"
+      [columns]="columns" 
+      [data]="(tests$ | async) || []"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

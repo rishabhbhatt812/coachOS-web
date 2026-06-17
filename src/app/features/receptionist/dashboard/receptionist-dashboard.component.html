@@ -1,0 +1,167 @@
+<div class="dashboard-container">
+  <app-page-header 
+    title="Receptionist Front Office" 
+    subtitle="Manage and analyze front-desk inquiries, follow-ups, and lead tracking.">
+    <a routerLink="/receptionist/crm" class="btn btn-primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+      Manage Inquiries
+    </a>
+  </app-page-header>
+
+  <!-- Metrics Grid -->
+  <div class="stats-grid">
+    <div class="stats-card card">
+      <div class="icon-wrapper blue">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      </div>
+      <div class="stats-info">
+        <span class="value">{{ totalLeads }}</span>
+        <span class="label">Total Inquiries</span>
+      </div>
+    </div>
+
+    <div class="stats-card card">
+      <div class="icon-wrapper orange">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+      </div>
+      <div class="stats-info">
+        <span class="value">{{ hotLeads }}</span>
+        <span class="label">Hot Leads</span>
+      </div>
+    </div>
+
+    <div class="stats-card card">
+      <div class="icon-wrapper green">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </div>
+      <div class="stats-info">
+        <span class="value">{{ convertedLeads }}</span>
+        <span class="label">Converted / Enrolled</span>
+      </div>
+    </div>
+
+    <div class="stats-card card">
+      <div class="icon-wrapper purple">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      </div>
+      <div class="stats-info">
+        <span class="value">{{ warmLeads }}</span>
+        <span class="label">Warm Follow-ups</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts & Visual representation -->
+  <div class="visuals-grid">
+    <!-- Graphical Status Distribution -->
+    <div class="card visual-card">
+      <div class="card-header">
+        <h3>Coaching Lead Status Conversion</h3>
+      </div>
+      <div class="progress-details">
+        <div class="progress-item">
+          <div class="progress-label-info">
+            <span>Converted (Enrolled)</span>
+            <span>{{ convertedLeads }} ({{ getProgressBarPercentage(convertedLeads) }}%)</span>
+          </div>
+          <div class="bar-container">
+            <div class="bar green" [style.width]="getProgressBarWidth(convertedLeads)"></div>
+          </div>
+        </div>
+
+        <div class="progress-item">
+          <div class="progress-label-info">
+            <span>Hot Leads</span>
+            <span>{{ hotLeads }} ({{ getProgressBarPercentage(hotLeads) }}%)</span>
+          </div>
+          <div class="bar-container">
+            <div class="bar orange" [style.width]="getProgressBarWidth(hotLeads)"></div>
+          </div>
+        </div>
+
+        <div class="progress-item">
+          <div class="progress-label-info">
+            <span>Warm Leads</span>
+            <span>{{ warmLeads }} ({{ getProgressBarPercentage(warmLeads) }}%)</span>
+          </div>
+          <div class="bar-container">
+            <div class="bar blue" [style.width]="getProgressBarWidth(warmLeads)"></div>
+          </div>
+        </div>
+
+        <div class="progress-item">
+          <div class="progress-label-info">
+            <span>Cold / Raw Leads</span>
+            <span>{{ coldLeads }} ({{ getProgressBarPercentage(coldLeads) }}%)</span>
+          </div>
+          <div class="bar-container">
+            <div class="bar gray" [style.width]="getProgressBarWidth(coldLeads)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Follow-up Agenda -->
+    <div class="card agenda-card">
+      <div class="card-header">
+        <h3>Priority Follow-ups Agenda</h3>
+      </div>
+      <div class="agenda-list" *ngIf="todayFollowups.length > 0">
+        <div class="agenda-item" *ngFor="let item of todayFollowups">
+          <div class="agenda-badge" [class.hot]="item.status === 'Hot'" [class.warm]="item.status === 'Warm'">
+            {{ item.status }}
+          </div>
+          <div class="agenda-content">
+            <h4>{{ item.fullName }}</h4>
+            <p>Course: {{ item.interestedCourseName || 'Not Decided' }} • {{ item.mobile }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="no-agenda" *ngIf="todayFollowups.length === 0">
+        <p>No priority follow-ups scheduled for today.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Enquiries List -->
+  <div class="card list-card">
+    <div class="card-header justify-between flex items-center">
+      <h3>Recent Enquiries Feed</h3>
+      <a routerLink="/receptionist/crm" class="view-all-link">View All CRM Leads</a>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="app-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Course</th>
+            <th>Source</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of recentEnquiries">
+            <td><strong>{{ item.fullName }}</strong></td>
+            <td>{{ item.mobile }}</td>
+            <td>{{ item.email || '-' }}</td>
+            <td>{{ item.interestedCourseName || 'General Enquiry' }}</td>
+            <td>{{ item.source || 'Direct Walk-In' }}</td>
+            <td>
+              <span class="badge" [class.green]="item.status === 'Converted'" [class.orange]="item.status === 'Hot'" [class.blue]="item.status === 'Warm'" [class.red]="item.status === 'Cold'">
+                {{ item.status }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="recentEnquiries.length === 0">
+            <td colspan="6" class="empty-table-state">
+              No enquiries registered yet.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

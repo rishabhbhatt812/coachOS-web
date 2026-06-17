@@ -1,0 +1,43 @@
+<app-page-header title="My Enrolled Courses" subtitle="View details of your academic courses and batch schedules"></app-page-header>
+
+<div class="courses-container">
+  <div *ngIf="isLoading$ | async" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Loading course enrollments...</p>
+  </div>
+
+  <div *ngIf="!(isLoading$ | async)" class="courses-grid">
+    <div *ngFor="let course of courses$ | async" class="course-card card">
+      <div class="card-header">
+        <span class="status-badge" [class.active]="course.isActive">
+          {{ course.isActive ? 'Active' : 'Inactive' }}
+        </span>
+        <h3>{{ course.courseName }}</h3>
+        <p class="batch-name">{{ course.batchName }}</p>
+      </div>
+      
+      <div class="card-body">
+        <p class="description">{{ course.courseDescription || 'Comprehensive preparation curriculum and study modules.' }}</p>
+        
+        <div class="details-list">
+          <div class="detail-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span><strong>Timing:</strong> {{ course.timing }}</span>
+          </div>
+          <div class="detail-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span><strong>Teacher:</strong> {{ course.teacherName }}</span>
+          </div>
+          <div class="detail-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span><strong>Joined On:</strong> {{ course.joinedDate | date:'mediumDate' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="((courses$ | async) || []).length === 0" class="no-records-card card">
+      <p>You are not currently enrolled in any active courses.</p>
+    </div>
+  </div>
+</div>

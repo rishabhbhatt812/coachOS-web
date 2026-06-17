@@ -1,0 +1,78 @@
+<app-page-header title="Students" subtitle="Manage and monitor enrolled students">
+  <button class="btn btn-primary" *ngIf="!showAddForm" (click)="navigateToAddStudent()">
+    + Add Student
+  </button>
+</app-page-header>
+
+<div class="students-container">
+  <!-- Collapsible Student Form -->
+  <div class="form-card card" *ngIf="showAddForm">
+    <div class="card-header">
+      <h3>{{ editingId ? 'Edit Student' : 'Add New Student' }}</h3>
+    </div>
+    
+    <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" class="student-form">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Student Code</mat-label>
+          <input matInput formControlName="studentCode" placeholder="e.g. STU001" />
+          <mat-error *ngIf="studentForm.get('studentCode')?.hasError('required')">Student code is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Full Name</mat-label>
+          <input matInput formControlName="fullName" placeholder="Enter full name" />
+          <mat-error *ngIf="studentForm.get('fullName')?.hasError('required')">Full name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mobile Number</mat-label>
+          <input matInput formControlName="mobile" placeholder="10-digit mobile" />
+          <mat-error *ngIf="studentForm.get('mobile')?.hasError('required')">Mobile number is required</mat-error>
+          <mat-error *ngIf="studentForm.get('mobile')?.hasError('pattern')">Enter a valid 10-digit number</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email Address</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="student@example.com" />
+          <mat-error *ngIf="studentForm.get('email')?.hasError('required')">Email address is required</mat-error>
+          <mat-error *ngIf="studentForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput type="date" formControlName="dateOfBirth" />
+          <mat-error *ngIf="studentForm.get('dateOfBirth')?.hasError('required')">Date of birth is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Admission Date</mat-label>
+          <input matInput type="date" formControlName="admissionDate" />
+          <mat-error *ngIf="studentForm.get('admissionDate')?.hasError('required')">Admission date is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="studentForm.invalid || (isLoading$ | async)">
+          {{ editingId ? 'Update Student' : 'Create Student' }}
+        </button>
+        <button mat-button type="button" (click)="cancelEdit()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Students List -->
+  <div class="table-card card">
+    <div *ngIf="isLoading$ | async" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Retrieving student roster...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!(isLoading$ | async)"
+      [columns]="columns" 
+      [data]="(students$ | async) || []"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

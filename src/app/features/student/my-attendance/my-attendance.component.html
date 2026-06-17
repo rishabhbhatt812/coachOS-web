@@ -1,0 +1,80 @@
+<app-page-header title="My Attendance History" subtitle="Track your attendance percentages and individual session records"></app-page-header>
+
+<div class="attendance-container">
+  <div *ngIf="isLoading$ | async" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Loading attendance statistics...</p>
+  </div>
+
+  <div *ngIf="!(isLoading$ | async)" class="attendance-content">
+    <!-- Summary Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card card progress-card">
+        <div class="progress-circle">
+          <div class="percent-value">{{ percent$ | async }}%</div>
+          <div class="percent-label">Attendance</div>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" [style.width.%]="percent$ | async"></div>
+        </div>
+      </div>
+
+      <div class="stats-cards">
+        <div class="stat-row-card card">
+          <div class="stat-details">
+            <span class="stat-label">Total Conducted Classes</span>
+            <h3 class="stat-val">{{ totalClasses$ | async }}</h3>
+          </div>
+        </div>
+        <div class="stat-row-card card">
+          <div class="stat-details">
+            <span class="stat-label">Present Sessions</span>
+            <h3 class="stat-val text-green">{{ presentCount$ | async }}</h3>
+          </div>
+        </div>
+        <div class="stat-row-card card">
+          <div class="stat-details">
+            <span class="stat-label">Absent / Missed Sessions</span>
+            <h3 class="stat-val text-red">{{ absentCount$ | async }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Table Logs -->
+    <div class="table-card card">
+      <div class="card-header">
+        <h3>Class Logs / Session History</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Batch Name</th>
+                <th>Status</th>
+                <th>Remark / Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let record of records$ | async">
+                <td>{{ record.attendanceDate | date:'mediumDate' }}</td>
+                <td>{{ record.batchName }}</td>
+                <td>
+                  <span class="status-badge" [class.present]="record.status === 'Present'" [class.absent]="record.status === 'Absent'">
+                    {{ record.status }}
+                  </span>
+                </td>
+                <td>{{ record.remark || '-' }}</td>
+              </tr>
+              <tr *ngIf="((records$ | async) || []).length === 0">
+                <td colspan="4" class="empty-row">No attendance records have been registered yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

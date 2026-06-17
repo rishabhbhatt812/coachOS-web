@@ -1,0 +1,131 @@
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.open]="sidebarOpen">
+    <div class="sidebar-header">
+      <div class="brand">
+        <img src="/logo.png" alt="EduNex Logo" style="width: 36px; height: 36px; border-radius: 8px; object-fit: contain; background: white; padding: 2px;" />
+        <div class="brand-text">
+          <h2>EduNex</h2>
+          <p>Admin Portal</p>
+        </div>
+      </div>
+      <button class="close-sidebar-btn" (click)="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    
+    <nav class="sidebar-nav" *ngIf="user$ | async as user">
+      <!-- Admin & Global/Super Admin Sidebar Links -->
+      <ng-container *ngIf="user.role === 'ADMIN'">
+        <a routerLink="/admin/dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span>Dashboard</span>
+        </a>
+        <a routerLink="/admin/students" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showInstituteSection()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>Students</span>
+        </a>
+        <a routerLink="/admin/teachers" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showInstituteSection()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+          <span>Teachers</span>
+        </a>
+        <a routerLink="/admin/staff" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showInstituteSection()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+          <span>Staff Management</span>
+        </a>
+        <a routerLink="/admin/courses" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showModule('LEARNING')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Courses</span>
+        </a>
+        <a routerLink="/admin/batches" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showModule('LEARNING')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Batches</span>
+        </a>
+        <a routerLink="/admin/branches" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showInstituteSection()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+          <span>Branches</span>
+        </a>
+        <a routerLink="/admin/fees" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showModule('FEES')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Fee Management</span>
+        </a>
+        <a routerLink="/admin/crm" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showModule('CRM')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <span>CRM / Leads</span>
+        </a>
+        <a routerLink="/admin/attendance" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showModule('ATTENDANCE')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Attendance</span>
+        </a>
+        <a routerLink="/admin/notices" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showModule('COMMUNICATION')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span>Notices</span>
+        </a>
+        <a routerLink="/admin/institutes" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="isGlobalAdmin">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7M4 21V10m16 11V10M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg>
+          <span>Coaching Centers</span>
+        </a>
+      </ng-container>
+
+      <!-- Receptionist Sidebar Links -->
+      <ng-container *ngIf="user.role === 'RECEPTIONIST'">
+        <a routerLink="/receptionist/dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span>Dashboard</span>
+        </a>
+        <a routerLink="/receptionist/crm" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="hasModuleAccess('CRM')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <span>CRM / Leads</span>
+        </a>
+        <a routerLink="/receptionist/notices" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="hasModuleAccess('COMMUNICATION')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span>Notices</span>
+        </a>
+      </ng-container>
+    </nav>
+  </aside>
+
+  <!-- Sidebar Overlay for mobile -->
+  <div class="sidebar-overlay" *ngIf="sidebarOpen" (click)="toggleSidebar()"></div>
+
+  <!-- Main Area -->
+  <div class="main-container">
+    <!-- Topbar Header -->
+    <header class="topbar" style="justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-right: auto;">
+        <button class="menu-toggle" (click)="toggleSidebar()" style="margin-right: 0;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="topbar-brand" style="display: flex; align-items: center; gap: 8px;">
+          <img src="/logo.png" alt="EduNex Logo" style="height: 32px; border-radius: 6px; background: white; padding: 2px;" />
+          <span style="font-weight: 700; color: var(--text-main); font-size: 16px;">EduNex</span>
+        </div>
+      </div>
+      
+      <!-- Tenant Switcher (only for Global/Super Admins) -->
+      <div class="tenant-switcher" *ngIf="isGlobalAdmin" style="margin-right: 20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="switcher-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+        <select [value]="selectedInstituteId" (change)="onInstituteChange($event)" class="switcher-dropdown">
+          <option value="system_global">🌐 Global System Overview</option>
+          <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }}</option>
+        </select>
+      </div>
+
+      <div class="user-profile" *ngIf="user$ | async as user">
+        <div class="profile-details">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">{{ user.rawRole === 'GLOBAL_ADMIN' ? 'Global Admin' : (user.rawRole === 'SUPER_ADMIN' ? 'Super Admin' : (user.rawRole === 'RECEPTIONIST' ? 'Receptionist' : 'Administrator')) }}</span>
+        </div>
+        <div class="profile-avatar">{{ user.name.charAt(0) }}</div>
+        <button class="logout-action-btn" (click)="logout()" title="Logout">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="content-body">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

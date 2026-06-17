@@ -1,0 +1,97 @@
+<app-page-header title="CRM & Enquiries" subtitle="Track and manage coaching leads and registrations">
+  <button class="btn btn-primary" (click)="toggleForm()">
+    {{ showAddForm ? 'Close Form' : '+ New Enquiry' }}
+  </button>
+</app-page-header>
+
+<div class="crm-container">
+  <!-- Collapsible Enquiry Form -->
+  <div class="form-card card" *ngIf="showAddForm">
+    <div class="card-header">
+      <h3>{{ editingId ? 'Edit Enquiry' : 'Add New Lead / Enquiry' }}</h3>
+    </div>
+    
+    <form [formGroup]="crmForm" (ngSubmit)="onSubmit()" class="crm-form">
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Lead Name</mat-label>
+          <input matInput formControlName="fullName" placeholder="e.g. John Doe" />
+          <mat-error *ngIf="crmForm.get('fullName')?.hasError('required')">Name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Mobile Number</mat-label>
+          <input matInput formControlName="mobile" placeholder="10-digit mobile" />
+          <mat-error *ngIf="crmForm.get('mobile')?.hasError('required')">Mobile is required</mat-error>
+          <mat-error *ngIf="crmForm.get('mobile')?.hasError('pattern')">Enter a valid 10-digit number</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email Address</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="john@example.com" />
+          <mat-error *ngIf="crmForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="crmForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Select Interested Course</mat-label>
+          <select matNativeControl formControlName="interestedCourseId">
+            <option value="" disabled selected>Choose a course</option>
+            <option *ngFor="let course of courses$ | async" [value]="course.id">
+              {{ course.name }}
+            </option>
+          </select>
+          <mat-error *ngIf="crmForm.get('interestedCourseId')?.hasError('required')">Please select a course</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Previous School / College</mat-label>
+          <input matInput formControlName="previousSchoolOrCollege" placeholder="e.g. DPS School" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Lead Source</mat-label>
+          <select matNativeControl formControlName="source">
+            <option value="Website">Website</option>
+            <option value="Referral">Referral</option>
+            <option value="SocialMedia">Social Media</option>
+            <option value="WalkIn">Walk In</option>
+          </select>
+          <mat-error *ngIf="crmForm.get('source')?.hasError('required')">Please select a source</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="editingId">
+          <mat-label>Lead Status</mat-label>
+          <select matNativeControl formControlName="status">
+            <option value="Hot">Hot</option>
+            <option value="Warm">Warm</option>
+            <option value="Cold">Cold</option>
+            <option value="Converted">Converted</option>
+          </select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="crmForm.invalid || (isLoading$ | async)">
+          {{ editingId ? 'Update Lead' : 'Add Lead' }}
+        </button>
+        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Enquiries Table -->
+  <div class="table-card card">
+    <div *ngIf="isLoading$ | async" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Loading sales and enquiry list...</p>
+    </div>
+    
+    <app-data-table 
+      *ngIf="!(isLoading$ | async)"
+      [columns]="columns" 
+      [data]="(enquiries$ | async) || []"
+      (actionClicked)="onActionClicked($event)">
+    </app-data-table>
+  </div>
+</div>

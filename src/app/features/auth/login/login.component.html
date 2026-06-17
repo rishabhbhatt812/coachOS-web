@@ -1,0 +1,49 @@
+<div class="login-container">
+  <div class="glow-sphere sphere-1"></div>
+  <div class="glow-sphere sphere-2"></div>
+  
+  <div class="login-card">
+    <div class="brand-header">
+      <div class="brand-logo" style="background: transparent; border-radius: 0; width: auto; height: auto; display: flex; justify-content: center; margin-bottom: 16px;">
+        <img src="/logo.png" alt="EduNex Logo" style="height: 80px; width: auto; border-radius: 12px;" />
+      </div>
+      <h2>EduNex</h2>
+      <p class="subtitle">Enterprise Coaching Management Portal</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Email Address</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="name@company.com" autocomplete="email" />
+        <mat-icon matPrefix>email</mat-icon>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email address</mat-error>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button type="button" mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-flat-button color="primary" class="btn-submit w-100" type="submit" [disabled]="loginForm.invalid || (isLoading$ | async)">
+          <span class="btn-content" *ngIf="!(isLoading$ | async)">
+            Sign In <mat-icon>arrow_forward</mat-icon>
+          </span>
+          <span class="spinner-container" *ngIf="isLoading$ | async">
+            <mat-spinner diameter="24"></mat-spinner>
+          </span>
+        </button>
+      </div>
+    </form>
+    
+    <div class="login-footer">
+      <p class="muted">&copy; 2026 EduNex. All rights reserved.</p>
+    </div>
+  </div>
+</div>

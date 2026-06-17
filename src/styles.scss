@@ -1,1 +1,336 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global Premium Styles for CoachOS */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Brand Colors - Premium Indigo/Purple */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #e0e7ff;
+  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  
+  /* Backgrounds */
+  --bg-body: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #0f172a; /* Deep slate */
+  --bg-table-header: #f1f5f9;
+  
+  /* Text Colors */
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-sidebar: #94a3b8;
+  --text-sidebar-hover: #ffffff;
+  
+  /* Border Colors */
+  --border-light: #e2e8f0;
+  --border-focus: #cbd5e1;
+  --border-table: #f1f5f9;
+  
+  /* Status Colors */
+  --success-bg: #dcfce7;
+  --success-text: #166534;
+  --danger-bg: #fee2e2;
+  --danger-text: #991b1b;
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+  --info-bg: #dbeafe;
+  --info-text: #1e40af;
+  --purple-bg: #f3e8ff;
+  --purple-text: #6b21a8;
+  
+  /* Layout & Spacing */
+  --sidebar-width: 280px;
+  --topbar-height: 80px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  
+  /* Shadows */
+  --box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  --box-shadow-hover: 0 14px 40px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: 'Outfit', var(--font-family);
+  
+  /* Transitions */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-body);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-main);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.text-muted { color: var(--text-muted); }
+.font-bold { font-weight: 700; }
+
+/* Global Badges */
+.badge {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.badge.green { background: var(--success-bg); color: var(--success-text); }
+.badge.red { background: var(--danger-bg); color: var(--danger-text); }
+.badge.orange { background: var(--warning-bg); color: var(--warning-text); }
+.badge.blue { background: var(--info-bg); color: var(--info-text); }
+.badge.purple { background: var(--purple-bg); color: var(--purple-text); }
+
+/* Premium Buttons */
+.btn {
+  border: 0;
+  border-radius: var(--border-radius-md);
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-light {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.btn-light:hover:not(:disabled) {
+  background: #c7d2fe;
+}
+
+/* Premium Card Layout */
+.card {
+  background: var(--bg-card);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--border-radius-lg);
+  padding: 24px;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+}
+.card:hover {
+  box-shadow: var(--box-shadow-hover);
+}
+
+/* Global Forms */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+  }
+  
+  .error-msg {
+    font-size: 12px;
+    color: var(--danger-text);
+    margin-top: 6px;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  color: var(--text-main);
+  background: #ffffff;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-control::placeholder {
+  color: #94a3b8;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #ffffff;
+}
+
+/* Premium Datatable */
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+table.app-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table.app-table th, table.app-table td {
+  text-align: left;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 14px;
+}
+
+table.app-table th {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--bg-table-header);
+  font-weight: 600;
+  
+  &:first-child {
+    border-top-left-radius: var(--border-radius-md);
+  }
+  &:last-child {
+    border-top-right-radius: var(--border-radius-md);
+  }
+}
+
+table.app-table tbody tr {
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #f8fafc;
+  }
+}
+
+.empty-table-state {
+  text-align: center;
+  padding: 32px !important;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Helper Classes */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+
+/* Custom SnackBar Theme */
+.mat-mdc-snack-bar-container {
+  &.success-snackbar {
+    --mdc-snackbar-container-color: #059669 !important;
+    --mdc-snackbar-supporting-text-color: #ffffff !important;
+    .mdc-snackbar__surface {
+      background-color: #059669 !important;
+      border-radius: var(--border-radius-sm) !important;
+      box-shadow: 0 8px 24px rgba(5, 150, 105, 0.2) !important;
+    }
+    .mdc-snackbar__label, .mat-mdc-snack-bar-label {
+      color: #ffffff !important;
+      font-weight: 500 !important;
+    }
+    .mat-mdc-snack-bar-action, button, span { color: #ffffff !important; }
+  }
+  &.error-snackbar {
+    --mdc-snackbar-container-color: #dc2626 !important;
+    --mdc-snackbar-supporting-text-color: #ffffff !important;
+    .mdc-snackbar__surface {
+      background-color: #dc2626 !important;
+      border-radius: var(--border-radius-sm) !important;
+      box-shadow: 0 8px 24px rgba(220, 38, 38, 0.2) !important;
+    }
+    .mdc-snackbar__label, .mat-mdc-snack-bar-label {
+      color: #ffffff !important;
+      font-weight: 500 !important;
+    }
+    .mat-mdc-snack-bar-action, button, span { color: #ffffff !important; }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Fix select option transparent backgrounds */
+select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Fix Angular Material mat-select panel transparent backgrounds */
+.mat-mdc-select-panel, 
+.mat-select-panel,
+.mat-mdc-option,
+.mat-option,
+.cdk-overlay-pane {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.mat-mdc-option:hover, 
+.mat-option:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.mat-mdc-option.mat-mdc-option-active,
+.mat-option.mat-active {
+  background-color: #e2e8f0 !important;
+}
+
+/* Validation styling: Turn input border and label red when required fields are invalid/touched */
+.form-group:has(.form-control.ng-touched.ng-invalid) {
+  label {
+    color: #b91c1c !important;
+  }
+}
+
+.form-control.ng-touched.ng-invalid {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+  background-color: #fffafc !important;
+}
+
+/* Set validation errors and mat-error colors to red across the application */
+mat-error, .mat-mdc-form-field-error, .mat-form-field-error, .error-msg {
+  color: #dc2626 !important;
+}
+
