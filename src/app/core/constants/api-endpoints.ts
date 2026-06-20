@@ -7,7 +7,8 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: environment.apiUrl + '/api/Auth/login',
     REGISTER_INSTITUTE: environment.apiUrl + '/api/Auth/register-institute',
-    CREATE_USER: environment.apiUrl + '/api/Auth/create-user'
+    CREATE_USER: environment.apiUrl + '/api/Auth/create-user',
+    ME: environment.apiUrl + '/api/Auth/me'
   },
   ADMIN: {
     ATTENDANCE: environment.apiUrl + '/api/admin/Attendance/sessions',
@@ -28,7 +29,8 @@ export const API_ENDPOINTS = {
     SUBJECTS: environment.apiUrl + '/api/admin/Subjects',
     VACANCIES: environment.apiUrl + '/api/admin/Vacancies',
     STAFF: environment.apiUrl + '/api/staff',
-    TEACHERS: environment.apiUrl + '/api/teachers'
+    TEACHERS: environment.apiUrl + '/api/teachers',
+    STUDENT_PROFILE: environment.apiUrl + '/api/students'
   },
   TEACHER: {
     ATTENDANCE: environment.apiUrl + '/api/teacher/TeacherAttendance/sessions',
@@ -43,6 +45,7 @@ export const API_ENDPOINTS = {
     ATTENDANCE: environment.apiUrl + '/api/student/portal/attendance',
     RESULTS: environment.apiUrl + '/api/student/portal/results',
     VACANCIES: environment.apiUrl + '/api/student/portal/vacancies',
-    PORTAL: environment.apiUrl + '/api/student/portal'
+    PORTAL: environment.apiUrl + '/api/student/portal',
+    MY_PROFILE: environment.apiUrl + '/api/students/my-profile'
   }
 };

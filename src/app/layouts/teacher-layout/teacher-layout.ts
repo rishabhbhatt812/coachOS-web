@@ -17,6 +17,7 @@ export class TeacherLayout implements OnInit {
   private http = inject(HttpClient);
   
   user$ = this.authFacade.currentUser$;
+  tenant$ = this.authFacade.currentTenant$;
   sidebarOpen = false;
   
   notifications: any[] = [];

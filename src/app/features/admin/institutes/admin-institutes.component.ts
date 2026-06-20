@@ -40,6 +40,8 @@ export class AdminInstitutesComponent implements OnInit {
   instituteForm!: FormGroup;
   currentStep = 1;
   subjectsList: string[] = [];
+  selectedLogoFile: File | null = null;
+  logoError: string | null = null;
 
   columns: TableColumn[] = [
     { key: 'instituteCode', header: 'Code' },
@@ -228,6 +230,8 @@ export class AdminInstitutesComponent implements OnInit {
     if (!this.showAddForm) {
       this.currentStep = 1;
       this.subjectsList = [];
+      this.selectedLogoFile = null;
+      this.logoError = null;
       this.initForm();
     }
   }
@@ -315,17 +319,58 @@ export class AdminInstitutesComponent implements OnInit {
     });
   }
 
+  onLogoFileSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        this.logoError = 'Invalid image type. Please select a JPG, PNG, or WEBP image.';
+        this.selectedLogoFile = null;
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        this.logoError = 'File size too large. Maximum size is 2MB.';
+        this.selectedLogoFile = null;
+        return;
+      }
+      this.logoError = null;
+      this.selectedLogoFile = file;
+    }
+  }
+
   onSubmit() {
+    if (this.logoError) {
+      this.snackBar.open('Please fix logo validation errors before submitting.', 'Dismiss', { duration: 3000 });
+      return;
+    }
+
     if (this.instituteForm.valid) {
       this.isLoading = true;
       
-      const payload = {
-        ...this.instituteForm.value,
-        subjectNames: this.subjectsList,
-        expiryDate: new Date(this.instituteForm.value.expiryDate).toISOString()
-      };
+      const formData = new FormData();
+      const formValue = this.instituteForm.value;
 
-      this.http.post<any>(API_ENDPOINTS.AUTH.REGISTER_INSTITUTE, payload).subscribe({
+      Object.keys(formValue).forEach(key => {
+        if (key !== 'logo' && formValue[key] !== null && formValue[key] !== undefined) {
+          if (key === 'expiryDate') {
+            formData.append('ExpiryDate', new Date(formValue[key]).toISOString());
+          } else {
+            formData.append(key, formValue[key]);
+          }
+        }
+      });
+
+      if (this.selectedLogoFile) {
+        formData.append('LogoFile', this.selectedLogoFile);
+      }
+
+      if (this.subjectsList && this.subjectsList.length > 0) {
+        this.subjectsList.forEach(subject => {
+          formData.append('SubjectNames', subject);
+        });
+      }
+
+      this.http.post<any>(API_ENDPOINTS.AUTH.REGISTER_INSTITUTE, formData).subscribe({
         next: (res) => {
           this.snackBar.open('Coaching Center and Admin User registered successfully!', 'Dismiss', {
             duration: 3000,

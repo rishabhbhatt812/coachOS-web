@@ -17,6 +17,7 @@ export class AdminLayoutComponent implements OnInit {
   private http = inject(HttpClient);
   
   user$ = this.authFacade.currentUser$;
+  tenant$ = this.authFacade.currentTenant$;
   sidebarOpen = false;
   
   // Tenant switcher state
@@ -81,13 +82,72 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   showModule(moduleName: string): boolean {
-    if (moduleName.toUpperCase() === 'ATTENDANCE') {
-      return false;
-    }
     if (!this.isGlobalAdmin) {
       return this.hasModuleAccess(moduleName);
     }
     return this.selectedInstituteId !== 'system_global' && this.hasModuleAccess(moduleName);
+  }
+
+  get menuItems() {
+    const user = this.authFacade.currentUserValue;
+    if (!user) return [];
+
+    const items: Array<{ label: string; route: string; icon: string }> = [];
+
+    if (user.role === 'ADMIN') {
+      items.push({ label: 'Dashboard', route: '/admin/dashboard', icon: 'dashboard' });
+
+      if (this.showInstituteSection()) {
+        items.push({ label: 'Students', route: '/admin/students', icon: 'students' });
+        items.push({ label: 'Teachers', route: '/admin/teachers', icon: 'teachers' });
+      }
+
+      if (this.showInstituteSection() && this.hasModuleAccess('STAFF')) {
+        items.push({ label: 'Staff Management', route: '/admin/staff', icon: 'staff' });
+      }
+
+      if (this.showModule('LEARNING')) {
+        items.push({ label: 'Courses', route: '/admin/courses', icon: 'courses' });
+        items.push({ label: 'Batches', route: '/admin/batches', icon: 'batches' });
+      }
+
+      if (this.showInstituteSection() && this.hasModuleAccess('BRANCHES')) {
+        items.push({ label: 'Branches', route: '/admin/branches', icon: 'branches' });
+      }
+
+      if (this.showModule('FEES')) {
+        items.push({ label: 'Fee Management', route: '/admin/fees', icon: 'fees' });
+      }
+
+      if (this.showModule('CRM')) {
+        items.push({ label: 'CRM / Leads', route: '/admin/crm', icon: 'crm' });
+      }
+
+      if (this.showModule('ATTENDANCE')) {
+        items.push({ label: 'Attendance', route: '/admin/attendance', icon: 'attendance' });
+      }
+
+      if (this.showModule('COMMUNICATION')) {
+        items.push({ label: 'Notices', route: '/admin/notices', icon: 'notices' });
+      }
+
+      if (this.isGlobalAdmin) {
+        items.push({ label: 'Coaching Centers', route: '/admin/institutes', icon: 'institutes' });
+        items.push({ label: 'Module Access', route: '/super-admin/organization-modules', icon: 'module-access' });
+      }
+    } else if (user.role === 'RECEPTIONIST') {
+      items.push({ label: 'Dashboard', route: '/receptionist/dashboard', icon: 'dashboard' });
+
+      if (this.hasModuleAccess('CRM')) {
+        items.push({ label: 'CRM / Leads', route: '/receptionist/crm', icon: 'crm' });
+      }
+
+      if (this.hasModuleAccess('COMMUNICATION')) {
+        items.push({ label: 'Notices', route: '/receptionist/notices', icon: 'notices' });
+      }
+    }
+
+    return items;
   }
 
   logout(): void {

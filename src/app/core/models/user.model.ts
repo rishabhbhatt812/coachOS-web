@@ -8,6 +8,8 @@ export interface User {
   avatarUrl?: string;
   tenantId: string;
   rawRole?: string;
+  instituteName?: string;
+  branchName?: string;
 }
 
 export interface Tenant {

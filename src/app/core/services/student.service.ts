@@ -50,7 +50,7 @@ export class StudentService {
   }
 
   getProfile(): Observable<any> {
-    return this.http.get<any>(API_ENDPOINTS.STUDENT.PORTAL + '/profile');
+    return this.http.get<any>(API_ENDPOINTS.STUDENT.MY_PROFILE);
   }
 
   uploadProfilePicture(formData: FormData): Observable<any> {

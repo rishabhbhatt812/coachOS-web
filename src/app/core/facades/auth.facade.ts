@@ -84,29 +84,74 @@ export class AuthFacade {
       const user: User = { id, name, email, role, tenantId, rawRole: String(rawRole) };
       this.currentUserSubject.next(user);
 
-      // Fetch dynamic active modules from AuthController
-      this.http.get<any[]>(`${environment.apiUrl}/api/auth/my-enabled-modules`).subscribe({
-        next: (modules) => {
-          const activeModuleCodes = (modules || []).map(m => m.moduleCode.toUpperCase());
-          const tenant: Tenant = {
-            id: tenantId,
-            name: 'My Institute',
-            activeModules: activeModuleCodes
-          };
-          this.currentTenantSubject.next(tenant);
-          this.enabledModulesSubject.next(modules || []);
+      // Call /api/auth/me to get institute name, logoUrl, profilePhotoUrl
+      this.authService.getCurrentUser().subscribe({
+        next: (profileRes) => {
+          const profile = profileRes?.data || profileRes;
+          if (profile) {
+            // Update user details
+            const updatedUser: User = {
+              ...user,
+              name: profile.fullName || user.name,
+              email: profile.email || user.email,
+              avatarUrl: profile.profilePhotoUrl,
+              instituteName: profile.instituteName,
+              branchName: profile.branchName
+            };
+            this.currentUserSubject.next(updatedUser);
+
+            // Fetch dynamic active modules from AuthController
+            this.http.get<any[]>(`${environment.apiUrl}/api/auth/my-enabled-modules`).subscribe({
+              next: (modules) => {
+                const activeModuleCodes = (modules || []).map(m => m.moduleCode.toUpperCase());
+                const tenant: Tenant = {
+                  id: String(profile.instituteId || tenantId),
+                  name: profile.instituteName || 'My Institute',
+                  logoUrl: profile.instituteLogoUrl,
+                  activeModules: activeModuleCodes
+                };
+                this.currentTenantSubject.next(tenant);
+                this.enabledModulesSubject.next(modules || []);
+              },
+              error: (err) => {
+                console.error('Failed to fetch active modules', err);
+                const fallbackCodes = ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL'];
+                const tenant: Tenant = {
+                  id: String(profile.instituteId || tenantId),
+                  name: profile.instituteName || 'My Institute',
+                  logoUrl: profile.instituteLogoUrl,
+                  activeModules: fallbackCodes
+                };
+                this.currentTenantSubject.next(tenant);
+                this.enabledModulesSubject.next([]);
+              }
+            });
+          }
         },
         error: (err) => {
-          console.error('Failed to fetch active modules', err);
-          // Fallback to all enabled
-          const fallbackCodes = ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL'];
-          const tenant: Tenant = {
-            id: tenantId,
-            name: 'My Institute',
-            activeModules: fallbackCodes
-          };
-          this.currentTenantSubject.next(tenant);
-          this.enabledModulesSubject.next([]);
+          console.error('Failed to fetch profile', err);
+          // Fallback module fetching if profile fails
+          this.http.get<any[]>(`${environment.apiUrl}/api/auth/my-enabled-modules`).subscribe({
+            next: (modules) => {
+              const activeModuleCodes = (modules || []).map(m => m.moduleCode.toUpperCase());
+              const tenant: Tenant = {
+                id: tenantId,
+                name: 'My Institute',
+                activeModules: activeModuleCodes
+              };
+              this.currentTenantSubject.next(tenant);
+              this.enabledModulesSubject.next(modules || []);
+            },
+            error: (modulesErr) => {
+              const fallbackCodes = ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL'];
+              const tenant: Tenant = {
+                id: tenantId,
+                name: 'My Institute',
+                activeModules: fallbackCodes
+              };
+              this.currentTenantSubject.next(tenant);
+            }
+          });
         }
       });
 

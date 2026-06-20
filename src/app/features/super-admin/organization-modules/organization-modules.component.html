@@ -1,0 +1,144 @@
+<div class="super-admin-container">
+  <app-page-header 
+    title="Organization Module Management" 
+    subtitle="Configure active modules and feature toggles for Coaching Centers (Organizations)">
+  </app-page-header>
+
+  <!-- Main Glassmorphic Wrapper -->
+  <div class="glass-dashboard">
+    <!-- Section 1: Coaching Center Selection -->
+    <div class="selection-section">
+      <label class="section-label">Select Coaching Center</label>
+      <div class="search-select-wrapper">
+        <div class="search-input-container">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            (input)="filterInstitutes()" 
+            (focus)="toggleDropdown(true)" 
+            (blur)="toggleDropdown(false)"
+            placeholder="Search by center name or code..." 
+            class="search-input" />
+          <span class="loading-indicator" *ngIf="isLoadingInstitutes">
+            <span class="spinner"></span>
+          </span>
+        </div>
+
+        <!-- Custom Dropdown List -->
+        <div class="dropdown-list" *ngIf="showDropdown && filteredInstitutes.length > 0">
+          <div 
+            class="dropdown-item" 
+            *ngFor="let inst of filteredInstitutes" 
+            (mousedown)="selectInstitute(inst)">
+            <div class="inst-details">
+              <span class="inst-name">{{ inst.name }}</span>
+              <span class="inst-meta">{{ inst.instituteCode }} • {{ inst.city }}, {{ inst.state }}</span>
+            </div>
+            <span class="plan-badge" [class.trial]="inst.isTrial">{{ inst.planName }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Modules State -->
+    <div class="loading-modules-container" *ngIf="isLoadingModules">
+      <div class="spinner-large"></div>
+      <p>Fetching module configurations...</p>
+    </div>
+
+    <!-- Active State: No Organization Selected -->
+    <div class="empty-state" *ngIf="!selectedInstitute && !isLoadingModules">
+      <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+      <h3>No Coaching Center Selected</h3>
+      <p>Search and select an organization above to view and customize their enabled features.</p>
+    </div>
+
+    <!-- Section 2: Checkbox Grid grouping parent-child modules -->
+    <div class="modules-config-container" *ngIf="selectedInstitute && !isLoadingModules">
+      <div class="config-header">
+        <div class="config-title">
+          <h3>Modules for {{ selectedInstitute.name }}</h3>
+          <span class="org-code-badge">{{ selectedInstitute.instituteCode }}</span>
+        </div>
+        <p class="config-subtitle">Toggle checkboxes to enable or disable features. Disabling a parent module automatically disables all its submodules.</p>
+      </div>
+
+      <div class="modules-grid">
+        <!-- Loop over Grouped Modules -->
+        <div class="module-card glass-card" *ngFor="let group of groupedModules">
+          <!-- Parent Module Header -->
+          <div class="parent-module-header">
+            <label class="checkbox-container parent-checkbox">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="group.parent.isEnabled" 
+                (change)="onParentToggle(group)" />
+              <span class="custom-checkmark"></span>
+              
+              <!-- Module Details -->
+              <div class="module-info">
+                <span class="module-title-wrapper">
+                  <span class="module-title">{{ group.parent.name }}</span>
+                  <span class="code-tag">{{ group.parent.code }}</span>
+                </span>
+                <span class="module-desc" *ngIf="group.parent.description">{{ group.parent.description }}</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Child Modules Container -->
+          <div class="child-modules-container" *ngIf="group.children.length > 0" [class.disabled-parent]="!group.parent.isEnabled">
+            <div class="child-grid">
+              <div class="child-card" *ngFor="let child of group.children">
+                <label class="checkbox-container child-checkbox">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="child.isEnabled" 
+                    [disabled]="!group.parent.isEnabled"
+                    (change)="onChildToggle(group, child)" />
+                  <span class="custom-checkmark"></span>
+                  <div class="module-info">
+                    <span class="child-title-wrapper">
+                      <span class="child-title">{{ child.name }}</span>
+                      <span class="code-tag small">{{ child.code }}</span>
+                    </span>
+                    <span class="module-desc" *ngIf="child.description">{{ child.description }}</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Action Controls -->
+      <div class="action-footer glass-footer">
+        <div class="remarks-field">
+          <label for="remarks">Audit Remarks / Reason for change</label>
+          <input 
+            type="text" 
+            id="remarks" 
+            [(ngModel)]="remarks" 
+            placeholder="e.g., Upgraded subscription, CRM enabled for admissions campaign..." 
+            class="remarks-input" />
+        </div>
+        <div class="action-buttons">
+          <button 
+            class="btn btn-secondary" 
+            [disabled]="isSaving" 
+            (click)="loadModules(selectedInstitute.id)">
+            Reset Changes
+          </button>
+          <button 
+            class="btn btn-primary" 
+            [disabled]="isSaving" 
+            (click)="saveConfiguration()">
+            <span class="btn-spinner" *ngIf="isSaving"></span>
+            {{ isSaving ? 'Saving Settings...' : 'Save Configuration' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

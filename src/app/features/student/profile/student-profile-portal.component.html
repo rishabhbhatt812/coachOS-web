@@ -19,13 +19,21 @@
       <div class="profile-title-section">
         <h1 class="profile-name">{{profileData.fullName}}</h1>
         <p class="profile-meta">
-          <span class="meta-item code"><mat-icon>badge</mat-icon> {{profileData.studentCode}}</span>
+          <span class="meta-item code" title="Student Code"><mat-icon>badge</mat-icon> {{profileData.studentCode}}</span>
           <span class="meta-divider">|</span>
-          <span class="meta-item"><mat-icon>phone</mat-icon> {{profileData.mobile}}</span>
+          <span class="meta-item" title="Mobile Number"><mat-icon>phone</mat-icon> {{profileData.mobileNumber}}</span>
+          <span class="meta-divider">|</span>
+          <span class="meta-item" title="Email"><mat-icon>email</mat-icon> {{profileData.email}}</span>
         </p>
-        <div class="badge-row">
+        <div class="badge-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <span class="profile-status-badge active">
             Active Student
+          </span>
+          <span class="profile-status-badge" [ngClass]="profileData.feeStatus === 'Paid' ? 'active' : 'inactive'" style="background: none; border: 1px solid currentColor;">
+            Fee: {{profileData.feeStatus}}
+          </span>
+          <span class="profile-status-badge" [style.background-color]="profileData.attendancePercentage >= 75 ? '#ecfdf5' : '#fef2f2'" [style.color]="profileData.attendancePercentage >= 75 ? '#047857' : '#b91c1c'">
+            Attendance: {{profileData.attendancePercentage}}%
           </span>
         </div>
       </div>
@@ -49,6 +57,10 @@
                 <span class="detail-value">{{profileData.email || 'N/A'}}</span>
               </li>
               <li>
+                <span class="detail-label">Mobile Number</span>
+                <span class="detail-value">{{profileData.mobileNumber || 'N/A'}}</span>
+              </li>
+              <li>
                 <span class="detail-label">Date of Birth</span>
                 <span class="detail-value">{{profileData.dateOfBirth || 'N/A'}}</span>
               </li>
@@ -67,17 +79,60 @@
             </ul>
           </div>
 
-          <div class="overview-column">
-            <h3 class="details-heading">Parents & Guardians</h3>
-            <div *ngFor="let p of profileData.parents" class="parent-card">
-              <div class="parent-relationship">{{p.relationshipType}}</div>
-              <div class="parent-info">
-                <span class="parent-name">{{p.fullName}}</span>
-                <span class="parent-mobile"><mat-icon>phone</mat-icon> {{p.mobile}}</span>
+          <div class="overview-column" style="display: flex; flex-direction: column; gap: 24px;">
+            <div>
+              <h3 class="details-heading">Parents & Guardians</h3>
+              <div *ngIf="profileData.parentName; else emptyParent" class="parent-card">
+                <div class="parent-relationship">Guardian</div>
+                <div class="parent-info">
+                  <span class="parent-name">{{profileData.parentName}}</span>
+                  <span class="parent-mobile"><mat-icon>phone</mat-icon> {{profileData.parentMobileNumber || 'N/A'}}</span>
+                </div>
               </div>
+              <ng-template #emptyParent>
+                <div class="empty-state">
+                  No parent details recorded.
+                </div>
+              </ng-template>
             </div>
-            <div *ngIf="!profileData.parents || profileData.parents.length === 0" class="empty-state">
-              No parent details recorded.
+
+            <div>
+              <h3 class="details-heading">Academic & Enrolment</h3>
+              <ul class="details-list">
+                <li>
+                  <span class="detail-label">Institute</span>
+                  <span class="detail-value" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <img *ngIf="profileData.instituteLogoUrl" [src]="profileData.instituteLogoUrl" alt="Logo" style="height: 18px; border-radius: 2px; background: white;" />
+                    {{profileData.instituteName}}
+                  </span>
+                </li>
+                <li>
+                  <span class="detail-label">Branch</span>
+                  <span class="detail-value">{{profileData.branchName || 'N/A'}}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Course</span>
+                  <span class="detail-value">{{profileData.courseName || 'N/A'}}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Batch</span>
+                  <span class="detail-value">{{profileData.batchName || 'N/A'}}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Attendance Summary</span>
+                  <span class="detail-value" [style.color]="profileData.attendancePercentage >= 75 ? '#10b981' : '#ef4444'" style="font-weight: 700;">
+                    {{profileData.attendancePercentage}}%
+                  </span>
+                </li>
+                <li>
+                  <span class="detail-label">Fee Status</span>
+                  <span class="detail-value">
+                    <span class="badge-status" [ngClass]="profileData.feeStatus === 'Paid' ? 'active' : 'inactive'">
+                      {{profileData.feeStatus}}
+                    </span>
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
 

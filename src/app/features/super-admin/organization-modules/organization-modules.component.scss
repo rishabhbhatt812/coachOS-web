@@ -1,0 +1,508 @@
+.super-admin-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// Glassmorphic Main Dashboard
+.glass-dashboard {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+// Section: Coaching Center Selector
+.selection-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 500px;
+  position: relative;
+
+  .section-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+}
+
+.search-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    background: white;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+    }
+  }
+
+  .loading-indicator {
+    position: absolute;
+    right: 14px;
+  }
+}
+
+// Spinner for input loading state
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(168, 85, 247, 0.15);
+  border-top-color: #a855f7;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Search Dropdown List
+.dropdown-list {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(168, 85, 247, 0.04);
+  }
+
+  .inst-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .inst-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .inst-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  }
+
+  .plan-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+    background: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.2);
+
+    &.trial {
+      background: rgba(249, 115, 22, 0.1);
+      color: #f97316;
+      border-color: rgba(249, 115, 22, 0.2);
+    }
+  }
+}
+
+// Loading modules state
+.loading-modules-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 16px;
+  color: var(--text-muted);
+
+  .spinner-large {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(168, 85, 247, 0.1);
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--text-muted);
+
+  .empty-icon {
+    color: rgba(168, 85, 247, 0.25);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    max-width: 400px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+// Configured Modules Section
+.modules-config-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: fadeIn 0.2s ease-out;
+
+  .config-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .config-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+      }
+
+      .org-code-badge {
+        font-size: 11px;
+        font-weight: 600;
+        background: #f1f5f9;
+        color: #64748b;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+      }
+    }
+
+    .config-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+  }
+}
+
+// Glass Card Modules Grid
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.glass-card {
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.parent-module-header {
+  padding: 18px 20px;
+  background: rgba(249, 250, 251, 0.6);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.child-modules-container {
+  padding: 20px;
+  background: white;
+  transition: all 0.2s ease;
+
+  &.disabled-parent {
+    opacity: 0.55;
+    pointer-events: none;
+    background: #f8fafc;
+  }
+
+  .child-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .child-card {
+    padding-left: 8px;
+  }
+}
+
+// Custom Checkbox Implementation
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+
+  .custom-checkmark {
+    position: relative;
+    top: 2px;
+    height: 20px;
+    width: 20px;
+    background-color: white;
+    border: 2px solid #cbd5e1;
+    border-radius: 5px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+
+    &::after {
+      content: "";
+      position: absolute;
+      display: none;
+      left: 6px;
+      top: 2px;
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+  }
+
+  &:hover input ~ .custom-checkmark {
+    border-color: #a855f7;
+  }
+
+  input:checked ~ .custom-checkmark {
+    background-color: #a855f7;
+    border-color: #a855f7;
+    box-shadow: 0 2px 6px rgba(168, 85, 247, 0.35);
+
+    &::after {
+      display: block;
+    }
+  }
+
+  .module-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .module-title-wrapper, .child-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .module-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .child-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .code-tag {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(168, 85, 247, 0.08);
+      color: #7e22ce;
+      padding: 1px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &.small {
+        font-size: 8px;
+      }
+    }
+
+    .module-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+  }
+}
+
+// Action Footer with Glass Effects
+.glass-footer {
+  margin-top: 12px;
+  padding: 24px;
+  background: rgba(249, 250, 251, 0.75);
+  border-top: 1px solid var(--border-light);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.remarks-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .remarks-input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: white;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+// Button styles matching system design
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+
+  &:hover:not(:disabled) {
+    background: #e2e8f0;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 6px 16px rgba(168, 85, 247, 0.3);
+    filter: brightness(1.05);
+  }
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
