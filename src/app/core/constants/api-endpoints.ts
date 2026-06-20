@@ -33,7 +33,9 @@ export const API_ENDPOINTS = {
     STUDENT_PROFILE: environment.apiUrl + '/api/students'
   },
   TEACHER: {
+    BATCHES: environment.apiUrl + '/api/teacher/batches',
     ATTENDANCE: environment.apiUrl + '/api/teacher/TeacherAttendance/sessions',
+    SAVE_ATTENDANCE: environment.apiUrl + '/api/teacher/TeacherAttendance/save',
     NOTES: environment.apiUrl + '/api/teacher/notes',
     TESTS: environment.apiUrl + '/api/teacher/tests'
   },

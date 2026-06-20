@@ -115,6 +115,9 @@ export class AuthFacade {
               },
               error: (err) => {
                 console.error('Failed to fetch active modules', err);
+                if (err.status === 401) {
+                  return;
+                }
                 const fallbackCodes = ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL'];
                 const tenant: Tenant = {
                   id: String(profile.instituteId || tenantId),
@@ -130,6 +133,9 @@ export class AuthFacade {
         },
         error: (err) => {
           console.error('Failed to fetch profile', err);
+          if (err.status === 401) {
+            return;
+          }
           // Fallback module fetching if profile fails
           this.http.get<any[]>(`${environment.apiUrl}/api/auth/my-enabled-modules`).subscribe({
             next: (modules) => {
@@ -143,6 +149,9 @@ export class AuthFacade {
               this.enabledModulesSubject.next(modules || []);
             },
             error: (modulesErr) => {
+              if (modulesErr.status === 401) {
+                return;
+              }
               const fallbackCodes = ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL'];
               const tenant: Tenant = {
                 id: tenantId,
@@ -161,20 +170,37 @@ export class AuthFacade {
     }
   }
 
+  clearAuthStateAndRedirect() {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('active_institute_id');
+    this.currentUserSubject.next(null);
+    this.currentTenantSubject.next(null);
+    this.enabledModulesSubject.next([]);
+    this.router.navigate(['/auth/login']);
+  }
+
   private checkInitialAuth() {
     const token = localStorage.getItem('auth_token');
     if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp && decoded.exp < currentTime) {
+          this.clearAuthStateAndRedirect();
+          return;
+        }
+      } catch (e) {
+        console.error('Invalid token format on startup', e);
+        this.clearAuthStateAndRedirect();
+        return;
+      }
       this.handleToken(token);
     }
   }
 
   logout(): void {
     this.authService.logout().subscribe(() => {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('active_institute_id');
-      this.currentUserSubject.next(null);
-      this.currentTenantSubject.next(null);
-      this.router.navigate(['/auth/login']);
+      this.clearAuthStateAndRedirect();
     });
   }
 

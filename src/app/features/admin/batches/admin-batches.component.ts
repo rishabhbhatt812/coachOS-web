@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import { CreateBatchRequest, UpdateBatchRequest } from '../../../core/models/api-schemas';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../core/constants/api-endpoints';
@@ -26,7 +27,8 @@ import { environment } from '../../../core/constants/api-endpoints';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatIconModule
   ],
   templateUrl: './admin-batches.component.html',
   styleUrl: './admin-batches.component.scss'
@@ -48,6 +50,26 @@ export class AdminBatchesComponent implements OnInit {
   teachers: any[] = [];
   subjects: any[] = [];
   branches: any[] = [];
+  subjectTeacherMap: { [subjectId: string]: string | null } = {};
+
+  getSelectedSubjects(): string[] {
+    return this.batchForm?.get('subjectIds')?.value || [];
+  }
+
+  getSubjectName(subId: string): string {
+    const sub = this.subjects.find(s => s.id === subId);
+    return sub ? sub.name : 'Unknown Subject';
+  }
+
+  getTeachersForSubject(subId: string): any[] {
+    return this.teachers.filter(t => 
+      t.subjects && t.subjects.some((s: any) => s.subjectId === subId)
+    );
+  }
+
+  onTeacherChange(subId: string, teacherId: string | null) {
+    this.subjectTeacherMap[subId] = teacherId;
+  }
 
   columns: TableColumn[] = [
     { key: 'batchCode', header: 'Code' },
@@ -137,19 +159,26 @@ export class AdminBatchesComponent implements OnInit {
     if (!this.showAddForm) {
       this.editingId = null;
       this.batchForm.reset({ defaultFee: 0, courseId: '', branchId: '', batchStatus: 'Upcoming', capacity: 40 });
+      this.subjectTeacherMap = {};
     }
   }
 
   onSubmit() {
     if (this.batchForm.valid) {
       const val = this.batchForm.value;
+      const selectedSubs = val.subjectIds || [];
+      const mappings = selectedSubs.map((subId: string) => ({
+        subjectId: subId,
+        teacherUserId: this.subjectTeacherMap[subId] || undefined
+      }));
+
       const req: any = {
         batchCode: val.batchCode,
         name: val.name,
         courseId: val.courseId,
         branchId: val.branchId,
-        subjectIds: val.subjectIds || [],
-        teacherUserId: val.teacherUserId || undefined,
+        subjectIds: selectedSubs,
+        teacherUserId: mappings.length > 0 ? (mappings[0].teacherUserId || undefined) : undefined,
         defaultFee: val.defaultFee,
         startTime: val.startTime || undefined,
         endTime: val.endTime || undefined,
@@ -157,7 +186,8 @@ export class AdminBatchesComponent implements OnInit {
         endDate: val.endDate || undefined,
         capacity: val.capacity,
         roomNumber: val.roomNumber || undefined,
-        batchStatus: val.batchStatus
+        batchStatus: val.batchStatus,
+        subjectTeacherMappings: mappings
       };
 
       if (this.editingId) {
@@ -180,9 +210,32 @@ export class AdminBatchesComponent implements OnInit {
     }
   }
 
+  formatDateForInput(dateStr: any): string {
+    if (!dateStr) return '';
+    if (typeof dateStr === 'string') {
+      return dateStr.substring(0, 10);
+    }
+    return '';
+  }
+
+  formatTimeForInput(timeStr: any): string {
+    if (!timeStr) return '';
+    if (typeof timeStr === 'string') {
+      return timeStr.substring(0, 5); // HH:mm
+    }
+    return '';
+  }
+
   onActionClicked(event: any) {
     if (event.action === 'edit') {
       this.editingId = event.row.id;
+      this.subjectTeacherMap = {};
+      if (event.row.subjectTeacherMappings && Array.isArray(event.row.subjectTeacherMappings)) {
+        event.row.subjectTeacherMappings.forEach((m: any) => {
+          this.subjectTeacherMap[m.subjectId] = m.teacherUserId;
+        });
+      }
+
       this.batchForm.patchValue({
         batchCode: event.row.batchCode,
         name: event.row.name,
@@ -190,14 +243,14 @@ export class AdminBatchesComponent implements OnInit {
         branchId: event.row.branchId,
         subjectIds: event.row.subjectIds && event.row.subjectIds.length ? event.row.subjectIds : (event.row.subjectId ? [event.row.subjectId] : []),
         teacherUserId: event.row.teacherUserId,
-        defaultFee: event.row.defaultFee,
-        startTime: event.row.startTime,
-        endTime: event.row.endTime,
-        startDate: event.row.startDate,
-        endDate: event.row.endDate,
-        capacity: event.row.capacity,
+        defaultFee: event.row.defaultFee ?? 0,
+        startTime: this.formatTimeForInput(event.row.startTime),
+        endTime: this.formatTimeForInput(event.row.endTime),
+        startDate: this.formatDateForInput(event.row.startDate),
+        endDate: this.formatDateForInput(event.row.endDate),
+        capacity: event.row.capacity ?? 40,
         roomNumber: event.row.roomNumber,
-        batchStatus: event.row.batchStatus
+        batchStatus: event.row.batchStatus ?? 'Upcoming'
       });
       this.showAddForm = true;
     } else if (event.action === 'delete') {

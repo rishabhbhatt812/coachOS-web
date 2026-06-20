@@ -1,13 +1,21 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, Injector } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { catchError, throwError } from 'rxjs';
+import { AuthFacade } from '../facades/auth.facade';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const snackBar = inject(MatSnackBar);
+  const injector = inject(Injector);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      if (error.status === 401 && !req.url.endsWith('/api/auth/login')) {
+        const authFacade = injector.get(AuthFacade);
+        authFacade.clearAuthStateAndRedirect();
+        return throwError(() => error);
+      }
+
       let errorMessage = 'An unexpected error occurred.';
 
       if (error.error) {
