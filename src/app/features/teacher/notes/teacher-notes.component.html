@@ -10,36 +10,41 @@
   </div>
 
   <!-- Upload Form -->
-  <mat-card class="create-form-card mb-8" *ngIf="showUploadForm">
-    <mat-card-header>
-      <mat-card-title>Upload Study Material</mat-card-title>
-      <button mat-icon-button class="close-btn ml-auto" (click)="toggleUploadForm()">
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-card-header>
+  <div class="form-card card mb-8" *ngIf="showUploadForm">
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          Upload Study Material & Notes
+        </h3>
+        <p>Share PDF lecture notes, formula sheets, sample questions and presentation decks</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleUploadForm()">✕</button>
+    </div>
     
-    <mat-card-content class="mt-4">
+    <div class="form-card-body">
       <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Title</mat-label>
-          <input matInput [(ngModel)]="newNote.title" placeholder="e.g. Chapter 1 Notes">
-        </mat-form-field>
+        <div class="form-group">
+          <label>Resource Title <span class="required-star">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="newNote.title" placeholder="e.g. Chapter 4: Thermodynamics Complete Revision Notes" />
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Batch</mat-label>
-          <mat-select [(ngModel)]="newNote.batchId">
-            <mat-option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div class="form-group">
+          <label>Target Batch <span class="required-star">*</span></label>
+          <select class="form-control" [(ngModel)]="newNote.batchId">
+            <option [ngValue]="undefined" disabled selected>Choose a batch</option>
+            <option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</option>
+          </select>
+        </div>
 
-        <mat-form-field appearance="outline" class="col-span-2">
-          <mat-label>Description (Optional)</mat-label>
-          <textarea matInput [(ngModel)]="newNote.description" rows="2"></textarea>
-        </mat-form-field>
+        <div class="form-group full-width">
+          <label>Resource Description (Optional)</label>
+          <textarea class="form-control" [(ngModel)]="newNote.description" rows="3" placeholder="Brief summary of what this document covers, author notes, or recommended reading order..."></textarea>
+        </div>
       </div>
 
-      <div class="upload-section mt-4">
-        <h4 class="text-gray-700 font-medium mb-2">Select File (Max 10MB)</h4>
+      <div class="upload-section mt-6">
+        <label class="font-bold text-gray-700 mb-2 block text-sm">Select Document File (Max 10MB)</label>
         <app-file-upload 
           [maxSizeBytes]="10 * 1024 * 1024"
           [allowedTypes]="['.pdf', '.docx', '.pptx', '.zip']"
@@ -47,12 +52,14 @@
         </app-file-upload>
       </div>
 
-      <div class="form-actions mt-6 flex justify-end gap-4">
-        <button mat-button (click)="toggleUploadForm()">Cancel</button>
-        <button mat-flat-button color="primary" (click)="submitNote()">Upload</button>
+      <div class="form-actions flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+        <button type="button" class="btn btn-light" (click)="toggleUploadForm()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitNote()">
+          ✓ Upload & Distribute Material
+        </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 
   <div class="table-card card shadow-sm rounded-xl border border-gray-100 overflow-hidden" *ngIf="!showUploadForm">
     <div *ngIf="isLoading$ | async" class="loading-indicator p-8 text-center text-gray-500">

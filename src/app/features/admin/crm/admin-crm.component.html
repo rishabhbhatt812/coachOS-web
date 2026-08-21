@@ -1,5 +1,7 @@
 <app-page-header title="CRM & Enquiries" subtitle="Track and manage coaching leads and registrations">
   <button class="btn btn-primary" (click)="toggleForm()">
+    <svg *ngIf="!showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <svg *ngIf="showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     {{ showAddForm ? 'Close Form' : '+ New Enquiry' }}
   </button>
 </app-page-header>
@@ -7,77 +9,104 @@
 <div class="crm-container">
   <!-- Collapsible Enquiry Form -->
   <div class="form-card card" *ngIf="showAddForm">
-    <div class="card-header">
-      <h3>{{ editingId ? 'Edit Enquiry' : 'Add New Lead / Enquiry' }}</h3>
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          {{ editingId ? 'Edit Enquiry / Lead' : 'Register New Lead / Enquiry' }}
+        </h3>
+        <p>Record prospective student inquiries, target courses, source and status</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleForm()">✕</button>
     </div>
     
-    <form [formGroup]="crmForm" (ngSubmit)="onSubmit()" class="crm-form">
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Lead Name</mat-label>
-          <input matInput formControlName="fullName" placeholder="e.g. John Doe" />
-          <mat-error *ngIf="crmForm.get('fullName')?.hasError('required')">Name is required</mat-error>
-        </mat-form-field>
+    <div class="form-card-body">
+      <form [formGroup]="crmForm" (ngSubmit)="onSubmit()" class="crm-form">
+        <div class="form-grid">
+          <!-- Lead Name -->
+          <div class="form-group">
+            <label>Full Name <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="fullName" placeholder="e.g. Rahul Sharma" />
+            <span class="error-msg" *ngIf="crmForm.get('fullName')?.touched && crmForm.get('fullName')?.hasError('required')">
+              Name is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Mobile Number</mat-label>
-          <input matInput formControlName="mobile" placeholder="10-digit mobile" />
-          <mat-error *ngIf="crmForm.get('mobile')?.hasError('required')">Mobile is required</mat-error>
-          <mat-error *ngIf="crmForm.get('mobile')?.hasError('pattern')">Enter a valid 10-digit number</mat-error>
-        </mat-form-field>
+          <!-- Mobile Number -->
+          <div class="form-group">
+            <label>Mobile Number <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="mobile" placeholder="10-digit mobile number" />
+            <span class="error-msg" *ngIf="crmForm.get('mobile')?.touched && crmForm.get('mobile')?.hasError('required')">
+              Mobile number is required
+            </span>
+            <span class="error-msg" *ngIf="crmForm.get('mobile')?.touched && crmForm.get('mobile')?.hasError('pattern')">
+              Enter a valid 10-digit mobile number
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Email Address</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="john@example.com" />
-          <mat-error *ngIf="crmForm.get('email')?.hasError('required')">Email is required</mat-error>
-          <mat-error *ngIf="crmForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
-        </mat-form-field>
+          <!-- Email -->
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" class="form-control" formControlName="email" placeholder="e.g. rahul@example.com" />
+            <span class="error-msg" *ngIf="crmForm.get('email')?.touched && crmForm.get('email')?.hasError('email')">
+              Enter a valid email address
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Interested Course</mat-label>
-          <select matNativeControl formControlName="interestedCourseId">
-            <option value="" disabled selected>Choose a course</option>
-            <option *ngFor="let course of courses$ | async" [value]="course.id">
-              {{ course.name }}
-            </option>
-          </select>
-          <mat-error *ngIf="crmForm.get('interestedCourseId')?.hasError('required')">Please select a course</mat-error>
-        </mat-form-field>
+          <!-- Interested Course -->
+          <div class="form-group">
+            <label>Interested Course <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="interestedCourseId">
+              <option value="" disabled selected>Select course</option>
+              <option *ngFor="let course of courses$ | async" [value]="course.id">
+                {{ course.name }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="crmForm.get('interestedCourseId')?.touched && crmForm.get('interestedCourseId')?.hasError('required')">
+              Please select an interested course
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Previous School / College</mat-label>
-          <input matInput formControlName="previousSchoolOrCollege" placeholder="e.g. DPS School" />
-        </mat-form-field>
+          <!-- Previous School -->
+          <div class="form-group">
+            <label>Previous School / College</label>
+            <input type="text" class="form-control" formControlName="previousSchoolOrCollege" placeholder="e.g. DPS R.K. Puram" />
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Lead Source</mat-label>
-          <select matNativeControl formControlName="source">
-            <option value="Website">Website</option>
-            <option value="Referral">Referral</option>
-            <option value="SocialMedia">Social Media</option>
-            <option value="WalkIn">Walk In</option>
-          </select>
-          <mat-error *ngIf="crmForm.get('source')?.hasError('required')">Please select a source</mat-error>
-        </mat-form-field>
+          <!-- Lead Source -->
+          <div class="form-group">
+            <label>Lead Source <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="source">
+              <option value="Website">Website</option>
+              <option value="Referral">Referral</option>
+              <option value="SocialMedia">Social Media</option>
+              <option value="WalkIn">Direct Walk In</option>
+            </select>
+            <span class="error-msg" *ngIf="crmForm.get('source')?.touched && crmForm.get('source')?.hasError('required')">
+              Please select a source
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline" *ngIf="editingId">
-          <mat-label>Lead Status</mat-label>
-          <select matNativeControl formControlName="status">
-            <option value="Hot">Hot</option>
-            <option value="Warm">Warm</option>
-            <option value="Cold">Cold</option>
-            <option value="Converted">Converted</option>
-          </select>
-        </mat-form-field>
-      </div>
+          <!-- Lead Status (Edit) -->
+          <div class="form-group" *ngIf="editingId">
+            <label>Lead Status</label>
+            <select class="form-control" formControlName="status">
+              <option value="Hot">Hot Lead</option>
+              <option value="Warm">Warm Lead</option>
+              <option value="Cold">Cold Lead</option>
+              <option value="Converted">Converted</option>
+            </select>
+          </div>
+        </div>
 
-      <div class="form-actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="crmForm.invalid || (isLoading$ | async)">
-          {{ editingId ? 'Update Lead' : 'Add Lead' }}
-        </button>
-        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="crmForm.invalid || (isLoading$ | async)">
+            {{ editingId ? 'Update Lead' : 'Add Lead' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Enquiries Table -->

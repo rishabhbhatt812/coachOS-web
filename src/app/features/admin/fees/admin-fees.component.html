@@ -1,5 +1,7 @@
 <app-page-header title="Fees" subtitle="Manage student pricing, discounts, and payment tracking">
   <button class="btn btn-primary" (click)="toggleForm()">
+    <svg *ngIf="!showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <svg *ngIf="showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     {{ showAddForm ? 'Close Form' : '+ Create Fee Plan' }}
   </button>
 </app-page-header>
@@ -7,77 +9,102 @@
 <div class="fees-container">
   <!-- Collapsible Fee Plan Form -->
   <div class="form-card card" *ngIf="showAddForm">
-    <div class="card-header">
-      <h3>Create New Fee Plan</h3>
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          Create New Fee Plan
+        </h3>
+        <p>Set up student course billing structure, discount waivers and installment options</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleForm()">✕</button>
     </div>
     
-    <form [formGroup]="feeForm" (ngSubmit)="onSubmit()" class="fee-form">
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Select Student</mat-label>
-          <select matNativeControl formControlName="studentId">
-            <option value="" disabled selected>Choose a student</option>
-            <option *ngFor="let student of students$ | async" [value]="student.id">
-              {{ student.fullName }}
-            </option>
-          </select>
-          <mat-error *ngIf="feeForm.get('studentId')?.hasError('required')">Student selection is required</mat-error>
-        </mat-form-field>
+    <div class="form-card-body">
+      <form [formGroup]="feeForm" (ngSubmit)="onSubmit()" class="fee-form">
+        <div class="form-grid">
+          <!-- Student -->
+          <div class="form-group">
+            <label>Select Student <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="studentId">
+              <option value="" disabled selected>Choose a student</option>
+              <option *ngFor="let student of students$ | async" [value]="student.id">
+                {{ student.fullName }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="feeForm.get('studentId')?.touched && feeForm.get('studentId')?.hasError('required')">
+              Student selection is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Course</mat-label>
-          <select matNativeControl formControlName="courseId">
-            <option value="" disabled selected>Choose a course</option>
-            <option *ngFor="let course of courses$ | async" [value]="course.id">
-              {{ course.name }}
-            </option>
-          </select>
-          <mat-error *ngIf="feeForm.get('courseId')?.hasError('required')">Course selection is required</mat-error>
-        </mat-form-field>
+          <!-- Course -->
+          <div class="form-group">
+            <label>Select Course <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="courseId">
+              <option value="" disabled selected>Choose a course</option>
+              <option *ngFor="let course of courses$ | async" [value]="course.id">
+                {{ course.name }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="feeForm.get('courseId')?.touched && feeForm.get('courseId')?.hasError('required')">
+              Course selection is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Batch</mat-label>
-          <select matNativeControl formControlName="batchId">
-            <option value="" disabled selected>Choose a batch</option>
-            <option *ngFor="let batch of batches$ | async" [value]="batch.id">
-              {{ batch.name }}
-            </option>
-          </select>
-          <mat-error *ngIf="feeForm.get('batchId')?.hasError('required')">Batch selection is required</mat-error>
-        </mat-form-field>
+          <!-- Batch -->
+          <div class="form-group">
+            <label>Select Batch <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="batchId">
+              <option value="" disabled selected>Choose a batch</option>
+              <option *ngFor="let batch of batches$ | async" [value]="batch.id">
+                {{ batch.name }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="feeForm.get('batchId')?.touched && feeForm.get('batchId')?.hasError('required')">
+              Batch selection is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Total Fee (INR)</mat-label>
-          <input matInput type="number" formControlName="totalFee" placeholder="e.g. 25000" />
-          <mat-error *ngIf="feeForm.get('totalFee')?.hasError('required')">Total fee is required</mat-error>
-          <mat-error *ngIf="feeForm.get('totalFee')?.hasError('min')">Fee must be positive</mat-error>
-        </mat-form-field>
+          <!-- Total Fee -->
+          <div class="form-group">
+            <label>Total Fee (INR) <span class="required-star">*</span></label>
+            <input type="number" class="form-control" formControlName="totalFee" min="0" placeholder="e.g. 25000" />
+            <span class="error-msg" *ngIf="feeForm.get('totalFee')?.touched && feeForm.get('totalFee')?.hasError('required')">
+              Total fee is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Discount Amount (INR)</mat-label>
-          <input matInput type="number" formControlName="discountAmount" placeholder="e.g. 2000" />
-          <mat-error *ngIf="feeForm.get('discountAmount')?.hasError('required')">Discount amount is required</mat-error>
-          <mat-error *ngIf="feeForm.get('discountAmount')?.hasError('min')">Discount cannot be negative</mat-error>
-        </mat-form-field>
+          <!-- Discount Amount -->
+          <div class="form-group">
+            <label>Discount Amount (INR) <span class="required-star">*</span></label>
+            <input type="number" class="form-control" formControlName="discountAmount" min="0" placeholder="e.g. 2000" />
+            <span class="error-msg" *ngIf="feeForm.get('discountAmount')?.touched && feeForm.get('discountAmount')?.hasError('required')">
+              Discount amount is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Plan Type</mat-label>
-          <select matNativeControl formControlName="planType">
-            <option value="OneTime">One Time Payment</option>
-            <option value="Installments">Installments</option>
-            <option value="Monthly">Monthly Recurring</option>
-          </select>
-          <mat-error *ngIf="feeForm.get('planType')?.hasError('required')">Plan type selection is required</mat-error>
-        </mat-form-field>
-      </div>
+          <!-- Plan Type -->
+          <div class="form-group">
+            <label>Plan Type <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="planType">
+              <option value="OneTime">One Time Payment</option>
+              <option value="Installments">Installments</option>
+              <option value="Monthly">Monthly Recurring</option>
+            </select>
+            <span class="error-msg" *ngIf="feeForm.get('planType')?.touched && feeForm.get('planType')?.hasError('required')">
+              Plan type selection is required
+            </span>
+          </div>
+        </div>
 
-      <div class="form-actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="feeForm.invalid || (isLoading$ | async)">
-          Create Plan
-        </button>
-        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="feeForm.invalid || (isLoading$ | async)">
+            Create Plan
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Fee Plans List -->

@@ -1,137 +1,136 @@
 .wizard-container {
-  max-width: 900px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 24px;
-  min-height: calc(100vh - 120px);
+  padding: 10px 0 40px 0;
 }
 
-.wizard-title {
-  font-family: var(--font-heading);
-  font-size: 28px;
-  font-weight: 700;
+.wizard-header {
   margin-bottom: 24px;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-}
+  
+  .wizard-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+  }
 
-mat-stepper {
-  background: var(--bg-card);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: var(--border-radius-lg) !important;
-  box-shadow: var(--box-shadow);
-  padding: 24px;
-}
-
-.form-grid-layout {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 16px 0;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  .wizard-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
   }
 }
 
-.full-width-field {
-  grid-column: 1 / -1;
+.admission-stepper {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  padding: 24px;
+}
+
+.step-form {
+  padding: 20px 0 10px 0;
 }
 
 .step-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-light);
+  align-items: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
 
   &.justify-end {
     justify-content: flex-end;
   }
 
-  button[mat-raised-button] {
-    background: var(--primary-gradient) !important;
-    color: white !important;
-    padding: 12px 32px !important;
-    min-width: 200px; /* wide */
-    font-size: 14px;
+  .btn {
+    min-width: 140px;
+    height: 44px;
     font-weight: 600;
-    border-radius: var(--border-radius-md) !important;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25) !important;
-    border: none !important;
-    transition: var(--transition);
-    
-    &:hover:not(:disabled) {
-      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4) !important;
-      transform: translateY(-1px);
-    }
-    
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      box-shadow: none !important;
-    }
-  }
-
-  button[mat-button] {
-    color: var(--text-muted) !important;
-    font-weight: 600;
-    padding: 12px 24px !important;
-    border-radius: var(--border-radius-md) !important;
-    transition: var(--transition);
-    
-    &:hover {
-      color: var(--text-main) !important;
-      background-color: rgba(0, 0, 0, 0.04) !important;
-    }
   }
 }
 
 ::ng-deep {
-  /* Completed step icons and edit state icons */
-  .mat-step-header .mat-step-icon-state-done,
-  .mat-step-header .mat-step-icon-state-edit {
-    background-color: #10b981 !important;
-    color: #ffffff !important;
-  }
+  .admission-stepper {
+    .mat-horizontal-stepper-header-container {
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 8px;
+    }
 
-  /* Sibling connection line following a completed step */
-  .mat-step-header:has(.mat-step-icon-state-done) + .mat-stepper-horizontal-line,
-  .mat-step-header:has(.mat-step-icon-state-edit) + .mat-stepper-horizontal-line {
-    border-top-color: #10b981 !important;
-    border-top-width: 2px !important;
-  }
+    .mat-step-header {
+      padding: 0 12px !important;
+      height: 48px !important;
+      border-radius: 8px;
 
-  /* Label color of completed steps */
-  .mat-step-header:has(.mat-step-icon-state-done) .mat-step-text-label,
-  .mat-step-header:has(.mat-step-icon-state-edit) .mat-step-text-label {
-    color: #10b981 !important;
-    font-weight: 600 !important;
+      &:hover {
+        background-color: #f8fafc;
+      }
+    }
+
+    .mat-step-icon {
+      background-color: #e2e8f0 !important;
+      color: #475569 !important;
+      font-weight: 700;
+    }
+
+    .mat-step-icon-selected {
+      background-color: var(--primary) !important;
+      color: #ffffff !important;
+    }
+
+    .mat-step-icon-state-done,
+    .mat-step-icon-state-edit {
+      background-color: #10b981 !important;
+      color: #ffffff !important;
+    }
+
+    .mat-step-label {
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: #64748b !important;
+    }
+
+    .mat-step-label-selected {
+      color: var(--primary) !important;
+      font-weight: 700 !important;
+    }
   }
 }
 
 .review-step {
   text-align: center;
-  padding: 40px 20px;
+  padding: 36px 20px;
+
+  .success-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #e0e7ff;
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
 
   h3 {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 12px;
-    color: var(--text-main);
+    margin-bottom: 8px;
+    color: #0f172a;
   }
 
   p {
     font-size: 14px;
-    color: var(--text-muted);
+    color: #64748b;
     margin-bottom: 32px;
-    max-width: 500px;
+    max-width: 520px;
     margin-left: auto;
     margin-right: auto;
+    line-height: 1.5;
   }
 }
 
-mat-form-field {
-  width: 100%;
-}

@@ -9,12 +9,13 @@
     <div class="drop-zone-content" *ngIf="!selectedFile">
       <mat-icon class="upload-icon">cloud_upload</mat-icon>
       <h3>Drag & drop a file here</h3>
-      <p>or</p>
-      <button mat-stroked-button color="primary" (click)="fileInput.click()">Browse File</button>
+      <p class="text-xs text-gray-400 my-1">or</p>
+      <button type="button" class="btn btn-light" (click)="fileInput.click()" style="padding: 6px 16px; font-size: 13px; height: 36px;">
+        Browse File
+      </button>
       <input type="file" #fileInput (change)="onFileSelected($event)" [accept]="allowedTypes.join(',')" hidden />
-      <div class="hint-text mt-2 text-sm text-gray-500">
-        Allowed: {{ allowedTypes.join(', ') }}<br>
-        Max size: {{ maxSizeBytes / (1024 * 1024) }}MB
+      <div class="hint-text mt-2 text-xs text-gray-500">
+        Allowed: {{ allowedTypes.join(', ') }} • Max size: {{ maxSizeBytes / (1024 * 1024) }}MB
       </div>
     </div>
 

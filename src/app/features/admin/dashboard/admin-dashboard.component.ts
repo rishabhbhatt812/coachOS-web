@@ -45,18 +45,21 @@ export class AdminDashboardComponent implements OnInit {
 
   getMaxValue(list: any[] | undefined, key: string): number {
     if (!list || list.length === 0) return 1;
-    const max = Math.max(...list.map(item => Number(item[key] || 0)));
+    const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+    const max = Math.max(...list.map(item => Number(item[key] ?? item[capitalizedKey] ?? 0)));
     return max > 0 ? max : 1;
   }
 
-  getPercent(value: number, max: number): number {
-    if (max === 0) return 0;
-    return Math.round((value / max) * 100);
+  getPercent(value: any, max: number): number {
+    const v = Number(value || 0);
+    if (!max || max <= 0 || v <= 0) return 0;
+    const pct = Math.round((v / max) * 100);
+    return Math.min(Math.max(pct, 10), 100); // 10% minimum visible bar height for aesthetics
   }
 
   getPlanTotalCount(plans: any[] | undefined): number {
     if (!plans) return 0;
-    return plans.reduce((acc, curr) => acc + (curr.count || 0), 0);
+    return plans.reduce((acc, curr) => acc + (curr.count ?? curr.Count ?? 0), 0);
   }
 
   getStatusBadgeColor(status: string): BadgeColor {

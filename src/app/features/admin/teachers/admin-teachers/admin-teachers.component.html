@@ -8,15 +8,19 @@
     </button>
   </div>
 
-  <mat-card class="form-card" *ngIf="showWizard">
-    <mat-card-header class="form-header">
-      <mat-card-title>Register New Teacher</mat-card-title>
-      <button mat-icon-button (click)="toggleWizard()" class="close-btn">
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-card-header>
+  <div class="form-card card" *ngIf="showWizard">
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Register New Teacher
+        </h3>
+        <p>Enter teacher personal profile, employment details, qualifications and subject assignments</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleWizard()">✕</button>
+    </div>
     
-    <mat-card-content>
+    <div class="form-card-body">
       <form [formGroup]="teacherForm" class="teacher-reactive-form">
         
         <mat-tab-group [(selectedIndex)]="activeTab" class="custom-tabs">
@@ -24,135 +28,154 @@
           <!-- TAB 1: Basic Info -->
           <mat-tab label="1. Basic Info">
             <div class="form-grid pt-4">
-              <mat-form-field appearance="outline">
-                <mat-label>Full Name *</mat-label>
-                <input matInput formControlName="fullName" placeholder="e.g. John Doe">
-                <mat-error *ngIf="teacherForm.get('fullName')?.invalid">Name is required (min 3 chars)</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Full Name <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="fullName" placeholder="e.g. Dr. H. C. Verma" />
+                <span class="error-msg" *ngIf="teacherForm.get('fullName')?.touched && teacherForm.get('fullName')?.invalid">
+                  Name is required (min 3 chars)
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Email Address *</mat-label>
-                <input matInput formControlName="email" type="email" placeholder="e.g. john@apex.com">
-                <mat-error *ngIf="teacherForm.get('email')?.invalid">Enter a valid email address</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Email Address <span class="required-star">*</span></label>
+                <input type="email" class="form-control" formControlName="email" placeholder="e.g. physics@apex.com" />
+                <span class="error-msg" *ngIf="teacherForm.get('email')?.touched && teacherForm.get('email')?.invalid">
+                  Enter a valid email address
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Mobile Number *</mat-label>
-                <input matInput formControlName="mobile" placeholder="10-15 digit number">
-                <mat-error *ngIf="teacherForm.get('mobile')?.invalid">Enter valid mobile number</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Mobile Number <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="mobile" placeholder="10-digit mobile number" />
+                <span class="error-msg" *ngIf="teacherForm.get('mobile')?.touched && teacherForm.get('mobile')?.invalid">
+                  Enter valid 10-digit mobile number
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Login Password *</mat-label>
-                <input matInput formControlName="password" type="password">
-                <mat-error *ngIf="teacherForm.get('password')?.invalid">Password is required (min 6 chars)</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Login Password <span class="required-star">*</span></label>
+                <input type="password" class="form-control" formControlName="password" placeholder="••••••••" />
+                <span class="error-msg" *ngIf="teacherForm.get('password')?.touched && teacherForm.get('password')?.invalid">
+                  Password is required (min 6 chars)
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Gender *</mat-label>
-                <mat-select formControlName="gender">
-                  <mat-option *ngFor="let g of genders" [value]="g">{{ g }}</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Gender <span class="required-star">*</span></label>
+                <select class="form-control" formControlName="gender">
+                  <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
+                </select>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Date of Birth *</mat-label>
-                <input matInput formControlName="dateOfBirth" type="date">
-                <mat-error *ngIf="teacherForm.get('dateOfBirth')?.invalid">DOB is required</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Date of Birth <span class="required-star">*</span></label>
+                <input type="date" class="form-control" formControlName="dateOfBirth" />
+                <span class="error-msg" *ngIf="teacherForm.get('dateOfBirth')?.touched && teacherForm.get('dateOfBirth')?.invalid">
+                  Date of birth is required
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Alternate Mobile</mat-label>
-                <input matInput formControlName="alternateMobileNumber" placeholder="Alternate mobile number">
-                <mat-error *ngIf="teacherForm.get('alternateMobileNumber')?.invalid">Enter valid phone format</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Alternate Mobile</label>
+                <input type="text" class="form-control" formControlName="alternateMobileNumber" placeholder="Alternate contact number" />
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Marital Status</mat-label>
-                <mat-select formControlName="maritalStatus">
-                  <mat-option *ngFor="let status of maritalStatuses" [value]="status">{{ status }}</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Marital Status</label>
+                <select class="form-control" formControlName="maritalStatus">
+                  <option *ngFor="let status of maritalStatuses" [value]="status">{{ status }}</option>
+                </select>
+              </div>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Profile Photo URL</mat-label>
-                <input matInput formControlName="profilePhotoPath" placeholder="/assets/images/teachers/john.png">
-              </mat-form-field>
+              <div class="form-group full-width">
+                <label>Profile Photo URL</label>
+                <input type="text" class="form-control" formControlName="profilePhotoPath" placeholder="/assets/images/teachers/photo.png" />
+              </div>
             </div>
           </mat-tab>
 
           <!-- TAB 2: Address & Work -->
           <mat-tab label="2. Address & Work">
             <div class="form-grid pt-4">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Current Address *</mat-label>
-                <input matInput formControlName="currentAddress" placeholder="Street, landmark, building">
-                <mat-error *ngIf="teacherForm.get('currentAddress')?.invalid">Current address is required</mat-error>
-              </mat-form-field>
+              <div class="form-group full-width">
+                <label>Current Address <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="currentAddress" placeholder="Street address, building, landmark" />
+                <span class="error-msg" *ngIf="teacherForm.get('currentAddress')?.touched && teacherForm.get('currentAddress')?.invalid">
+                  Current address is required
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Permanent Address *</mat-label>
-                <input matInput formControlName="permanentAddress" placeholder="Same or permanent address">
-                <mat-error *ngIf="teacherForm.get('permanentAddress')?.invalid">Permanent address is required</mat-error>
-              </mat-form-field>
+              <div class="form-group full-width">
+                <label>Permanent Address <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="permanentAddress" placeholder="Permanent residence address" />
+                <span class="error-msg" *ngIf="teacherForm.get('permanentAddress')?.touched && teacherForm.get('permanentAddress')?.invalid">
+                  Permanent address is required
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>City *</mat-label>
-                <input matInput formControlName="city" placeholder="e.g. Delhi">
-                <mat-error *ngIf="teacherForm.get('city')?.invalid">City is required</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>City <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="city" placeholder="e.g. New Delhi" />
+                <span class="error-msg" *ngIf="teacherForm.get('city')?.touched && teacherForm.get('city')?.invalid">
+                  City is required
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>State *</mat-label>
-                <input matInput formControlName="state" placeholder="e.g. Delhi">
-                <mat-error *ngIf="teacherForm.get('state')?.invalid">State is required</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>State <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="state" placeholder="e.g. Delhi NCR" />
+                <span class="error-msg" *ngIf="teacherForm.get('state')?.touched && teacherForm.get('state')?.invalid">
+                  State is required
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Pincode *</mat-label>
-                <input matInput formControlName="pincode" placeholder="6-digit code">
-                <mat-error *ngIf="teacherForm.get('pincode')?.invalid">Enter valid 6-digit pincode</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Pincode <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="pincode" placeholder="6-digit pincode" />
+                <span class="error-msg" *ngIf="teacherForm.get('pincode')?.touched && teacherForm.get('pincode')?.invalid">
+                  Enter valid pincode
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Country *</mat-label>
-                <input matInput formControlName="country">
-                <mat-error *ngIf="teacherForm.get('country')?.invalid">Country is required</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Country <span class="required-star">*</span></label>
+                <input type="text" class="form-control" formControlName="country" placeholder="India" />
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Joining Date *</mat-label>
-                <input matInput formControlName="joiningDate" type="date">
-                <mat-error *ngIf="teacherForm.get('joiningDate')?.invalid">Joining date is required</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Joining Date <span class="required-star">*</span></label>
+                <input type="date" class="form-control" formControlName="joiningDate" />
+                <span class="error-msg" *ngIf="teacherForm.get('joiningDate')?.touched && teacherForm.get('joiningDate')?.invalid">
+                  Joining date is required
+                </span>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Teacher Type *</mat-label>
-                <mat-select formControlName="teacherType">
-                  <mat-option *ngFor="let t of teacherTypes" [value]="t">{{ t }}</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Teacher Type <span class="required-star">*</span></label>
+                <select class="form-control" formControlName="teacherType">
+                  <option *ngFor="let t of teacherTypes" [value]="t">{{ t }}</option>
+                </select>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Department</mat-label>
-                <input matInput formControlName="department" placeholder="e.g. Science">
-              </mat-form-field>
+              <div class="form-group">
+                <label>Department</label>
+                <input type="text" class="form-control" formControlName="department" placeholder="e.g. Physics & Science" />
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Designation</mat-label>
-                <input matInput formControlName="designation" placeholder="e.g. Senior Lecturer">
-              </mat-form-field>
+              <div class="form-group">
+                <label>Designation</label>
+                <input type="text" class="form-control" formControlName="designation" placeholder="e.g. Senior Faculty / HOD" />
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Experience (Years) *</mat-label>
-                <input matInput formControlName="experienceYears" type="number" min="0">
-                <mat-error *ngIf="teacherForm.get('experienceYears')?.invalid">Required (min 0)</mat-error>
-              </mat-form-field>
+              <div class="form-group">
+                <label>Experience (Years) <span class="required-star">*</span></label>
+                <input type="number" class="form-control" formControlName="experienceYears" min="0" placeholder="e.g. 5" />
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Previous Institute Name</mat-label>
-                <input matInput formControlName="previousInstituteName" placeholder="e.g. Brilliant Academy">
-              </mat-form-field>
+              <div class="form-group">
+                <label>Previous Institute</label>
+                <input type="text" class="form-control" formControlName="previousInstituteName" placeholder="e.g. IIT Kanpur / Apex Academy" />
+              </div>
             </div>
           </mat-tab>
 
@@ -161,45 +184,45 @@
             <div class="dynamic-list-section pt-4">
               <h5 class="section-heading">Add Academic Qualifications</h5>
               <div class="list-input-grid">
-                <mat-form-field appearance="outline">
-                  <mat-label>Qualification (e.g. B.Sc, MCA, PhD)</mat-label>
-                  <input matInput [(ngModel)]="tempQual.qualification" [ngModelOptions]="{standalone: true}">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>Degree / Qualification</label>
+                  <input type="text" class="form-control" [(ngModel)]="tempQual.qualification" [ngModelOptions]="{standalone: true}" placeholder="e.g. B.Sc, M.Sc, PhD" />
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Specialization</mat-label>
-                  <input matInput [(ngModel)]="tempQual.specialization" [ngModelOptions]="{standalone: true}">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>Specialization</label>
+                  <input type="text" class="form-control" [(ngModel)]="tempQual.specialization" [ngModelOptions]="{standalone: true}" placeholder="e.g. Nuclear Physics" />
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>University/Board</mat-label>
-                  <input matInput [(ngModel)]="tempQual.university" [ngModelOptions]="{standalone: true}">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>University / Board</label>
+                  <input type="text" class="form-control" [(ngModel)]="tempQual.university" [ngModelOptions]="{standalone: true}" placeholder="e.g. Delhi University" />
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Passing Year</mat-label>
-                  <input matInput type="number" [(ngModel)]="tempQual.passingYear" [ngModelOptions]="{standalone: true}">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>Passing Year</label>
+                  <input type="number" class="form-control" [(ngModel)]="tempQual.passingYear" [ngModelOptions]="{standalone: true}" placeholder="e.g. 2020" />
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Percentage / CGPA</mat-label>
-                  <input matInput [(ngModel)]="tempQual.percentageOrCGPA" [ngModelOptions]="{standalone: true}">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>Percentage / CGPA</label>
+                  <input type="text" class="form-control" [(ngModel)]="tempQual.percentageOrCGPA" [ngModelOptions]="{standalone: true}" placeholder="e.g. 88.5% or 9.2" />
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Certificate File Path</mat-label>
-                  <input matInput [(ngModel)]="tempQual.certificateFilePath" [ngModelOptions]="{standalone: true}" placeholder="e.g. certificates/mca.pdf">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>Certificate File Path</label>
+                  <input type="text" class="form-control" [(ngModel)]="tempQual.certificateFilePath" [ngModelOptions]="{standalone: true}" placeholder="e.g. certificates/phd.pdf" />
+                </div>
               </div>
 
               <div class="flex justify-end mb-4">
-                <button type="button" mat-stroked-button color="primary" (click)="addQualification()">
-                  <mat-icon>add</mat-icon> Add to List
+                <button type="button" class="btn btn-light" (click)="addQualification()">
+                  + Add to List
                 </button>
               </div>
 
               <!-- Qualifications Table -->
-              <div class="sub-table-container card">
+              <div class="sub-table-container">
                 <table class="sub-table">
                   <thead>
                     <tr>
@@ -213,15 +236,13 @@
                   </thead>
                   <tbody>
                     <tr *ngFor="let q of qualificationsList; let i = index">
-                      <td>{{ q.qualification }}</td>
+                      <td><strong>{{ q.qualification }}</strong></td>
                       <td>{{ q.specialization }}</td>
                       <td>{{ q.university }}</td>
                       <td>{{ q.passingYear }}</td>
                       <td>{{ q.percentageOrCGPA }}</td>
                       <td>
-                        <button type="button" mat-icon-button color="warn" (click)="removeQualification(i)">
-                          <mat-icon>delete</mat-icon>
-                        </button>
+                        <button type="button" class="btn-delete" (click)="removeQualification(i)">✕</button>
                       </td>
                     </tr>
                     <tr *ngIf="qualificationsList.length === 0">
@@ -236,44 +257,46 @@
           <!-- TAB 4: Subject Mapping & Docs -->
           <mat-tab label="4. Subjects & Documents">
             <div class="form-grid pt-4">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Select Assigned Subjects *</mat-label>
-                <mat-select formControlName="subjectIds" multiple>
-                  <mat-option *ngFor="let s of subjects" [value]="s.id">{{ s.name }}</mat-option>
-                </mat-select>
-                <mat-error *ngIf="teacherForm.get('subjectIds')?.invalid">At least one subject must be selected</mat-error>
-              </mat-form-field>
+              <div class="form-group full-width">
+                <label>Select Assigned Subjects <span class="required-star">*</span></label>
+                <select class="form-control" formControlName="subjectIds" multiple style="height: 110px;">
+                  <option *ngFor="let s of subjects" [value]="s.id">{{ s.name }}</option>
+                </select>
+                <span class="error-msg" *ngIf="teacherForm.get('subjectIds')?.touched && teacherForm.get('subjectIds')?.invalid">
+                  At least one subject must be selected
+                </span>
+              </div>
             </div>
 
             <div class="dynamic-list-section mt-4">
               <h5 class="section-heading">Add Teacher Documents</h5>
               <div class="list-input-grid doc-grid">
-                <mat-form-field appearance="outline">
-                  <mat-label>Document Type</mat-label>
-                  <mat-select [(ngModel)]="tempDoc.documentType" [ngModelOptions]="{standalone: true}">
-                    <mat-option *ngFor="let dt of documentTypes" [value]="dt">{{ dt }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
+                <div class="form-group">
+                  <label>Document Type</label>
+                  <select class="form-control" [(ngModel)]="tempDoc.documentType" [ngModelOptions]="{standalone: true}">
+                    <option *ngFor="let dt of documentTypes" [value]="dt">{{ dt }}</option>
+                  </select>
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Document Name</mat-label>
-                  <input matInput [(ngModel)]="tempDoc.fileName" [ngModelOptions]="{standalone: true}" placeholder="e.g. Aadhaar Card">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>Document Name</label>
+                  <input type="text" class="form-control" [(ngModel)]="tempDoc.fileName" [ngModelOptions]="{standalone: true}" placeholder="e.g. Aadhaar Card / Resume" />
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>File Path</mat-label>
-                  <input matInput [(ngModel)]="tempDoc.filePath" [ngModelOptions]="{standalone: true}" placeholder="e.g. documents/aadhaar.pdf">
-                </mat-form-field>
+                <div class="form-group">
+                  <label>File Path</label>
+                  <input type="text" class="form-control" [(ngModel)]="tempDoc.filePath" [ngModelOptions]="{standalone: true}" placeholder="e.g. documents/aadhaar.pdf" />
+                </div>
               </div>
 
               <div class="flex justify-end mb-4">
-                <button type="button" mat-stroked-button color="primary" (click)="addDocument()">
-                  <mat-icon>add</mat-icon> Add Document
+                <button type="button" class="btn btn-light" (click)="addDocument()">
+                  + Add Document
                 </button>
               </div>
 
               <!-- Documents Table -->
-              <div class="sub-table-container card">
+              <div class="sub-table-container">
                 <table class="sub-table">
                   <thead>
                     <tr>
@@ -285,13 +308,11 @@
                   </thead>
                   <tbody>
                     <tr *ngFor="let doc of documentsList; let i = index">
-                      <td>{{ doc.documentType }}</td>
+                      <td><strong>{{ doc.documentType }}</strong></td>
                       <td>{{ doc.fileName }}</td>
                       <td>{{ doc.filePath }}</td>
                       <td>
-                        <button type="button" mat-icon-button color="warn" (click)="removeDocument(i)">
-                          <mat-icon>delete</mat-icon>
-                        </button>
+                        <button type="button" class="btn-delete" (click)="removeDocument(i)">✕</button>
                       </td>
                     </tr>
                     <tr *ngIf="documentsList.length === 0">
@@ -306,14 +327,16 @@
 
         <!-- Wizard Navigation Actions -->
         <div class="form-actions mt-4">
-          <button type="button" mat-button (click)="toggleWizard()">Cancel</button>
-          <button type="button" mat-stroked-button color="primary" (click)="prevTab()" [disabled]="activeTab === 0">Previous</button>
-          <button type="button" mat-flat-button color="primary" (click)="nextTab()" *ngIf="activeTab < 3">Next</button>
-          <button type="button" mat-flat-button color="accent" (click)="submitTeacher()" *ngIf="activeTab === 3" [disabled]="teacherForm.invalid || isLoading">Register</button>
+          <button type="button" class="btn btn-light" (click)="toggleWizard()">Cancel</button>
+          <button type="button" class="btn btn-light" (click)="prevTab()" [disabled]="activeTab === 0">← Previous</button>
+          <button type="button" class="btn btn-primary" (click)="nextTab()" *ngIf="activeTab < 3">Next Step →</button>
+          <button type="button" class="btn btn-primary" (click)="submitTeacher()" *ngIf="activeTab === 3" [disabled]="teacherForm.invalid || isLoading">
+            ✓ Register Teacher
+          </button>
         </div>
       </form>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 
   <mat-card class="table-card" *ngIf="!showWizard">
     <div *ngIf="isLoading" class="loading-state">

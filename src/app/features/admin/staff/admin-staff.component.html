@@ -1,5 +1,7 @@
 <app-page-header title="Staff Management" subtitle="Manage and add coaching center staff, branch admins, receptionists, teachers, and operators.">
   <button class="btn btn-primary" (click)="toggleForm()">
+    <svg *ngIf="!showForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <svg *ngIf="showForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     {{ showForm ? 'Close Form' : '+ Add Staff member' }}
   </button>
 </app-page-header>
@@ -7,163 +9,201 @@
 <div class="staff-container">
   <!-- Collapsible Staff Form -->
   <div class="form-card card animate-slide" *ngIf="showForm">
-    <div class="card-header">
-      <h3>{{ editingId ? 'Edit Staff Details' : 'Add New Staff Member' }}</h3>
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          {{ editingId ? 'Edit Staff Details' : 'Add New Staff Member' }}
+        </h3>
+        <p>Assign administrative roles, employment status, personal profile and contact points</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleForm()">✕</button>
     </div>
     
-    <form [formGroup]="staffForm" (ngSubmit)="onSubmit()" class="staff-form p-4">
-      <h4 class="section-title">Personal & Account Information</h4>
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Full Name *</mat-label>
-          <input matInput formControlName="fullName" placeholder="e.g. John Doe" />
-          <mat-error *ngIf="staffForm.get('fullName')?.hasError('required')">Full name is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Email Address</mat-label>
-          <input matInput formControlName="email" type="email" placeholder="e.g. john@apex.com" />
-          <mat-error *ngIf="staffForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Mobile Number</mat-label>
-          <input matInput formControlName="mobileNumber" placeholder="e.g. 9876543210" />
-          <mat-error *ngIf="staffForm.get('mobileNumber')?.hasError('pattern')">Enter valid 10-digit mobile number</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Role *</mat-label>
-          <mat-select formControlName="roleId" placeholder="Select role">
-            <mat-option *ngFor="let role of roles" [value]="role.id">
-              {{ role.roleName }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="staffForm.get('roleId')?.hasError('required')">Role selection is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Branch Assignment *</mat-label>
-          <mat-select formControlName="branchId" placeholder="Select branch">
-            <mat-option *ngFor="let branch of branches" [value]="branch.id">
-              {{ branch.name }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="staffForm.get('branchId')?.hasError('required')">Branch assignment is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Staff Code</mat-label>
-          <input matInput formControlName="staffCode" placeholder="Optional (e.g. STF-001)" />
-        </mat-form-field>
-      </div>
-
-      <h4 class="section-title">Employment & Profile Details</h4>
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Employment Type *</mat-label>
-          <mat-select formControlName="staffType">
-            <mat-option value="Full-Time">Full-Time</mat-option>
-            <mat-option value="Part-Time">Part-Time</mat-option>
-            <mat-option value="Contract">Contract</mat-option>
-            <mat-option value="Intern">Intern</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Joining Date *</mat-label>
-          <input matInput [matDatepicker]="joinPicker" formControlName="joiningDate" (click)="joinPicker.open()" readonly>
-          <mat-datepicker-toggle matIconSuffix [for]="joinPicker"></mat-datepicker-toggle>
-          <mat-datepicker #joinPicker></mat-datepicker>
-          <mat-error *ngIf="staffForm.get('joiningDate')?.hasError('required')">Joining date is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Designation</mat-label>
-          <input matInput formControlName="designation" placeholder="e.g. Senior Counsellor" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Department</mat-label>
-          <input matInput formControlName="department" placeholder="e.g. Sales, Academics" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Qualification</mat-label>
-          <input matInput formControlName="qualification" placeholder="e.g. B.Tech, MBA" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Experience (Years)</mat-label>
-          <input matInput type="number" formControlName="experienceYears" min="0" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Address</mat-label>
-          <textarea matInput formControlName="address" rows="2" placeholder="Residential address..."></textarea>
-        </mat-form-field>
-      </div>
-
-      <!-- Teacher-specific Fields (Dynamic Section) -->
-      <div *ngIf="isTeacherSelected()" class="teacher-specific-section animate-slide mt-4">
-        <h4 class="section-title text-primary">Teacher-specific Information</h4>
+    <div class="form-card-body">
+      <form [formGroup]="staffForm" (ngSubmit)="onSubmit()" class="staff-form">
+        <h4 class="section-title">Personal & Account Information</h4>
         <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Subject Expertise *</mat-label>
-            <input matInput formControlName="subjectExpertise" placeholder="e.g. Physics, Calculus" />
-            <mat-error *ngIf="staffForm.get('subjectExpertise')?.hasError('required')">Subject expertise is required for teachers</mat-error>
-          </mat-form-field>
+          <!-- Full Name -->
+          <div class="form-group">
+            <label>Full Name <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="fullName" placeholder="e.g. Vikas Gupta" />
+            <span class="error-msg" *ngIf="staffForm.get('fullName')?.touched && staffForm.get('fullName')?.hasError('required')">
+              Full name is required
+            </span>
+          </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Teacher Type *</mat-label>
-            <mat-select formControlName="teacherType">
-              <mat-option value="Permanent">Permanent</mat-option>
-              <mat-option value="Contract">Contract</mat-option>
-              <mat-option value="Guest">Guest Faculty</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <!-- Email -->
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" class="form-control" formControlName="email" placeholder="e.g. vikas@apex.com" />
+            <span class="error-msg" *ngIf="staffForm.get('email')?.touched && staffForm.get('email')?.hasError('email')">
+              Enter a valid email address
+            </span>
+          </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Teaching Experience (Years)</mat-label>
-            <input matInput type="number" formControlName="teachingExperienceYears" min="0" />
-          </mat-form-field>
+          <!-- Mobile -->
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="text" class="form-control" formControlName="mobileNumber" placeholder="e.g. 9876543210" />
+            <span class="error-msg" *ngIf="staffForm.get('mobileNumber')?.touched && staffForm.get('mobileNumber')?.hasError('pattern')">
+              Enter valid 10-digit mobile number
+            </span>
+          </div>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Bio / Description</mat-label>
-            <textarea matInput formControlName="bio" rows="2" placeholder="Brief professional bio..."></textarea>
-          </mat-form-field>
+          <!-- Role -->
+          <div class="form-group">
+            <label>Role <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="roleId">
+              <option value="" disabled selected>Select role</option>
+              <option *ngFor="let role of roles" [value]="role.id">
+                {{ role.roleName }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="staffForm.get('roleId')?.touched && staffForm.get('roleId')?.hasError('required')">
+              Role selection is required
+            </span>
+          </div>
+
+          <!-- Branch -->
+          <div class="form-group">
+            <label>Branch Assignment <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="branchId">
+              <option value="" disabled selected>Select branch</option>
+              <option *ngFor="let branch of branches" [value]="branch.id">
+                {{ branch.name }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="staffForm.get('branchId')?.touched && staffForm.get('branchId')?.hasError('required')">
+              Branch assignment is required
+            </span>
+          </div>
+
+          <!-- Staff Code -->
+          <div class="form-group">
+            <label>Staff Code</label>
+            <input type="text" class="form-control" formControlName="staffCode" placeholder="Optional (e.g. STF-001)" />
+          </div>
         </div>
-      </div>
 
-      <h4 class="section-title">Emergency Contact</h4>
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Emergency Contact Name</mat-label>
-          <input matInput formControlName="emergencyContactName" placeholder="Name of contact person" />
-        </mat-form-field>
+        <h4 class="section-title">Employment & Profile Details</h4>
+        <div class="form-grid">
+          <!-- Employment Type -->
+          <div class="form-group">
+            <label>Employment Type <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="staffType">
+              <option value="Full-Time">Full-Time</option>
+              <option value="Part-Time">Part-Time</option>
+              <option value="Contract">Contract</option>
+              <option value="Intern">Intern</option>
+            </select>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Emergency Contact Number</mat-label>
-          <input matInput formControlName="emergencyContactNumber" placeholder="Contact number" />
-          <mat-error *ngIf="staffForm.get('emergencyContactNumber')?.hasError('pattern')">Enter valid 10-digit contact number</mat-error>
-        </mat-form-field>
+          <!-- Joining Date -->
+          <div class="form-group">
+            <label>Joining Date <span class="required-star">*</span></label>
+            <input type="date" class="form-control" formControlName="joiningDate" />
+            <span class="error-msg" *ngIf="staffForm.get('joiningDate')?.touched && staffForm.get('joiningDate')?.hasError('required')">
+              Joining date is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline" *ngIf="editingId">
-          <mat-label>Account Status</mat-label>
-          <mat-select formControlName="isActive">
-            <mat-option [value]="true">Active</mat-option>
-            <mat-option [value]="false">Inactive</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+          <!-- Designation -->
+          <div class="form-group">
+            <label>Designation</label>
+            <input type="text" class="form-control" formControlName="designation" placeholder="e.g. Senior Counsellor / Head Accountant" />
+          </div>
 
-      <div class="form-actions mt-4">
-        <button mat-raised-button color="primary" type="submit" [disabled]="staffForm.invalid || isLoading">
-          {{ editingId ? 'Update Staff Member' : 'Register Staff Member' }}
-        </button>
-        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
-      </div>
-    </form>
+          <!-- Department -->
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" class="form-control" formControlName="department" placeholder="e.g. Finance, Admissions, Operations" />
+          </div>
+
+          <!-- Qualification -->
+          <div class="form-group">
+            <label>Qualification</label>
+            <input type="text" class="form-control" formControlName="qualification" placeholder="e.g. B.Com, MBA, M.Sc" />
+          </div>
+
+          <!-- Experience -->
+          <div class="form-group">
+            <label>Experience (Years)</label>
+            <input type="number" class="form-control" formControlName="experienceYears" min="0" placeholder="e.g. 3" />
+          </div>
+
+          <!-- Address -->
+          <div class="form-group full-width">
+            <label>Residential Address</label>
+            <textarea class="form-control" formControlName="address" rows="2" placeholder="Full residential street address..."></textarea>
+          </div>
+        </div>
+
+        <!-- Teacher-specific Fields (Dynamic Section) -->
+        <div *ngIf="isTeacherSelected()" class="teacher-specific-section animate-slide mt-4">
+          <h4 class="section-title text-primary">Teacher-specific Information</h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Subject Expertise <span class="required-star">*</span></label>
+              <input type="text" class="form-control" formControlName="subjectExpertise" placeholder="e.g. Physics, Calculus" />
+              <span class="error-msg" *ngIf="staffForm.get('subjectExpertise')?.touched && staffForm.get('subjectExpertise')?.hasError('required')">
+                Subject expertise is required for teachers
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label>Teacher Type <span class="required-star">*</span></label>
+              <select class="form-control" formControlName="teacherType">
+                <option value="Permanent">Permanent Faculty</option>
+                <option value="Contract">Contract</option>
+                <option value="Guest">Guest Faculty</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Teaching Experience (Years)</label>
+              <input type="number" class="form-control" formControlName="teachingExperienceYears" min="0" placeholder="e.g. 5" />
+            </div>
+
+            <div class="form-group full-width">
+              <label>Bio / Description</label>
+              <textarea class="form-control" formControlName="bio" rows="2" placeholder="Brief professional bio and background..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="section-title">Emergency Contact</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Emergency Contact Name</label>
+            <input type="text" class="form-control" formControlName="emergencyContactName" placeholder="Name of contact person" />
+          </div>
+
+          <div class="form-group">
+            <label>Emergency Contact Number</label>
+            <input type="text" class="form-control" formControlName="emergencyContactNumber" placeholder="10-digit phone number" />
+            <span class="error-msg" *ngIf="staffForm.get('emergencyContactNumber')?.touched && staffForm.get('emergencyContactNumber')?.hasError('pattern')">
+              Enter valid 10-digit contact number
+            </span>
+          </div>
+
+          <div class="form-group" *ngIf="editingId">
+            <label>Account Status</label>
+            <select class="form-control" formControlName="isActive">
+              <option [ngValue]="true">Active</option>
+              <option [ngValue]="false">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="staffForm.invalid || isLoading">
+            {{ editingId ? 'Update Staff Member' : 'Register Staff Member' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Staff Table List -->

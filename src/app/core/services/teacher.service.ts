@@ -28,12 +28,21 @@ export interface TeacherTest {
 export class TeacherService {
   private http = inject(HttpClient);
 
+  // Batches
+  getMyBatches(): Observable<any> {
+    return this.http.get<any>(API_ENDPOINTS.TEACHER.BATCHES);
+  }
+
+  getBatchStudents(batchId: string): Observable<any> {
+    return this.http.get<any>(`${API_ENDPOINTS.TEACHER.BATCHES}/${batchId}/students`);
+  }
+
   // Attendance
   getAttendanceSessions(): Observable<any[]> {
     return this.http.get<any[]>(API_ENDPOINTS.TEACHER.ATTENDANCE);
   }
 
-  createAttendanceSession(data: CreateAttendanceSessionRequest): Observable<any> {
+  createAttendanceSession(data: any): Observable<any> {
     return this.http.post<any>(API_ENDPOINTS.TEACHER.ATTENDANCE, data);
   }
 

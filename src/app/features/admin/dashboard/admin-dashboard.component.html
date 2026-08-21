@@ -42,16 +42,16 @@
         <div class="chart-body">
           <div class="custom-bar-chart" *ngIf="metrics.monthlyRegistrations && metrics.monthlyRegistrations.length > 0; else noRegistrationsData">
             <div class="chart-y-axis">
-              <span>Max</span>
-              <span>Min</span>
+              <span>{{ getMaxValue(metrics.monthlyRegistrations, 'count') }}</span>
+              <span>0</span>
             </div>
             <div class="chart-bars-container">
               <div class="chart-bar-item" *ngFor="let item of metrics.monthlyRegistrations">
                 <div class="bar-wrapper">
-                  <span class="bar-tooltip">{{ item.count }} Students</span>
-                  <div class="bar-fill primary-gradient" [style.height.%]="getPercent(item.count, getMaxValue(metrics.monthlyRegistrations, 'count'))"></div>
+                  <span class="bar-tooltip">{{ item.count ?? item.Count }} Students</span>
+                  <div class="bar-fill primary-gradient" [style.height.%]="getPercent(item.count ?? item.Count, getMaxValue(metrics.monthlyRegistrations, 'count'))"></div>
                 </div>
-                <span class="bar-label">{{ item.month }}</span>
+                <span class="bar-label">{{ item.month ?? item.Month }}</span>
               </div>
             </div>
           </div>
@@ -73,16 +73,16 @@
         <div class="chart-body">
           <div class="custom-bar-chart" *ngIf="metrics.monthlyCollections && metrics.monthlyCollections.length > 0; else noCollectionsData">
             <div class="chart-y-axis">
-              <span>Max</span>
-              <span>Min</span>
+              <span>{{ getMaxValue(metrics.monthlyCollections, 'amount') | currency:'INR':'symbol':'1.0-0' }}</span>
+              <span>₹0</span>
             </div>
             <div class="chart-bars-container">
               <div class="chart-bar-item" *ngFor="let item of metrics.monthlyCollections">
                 <div class="bar-wrapper">
-                  <span class="bar-tooltip">{{ item.amount | currency:'INR':'symbol':'1.0-0' }}</span>
-                  <div class="bar-fill success-gradient" [style.height.%]="getPercent(item.amount, getMaxValue(metrics.monthlyCollections, 'amount'))"></div>
+                  <span class="bar-tooltip">{{ (item.amount ?? item.Amount) | currency:'INR':'symbol':'1.0-0' }}</span>
+                  <div class="bar-fill success-gradient" [style.height.%]="getPercent(item.amount ?? item.Amount, getMaxValue(metrics.monthlyCollections, 'amount'))"></div>
                 </div>
-                <span class="bar-label">{{ item.month }}</span>
+                <span class="bar-label">{{ item.month ?? item.Month }}</span>
               </div>
             </div>
           </div>
@@ -120,12 +120,12 @@
             </thead>
             <tbody>
               <tr *ngFor="let enquiry of metrics.recentEnquiries">
-                <td class="font-bold">{{ enquiry.name }}</td>
-                <td>{{ enquiry.courseName }}</td>
-                <td>{{ enquiry.date | date:'dd MMM yyyy' }}</td>
+                <td class="font-bold">{{ enquiry.name ?? enquiry.Name }}</td>
+                <td>{{ enquiry.courseName ?? enquiry.CourseName }}</td>
+                <td>{{ (enquiry.date ?? enquiry.Date) | date:'dd MMM yyyy' }}</td>
                 <td>
-                  <app-status-badge [color]="getStatusBadgeColor(enquiry.status)">
-                    {{ enquiry.status }}
+                  <app-status-badge [color]="getStatusBadgeColor(enquiry.status ?? enquiry.Status)">
+                    {{ enquiry.status ?? enquiry.Status }}
                   </app-status-badge>
                 </td>
               </tr>
@@ -217,16 +217,16 @@
         <div class="chart-body">
           <div class="custom-bar-chart" *ngIf="globalMetrics.monthlyGrowth && globalMetrics.monthlyGrowth.length > 0; else noGrowthData">
             <div class="chart-y-axis">
-              <span>Max</span>
-              <span>Min</span>
+              <span>{{ getMaxValue(globalMetrics.monthlyGrowth, 'count') }}</span>
+              <span>0</span>
             </div>
             <div class="chart-bars-container">
               <div class="chart-bar-item" *ngFor="let item of globalMetrics.monthlyGrowth">
                 <div class="bar-wrapper">
-                  <span class="bar-tooltip">{{ item.count }} Institutes</span>
-                  <div class="bar-fill purple-gradient" [style.height.%]="getPercent(item.count, getMaxValue(globalMetrics.monthlyGrowth, 'count'))"></div>
+                  <span class="bar-tooltip">{{ item.count ?? item.Count }} Institutes</span>
+                  <div class="bar-fill purple-gradient" [style.height.%]="getPercent(item.count ?? item.Count, getMaxValue(globalMetrics.monthlyGrowth, 'count'))"></div>
                 </div>
-                <span class="bar-label">{{ item.month }}</span>
+                <span class="bar-label">{{ item.month ?? item.Month }}</span>
               </div>
             </div>
           </div>
@@ -248,13 +248,13 @@
         <div class="chart-body plan-list" *ngIf="globalMetrics.planDistribution && globalMetrics.planDistribution.length > 0; else noPlansData">
           <div class="plan-stat-item" *ngFor="let plan of globalMetrics.planDistribution">
             <div class="plan-info">
-              <span class="plan-name font-bold">{{ plan.planName || 'Unknown Plan' }}</span>
-              <span class="plan-count">{{ plan.count }} Institutes ({{ getPercent(plan.count, getPlanTotalCount(globalMetrics.planDistribution)) }}%)</span>
+              <span class="plan-name font-bold">{{ plan.planName ?? plan.PlanName ?? 'Standard' }}</span>
+              <span class="plan-count">{{ plan.count ?? plan.Count }} Institutes ({{ getPercent(plan.count ?? plan.Count, getPlanTotalCount(globalMetrics.planDistribution)) }}%)</span>
             </div>
             <div class="plan-progress-bar">
               <div class="progress-fill" 
-                [style.width.%]="getPercent(plan.count, getPlanTotalCount(globalMetrics.planDistribution))"
-                [ngClass]="(plan.planName || 'trial').toLowerCase().includes('free') || (plan.planName || 'trial').toLowerCase().includes('trial') ? 'trial' : ((plan.planName || '').toLowerCase().includes('basic') ? 'basic' : ((plan.planName || '').toLowerCase().includes('standard') ? 'standard' : 'premium'))">
+                [style.width.%]="getPercent(plan.count ?? plan.Count, getPlanTotalCount(globalMetrics.planDistribution))"
+                [ngClass]="(plan.planName ?? plan.PlanName ?? 'trial').toLowerCase().includes('free') || (plan.planName ?? plan.PlanName ?? 'trial').toLowerCase().includes('trial') ? 'trial' : ((plan.planName ?? plan.PlanName ?? '').toLowerCase().includes('basic') ? 'basic' : ((plan.planName ?? plan.PlanName ?? '').toLowerCase().includes('standard') ? 'standard' : 'premium'))">
               </div>
             </div>
           </div>
@@ -288,18 +288,18 @@
           </thead>
           <tbody>
             <tr *ngFor="let inst of globalMetrics.recentInstitutes">
-              <td class="font-bold">{{ inst.instituteName }}</td>
-              <td><code>{{ inst.instituteCode }}</code></td>
-              <td>{{ inst.establishedYear || 'N/A' }}</td>
+              <td class="font-bold">{{ inst.instituteName ?? inst.InstituteName }}</td>
+              <td><code>{{ inst.instituteCode ?? inst.InstituteCode }}</code></td>
+              <td>{{ (inst.establishedYear ?? inst.EstablishedYear) || 'N/A' }}</td>
               <td>
-                <span class="badge purple">{{ inst.planName }}</span>
+                <span class="badge purple">{{ inst.planName ?? inst.PlanName }}</span>
               </td>
               <td>
-                <app-status-badge [color]="inst.isActive ? 'green' : 'red'">
-                  {{ inst.isActive ? 'Active' : 'Inactive' }}
+                <app-status-badge [color]="(inst.isActive ?? inst.IsActive) ? 'green' : 'red'">
+                  {{ (inst.isActive ?? inst.IsActive) ? 'Active' : 'Inactive' }}
                 </app-status-badge>
               </td>
-              <td>{{ inst.createdAt | date:'dd MMM yyyy' }}</td>
+              <td>{{ (inst.createdAt ?? inst.CreatedAt) | date:'dd MMM yyyy' }}</td>
             </tr>
             <tr *ngIf="!globalMetrics.recentInstitutes || globalMetrics.recentInstitutes.length === 0">
               <td colspan="6" class="no-data text-center">No coaching centers registered yet.</td>

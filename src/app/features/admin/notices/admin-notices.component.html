@@ -1,5 +1,7 @@
 <app-page-header title="Announcements & Notices" subtitle="Broadcast updates, schedules and alerts to your institute">
   <button class="btn btn-primary" (click)="toggleForm()">
+    <svg *ngIf="!showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <svg *ngIf="showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     {{ showAddForm ? 'Close Form' : '+ Create Notice' }}
   </button>
 </app-page-header>
@@ -7,52 +9,69 @@
 <div class="notices-container">
   <!-- Collapsible Notice Form -->
   <div class="form-card card" *ngIf="showAddForm">
-    <div class="card-header">
-      <h3>Create New Announcement</h3>
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          Create New Announcement
+        </h3>
+        <p>Broadcast alerts, reminders or timetable updates to students and teachers</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleForm()">✕</button>
     </div>
     
-    <form [formGroup]="noticeForm" (ngSubmit)="onSubmit()" class="notice-form">
-      <div class="form-grid">
-        <mat-form-field appearance="outline" class="col-span-2">
-          <mat-label>Notice Title</mat-label>
-          <input matInput formControlName="title" placeholder="e.g. Schedule Change for Physics Test" />
-          <mat-error *ngIf="noticeForm.get('title')?.hasError('required')">Notice title is required</mat-error>
-        </mat-form-field>
+    <div class="form-card-body">
+      <form [formGroup]="noticeForm" (ngSubmit)="onSubmit()" class="notice-form">
+        <div class="form-grid">
+          <!-- Notice Title -->
+          <div class="form-group full-width">
+            <label>Notice Title <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="title" placeholder="e.g. Schedule Change for Physics Test / Holiday Notice" />
+            <span class="error-msg" *ngIf="noticeForm.get('title')?.touched && noticeForm.get('title')?.hasError('required')">
+              Notice title is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Target Course (Optional)</mat-label>
-          <select matNativeControl formControlName="courseId">
-            <option value="">All Courses</option>
-            <option *ngFor="let course of courses$ | async" [value]="course.id">
-              {{ course.name }}
-            </option>
-          </select>
-        </mat-form-field>
+          <!-- Target Course -->
+          <div class="form-group">
+            <label>Target Course (Optional)</label>
+            <select class="form-control" formControlName="courseId">
+              <option value="">All Courses (Institute-wide)</option>
+              <option *ngFor="let course of courses$ | async" [value]="course.id">
+                {{ course.name }}
+              </option>
+            </select>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Target Batch (Optional)</mat-label>
-          <select matNativeControl formControlName="batchId">
-            <option value="">All Batches</option>
-            <option *ngFor="let batch of batches$ | async" [value]="batch.id">
-              {{ batch.name }}
-            </option>
-          </select>
-        </mat-form-field>
+          <!-- Target Batch -->
+          <div class="form-group">
+            <label>Target Batch (Optional)</label>
+            <select class="form-control" formControlName="batchId">
+              <option value="">All Batches</option>
+              <option *ngFor="let batch of batches$ | async" [value]="batch.id">
+                {{ batch.name }}
+              </option>
+            </select>
+          </div>
 
-        <mat-form-field appearance="outline" class="col-span-3">
-          <mat-label>Notice Message</mat-label>
-          <textarea matInput formControlName="message" rows="3" placeholder="Enter notice body message..."></textarea>
-          <mat-error *ngIf="noticeForm.get('message')?.hasError('required')">Message body is required</mat-error>
-        </mat-form-field>
-      </div>
+          <!-- Notice Message -->
+          <div class="form-group full-width">
+            <label>Notice Message Body <span class="required-star">*</span></label>
+            <textarea class="form-control" formControlName="message" rows="4" placeholder="Enter full announcement details and instructions for students/faculty..."></textarea>
+            <span class="error-msg" *ngIf="noticeForm.get('message')?.touched && noticeForm.get('message')?.hasError('required')">
+              Message body is required
+            </span>
+          </div>
+        </div>
 
-      <div class="form-actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="noticeForm.invalid || (isLoading$ | async)">
-          Post Announcement
-        </button>
-        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="noticeForm.invalid || (isLoading$ | async)">
+            Post Announcement
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Notices List -->

@@ -1,63 +1,182 @@
-<div class="dashboard-container p-6">
-  <div class="flex justify-between items-center mb-8">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Welcome Back, Teacher! 👋</h1>
-      <p class="text-gray-500 mt-1">Here is what's happening with your classes today.</p>
+<div class="dashboard-container">
+  <!-- Top Header -->
+  <div class="dashboard-header">
+    <div class="welcome-block">
+      <h1 class="page-title">Welcome Back, Teacher! 👋</h1>
+      <p class="page-subtitle">Here is what's happening with your academic schedule today.</p>
     </div>
-    <button mat-flat-button color="primary" class="new-action-btn">
-      <mat-icon>add</mat-icon> Create Assignment
-    </button>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary create-btn" (click)="createAssignment()">
+        <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 6px;">add</mat-icon>
+        Create Assignment
+      </button>
+    </div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card" *ngFor="let stat of stats" [ngClass]="'color-' + stat.color">
-      <div class="stat-icon">
+  <!-- KPI Metric Cards Grid -->
+  <div class="kpi-grid">
+    <div 
+      class="kpi-card" 
+      *ngFor="let stat of stats" 
+      [ngClass]="'kpi-' + stat.color"
+      (click)="navigateTo(stat.route)">
+      <div class="kpi-icon-box">
         <mat-icon>{{ stat.icon }}</mat-icon>
       </div>
-      <div class="stat-details">
-        <p class="stat-label">{{ stat.label }}</p>
-        <h2 class="stat-value">{{ stat.value }}</h2>
+      <div class="kpi-details">
+        <span class="kpi-label">{{ stat.label }}</span>
+        <h2 class="kpi-value">{{ stat.value }}</h2>
       </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-    <div class="lg:col-span-2">
-      <mat-card class="schedule-card">
-        <mat-card-header>
-          <mat-card-title>Today's Schedule</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="empty-state">
-            <div class="icon-circle">
-              <mat-icon>event_available</mat-icon>
-            </div>
-            <h3>No classes remaining today</h3>
-            <p>You have completed all your scheduled classes.</p>
+  <!-- Main Content Grid -->
+  <div class="dashboard-main-grid">
+    <!-- Left Column: Class Schedule & Quick Launchers -->
+    <div class="main-column-left">
+      <!-- Today's Schedule Card -->
+      <div class="content-card card">
+        <div class="content-card-header">
+          <div class="header-text">
+            <h3 class="card-heading">
+              <mat-icon class="heading-icon">event_available</mat-icon>
+              Today's Class Schedule
+            </h3>
+            <p class="card-subheading">Assigned lecture rooms, timings & quick roll call</p>
           </div>
-        </mat-card-content>
-      </mat-card>
+          <button type="button" class="btn btn-light btn-sm" (click)="navigateTo('/teacher/my-batches')">
+            View All Batches →
+          </button>
+        </div>
+
+        <div class="content-card-body">
+          <div class="schedule-list">
+            <div class="schedule-item" *ngFor="let c of todayClasses">
+              <div class="time-block">
+                <mat-icon class="clock-icon">schedule</mat-icon>
+                <span>{{ c.time }}</span>
+              </div>
+
+              <div class="class-info">
+                <h4 class="class-title">{{ c.batchName }}</h4>
+                <div class="class-meta">
+                  <span class="badge-mini blue">{{ c.subject }}</span>
+                  <span class="room-tag">{{ c.room }}</span>
+                </div>
+              </div>
+
+              <div class="class-actions">
+                <span class="status-pill" [ngClass]="c.status === 'Completed' ? 'status-green' : (c.status === 'In Progress' ? 'status-blue' : 'status-slate')">
+                  <span class="status-dot"></span>
+                  {{ c.status }}
+                </span>
+                <button type="button" class="btn btn-light btn-sm" (click)="navigateTo('/teacher/attendance', { batchId: c.batchId })">
+                  <mat-icon style="font-size: 15px; width: 15px; height: 15px; margin-right: 4px;">how_to_reg</mat-icon>
+                  Attendance
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Launchers Grid -->
+      <div class="quick-launchers-section">
+        <h3 class="section-title">Quick Actions & Workspaces</h3>
+        <div class="launchers-grid">
+          <div class="launcher-card card" (click)="navigateTo('/teacher/assignments')">
+            <div class="launcher-icon blue">
+              <mat-icon>assignment</mat-icon>
+            </div>
+            <div class="launcher-text">
+              <h4>Assignments</h4>
+              <p>Publish homework & worksheets</p>
+            </div>
+          </div>
+
+          <div class="launcher-card card" (click)="navigateTo('/teacher/notes')">
+            <div class="launcher-icon green">
+              <mat-icon>menu_book</mat-icon>
+            </div>
+            <div class="launcher-text">
+              <h4>Study Material</h4>
+              <p>Upload lecture notes & slides</p>
+            </div>
+          </div>
+
+          <div class="launcher-card card" (click)="navigateTo('/teacher/tests')">
+            <div class="launcher-icon purple">
+              <mat-icon>quiz</mat-icon>
+            </div>
+            <div class="launcher-text">
+              <h4>Tests & Exams</h4>
+              <p>Schedule chapter assessments</p>
+            </div>
+          </div>
+
+          <div class="launcher-card card" (click)="navigateTo('/teacher/results')">
+            <div class="launcher-icon amber">
+              <mat-icon>grade</mat-icon>
+            </div>
+            <div class="launcher-text">
+              <h4>Publish Results</h4>
+              <p>Enter marks & student feedback</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="lg:col-span-1">
-      <mat-card class="activity-card">
-        <mat-card-header>
-          <mat-card-title>Recent Activity</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="activity-list">
-            <div class="activity-item" *ngFor="let activity of recentActivities">
-              <div class="activity-icon">
+    <!-- Right Column: Recent Activity & Reminders -->
+    <div class="main-column-right">
+      <!-- Recent Activity Card -->
+      <div class="content-card card">
+        <div class="content-card-header">
+          <div class="header-text">
+            <h3 class="card-heading">
+              <mat-icon class="heading-icon">history</mat-icon>
+              Recent Activity
+            </h3>
+            <p class="card-subheading">Your recent updates & logs</p>
+          </div>
+        </div>
+
+        <div class="content-card-body p-0">
+          <div class="activity-feed">
+            <div 
+              class="activity-row" 
+              *ngFor="let activity of recentActivities"
+              (click)="navigateTo(activity.route)">
+              <div class="activity-avatar">
                 <mat-icon>{{ activity.icon }}</mat-icon>
               </div>
-              <div class="activity-info">
+              <div class="activity-content">
                 <p class="activity-title">{{ activity.title }}</p>
-                <p class="activity-time">{{ activity.time }}</p>
+                <span class="activity-time">{{ activity.time }}</span>
               </div>
+              <mat-icon class="activity-chevron">chevron_right</mat-icon>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </div>
+
+      <!-- Notice & Reminder Card -->
+      <div class="reminder-card card">
+        <div class="reminder-header">
+          <div class="reminder-icon-badge">
+            <mat-icon>notifications_active</mat-icon>
+          </div>
+          <div>
+            <h4>Academic Notice</h4>
+            <span class="text-xs text-gray-500">Institute circular</span>
+          </div>
+        </div>
+        <p class="reminder-body">
+          Monthly performance reviews and attendance summaries for all ongoing batches will be finalized on Friday.
+        </p>
+      </div>
     </div>
   </div>
 </div>
+
+

@@ -1,0 +1,94 @@
+<div class="org-modules-container">
+  <app-page-header 
+    title="Organization Modules" 
+    subtitle="Configure and toggle module access for each coaching center / institute.">
+  </app-page-header>
+
+  <!-- Institute Selector Bar -->
+  <div class="card selector-card">
+    <div class="selector-content">
+      <div class="selector-group">
+        <label for="instituteSelect">Select Coaching Center / Institute</label>
+        <div class="select-wrapper">
+          <select 
+            id="instituteSelect" 
+            [ngModel]="selectedInstituteId" 
+            (ngModelChange)="onInstituteChange($event)"
+            class="form-select"
+            [disabled]="isLoadingInstitutes || isSaving">
+            <option value="" disabled>-- Select Coaching Center --</option>
+            <option *ngFor="let inst of institutes" [value]="inst.id">
+              {{ inst.name }} ({{ inst.instituteCode || 'N/A' }})
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="summary-badge" *ngIf="modules.length > 0">
+        <span class="badge-label">Active Modules:</span>
+        <span class="badge-count">{{ enabledCount }} of {{ modules.length }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="card content-card" *ngIf="isLoadingModules || isLoadingInstitutes">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading module configurations...</p>
+    </div>
+  </div>
+
+  <!-- Empty State (No Institute Selected) -->
+  <div class="card content-card empty-card" *ngIf="!selectedInstituteId && !isLoadingInstitutes">
+    <div class="empty-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7M4 21V10m16 11V10M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg>
+    </div>
+    <h3>No Coaching Center Selected</h3>
+    <p>Please select a coaching center above to view and configure its available modules.</p>
+  </div>
+
+  <!-- Module Management Grid -->
+  <div class="card content-card" *ngIf="selectedInstituteId && !isLoadingModules">
+    <div class="card-header">
+      <div class="header-info">
+        <h3>Feature Modules & Permissions</h3>
+        <p class="subtitle">Turn modules on or off for this organization. Users belonging to this institute will only see enabled modules.</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn btn-outline" (click)="toggleAll(true)" [disabled]="isSaving">Enable All</button>
+        <button type="button" class="btn btn-outline" (click)="toggleAll(false)" [disabled]="isSaving">Disable All</button>
+      </div>
+    </div>
+
+    <div class="modules-grid">
+      <div class="module-card" *ngFor="let mod of modules" [class.enabled]="mod.isEnabled">
+        <div class="module-main">
+          <div class="module-header-row">
+            <h4 class="module-name">{{ mod.name }}</h4>
+            <span class="module-code">{{ mod.code }}</span>
+          </div>
+          <p class="module-description">{{ mod.description || 'Access to ' + mod.name + ' features and tools.' }}</p>
+        </div>
+
+        <div class="module-toggle-action">
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="mod.isEnabled" [disabled]="isSaving">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="saveModules()" 
+        [disabled]="isSaving">
+        <svg *ngIf="!isSaving" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span>{{ isSaving ? 'Saving Changes...' : 'Save Module Configuration' }}</span>
+      </button>
+    </div>
+  </div>
+</div>

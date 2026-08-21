@@ -1,57 +1,60 @@
 <div class="assignments-container p-6">
-  <div class="header-section mb-8 flex justify-between items-center">
+  <div class="header-section mb-6 flex justify-between items-center">
     <div>
       <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Assignments</h1>
-      <p class="text-gray-500 mt-1">Manage and grade assignments for your batches.</p>
+      <p class="text-gray-500 mt-1">Create homework, worksheets and evaluate student submissions.</p>
     </div>
-    <button mat-flat-button color="primary" class="create-btn" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
-      <mat-icon>add</mat-icon> New Assignment
+    <button type="button" class="btn btn-primary" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
+      <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">add</mat-icon>
+      New Assignment
     </button>
   </div>
 
   <!-- Create Form -->
-  <mat-card class="create-form-card mb-8" *ngIf="showCreateForm">
-    <mat-card-header>
-      <mat-card-title>Create New Assignment</mat-card-title>
-      <button mat-icon-button class="close-btn" (click)="toggleCreateForm()">
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-card-header>
+  <div class="form-card card mb-8" *ngIf="showCreateForm">
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Create New Assignment
+        </h3>
+        <p>Publish homework, practice problem sets or projects for your enrolled batches</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleCreateForm()">✕</button>
+    </div>
     
-    <mat-card-content class="mt-4">
+    <div class="form-card-body">
       <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Assignment Title</mat-label>
-          <input matInput [(ngModel)]="newAssignment.title" placeholder="e.g. Chapter 1 Exercises">
-        </mat-form-field>
+        <div class="form-group">
+          <label>Assignment Title <span class="required-star">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="newAssignment.title" placeholder="e.g. Chapter 1: Kinematics Problem Set" />
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Batch</mat-label>
-          <mat-select [(ngModel)]="newAssignment.batchId">
-            <mat-option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div class="form-group">
+          <label>Select Target Batch <span class="required-star">*</span></label>
+          <select class="form-control" [(ngModel)]="newAssignment.batchId">
+            <option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</option>
+          </select>
+        </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description / Instructions</mat-label>
-          <textarea matInput [(ngModel)]="newAssignment.description" rows="3"></textarea>
-        </mat-form-field>
+        <div class="form-group full-width">
+          <label>Description & Instructions</label>
+          <textarea class="form-control" [(ngModel)]="newAssignment.description" rows="3" placeholder="Provide details, problem numbers, or special submission guidelines..."></textarea>
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Due Date</mat-label>
-          <input matInput [matDatepicker]="picker" [(ngModel)]="newAssignment.dueDate">
-          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
+        <div class="form-group">
+          <label>Due Submission Date <span class="required-star">*</span></label>
+          <input type="date" class="form-control" [(ngModel)]="newAssignment.dueDate" />
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Total Marks</mat-label>
-          <input matInput type="number" [(ngModel)]="newAssignment.marks">
-        </mat-form-field>
+        <div class="form-group">
+          <label>Total Maximum Marks <span class="required-star">*</span></label>
+          <input type="number" class="form-control" [(ngModel)]="newAssignment.marks" min="1" placeholder="e.g. 50" />
+        </div>
       </div>
 
-      <div class="upload-section mt-4">
-        <h4 class="text-gray-700 font-medium mb-2">Attach File (Max 25MB)</h4>
+      <div class="upload-section mt-6">
+        <label class="font-bold text-gray-700 mb-2 block text-sm">Attach Reference Document or Question Paper (Max 25MB)</label>
         <app-file-upload 
           [maxSizeBytes]="25 * 1024 * 1024"
           [allowedTypes]="['.pdf', '.docx', '.jpg', '.png', '.zip']"
@@ -59,36 +62,143 @@
         </app-file-upload>
       </div>
 
-      <div class="form-actions mt-6 flex justify-end gap-4">
-        <button mat-button (click)="toggleCreateForm()">Cancel</button>
-        <button mat-flat-button color="primary" (click)="submitAssignment()">Create Assignment</button>
+      <div class="form-actions flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+        <button type="button" class="btn btn-light" (click)="toggleCreateForm()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitAssignment()">
+          ✓ Create & Publish Assignment
+        </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 
-  <!-- List -->
-  <div class="assignments-list" *ngIf="!showCreateForm">
-    <mat-card class="assignment-card" *ngFor="let item of assignments">
-      <div class="card-status-bar"></div>
-      <mat-card-content class="flex flex-col md:flex-row justify-between items-center gap-6">
+  <!-- Assignments List -->
+  <div class="assignments-grid" *ngIf="!showCreateForm">
+    <div class="assignment-item-card card" *ngFor="let item of assignments">
+      <div class="card-accent-bar"></div>
+      
+      <div class="card-content-area">
         <div class="flex-1">
-          <h3 class="text-xl font-bold text-gray-800 m-0">{{ item.title }}</h3>
-          <p class="text-sm text-gray-500 mt-1 mb-3">{{ item.batch }}</p>
-          <div class="meta-info flex gap-4 text-sm text-gray-600">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="badge blue font-medium">{{ item.batch }}</span>
+            <span class="badge" style="background: #f1f5f9; color: #475569;">Max: {{ item.marks }} Marks</span>
+          </div>
+
+          <h3 class="font-bold text-lg text-gray-900 m-0">{{ item.title }}</h3>
+          <p class="text-sm text-gray-600 mt-1 mb-3" *ngIf="item.description">{{ item.description }}</p>
+
+          <div class="meta-row flex flex-wrap gap-4 text-xs text-gray-500 mt-2">
             <span class="flex items-center gap-1">
-              <mat-icon inline>event</mat-icon> Due: {{ item.dueDate | date:'mediumDate' }}
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: #64748b;">event</mat-icon>
+              Due: <strong>{{ item.dueDate | date:'mediumDate' }}</strong>
             </span>
             <span class="flex items-center gap-1">
-              <mat-icon inline>groups</mat-icon> Submissions: {{ item.submissions }}/{{ item.totalStudents }}
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: #64748b;">groups</mat-icon>
+              Submissions: <strong>{{ item.submissions }} / {{ item.totalStudents }}</strong>
+            </span>
+            <span class="flex items-center gap-1" *ngIf="item.fileName">
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: #64748b;">attach_file</mat-icon>
+              {{ item.fileName }}
             </span>
           </div>
         </div>
-        <div class="actions flex gap-2">
-          <button mat-stroked-button color="primary">
-            <mat-icon>grading</mat-icon> Grade
+
+        <div class="action-buttons flex items-center gap-2">
+          <button type="button" class="btn btn-primary" (click)="openGradeModal(item)">
+            <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">grading</mat-icon>
+            Grade Submissions
+          </button>
+          <button type="button" class="btn btn-light" (click)="deleteAssignment(item)" title="Delete assignment" style="color: #ef4444;">
+            <mat-icon style="font-size: 16px; width: 16px; height: 16px;">delete</mat-icon>
           </button>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grading Submissions Modal -->
+  <div class="modal-overlay" *ngIf="showGradeModal" (click)="closeGradeModal()">
+    <div class="modal-dialog card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">
+            <mat-icon class="title-icon">grading</mat-icon>
+            Evaluate: {{ selectedAssignment?.title }}
+          </h3>
+          <p class="modal-subtitle">
+            {{ selectedAssignment?.batch }} • Maximum Marks: <strong>{{ selectedAssignment?.marks }}</strong>
+          </p>
+        </div>
+        <button type="button" class="btn-close" (click)="closeGradeModal()">✕</button>
+      </div>
+
+      <div class="modal-body p-0">
+        <div class="table-responsive">
+          <table class="sub-table w-full">
+            <thead>
+              <tr>
+                <th style="width: 110px;">Roll / ID</th>
+                <th style="min-width: 180px;">Student Name</th>
+                <th style="width: 130px;">Status</th>
+                <th style="min-width: 160px;">Submitted File</th>
+                <th style="width: 150px;">Score</th>
+                <th>Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of studentSubmissions">
+                <td>
+                  <span class="badge" style="background: #f1f5f9; color: #334155; font-family: monospace;">{{ s.rollNo }}</span>
+                </td>
+                <td>
+                  <span class="font-semibold text-gray-900">{{ s.name }}</span>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="s.status === 'Submitted' ? 'green' : 'amber'">
+                    {{ s.status }}
+                  </span>
+                </td>
+                <td>
+                  <span *ngIf="s.file" class="file-link flex items-center gap-1 text-blue-600 text-xs font-medium cursor-pointer">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">description</mat-icon>
+                    {{ s.file }}
+                  </span>
+                  <span *ngIf="!s.file" class="text-xs text-gray-400 italic">No file attached</span>
+                </td>
+                <td>
+                  <div class="marks-input-group flex items-center gap-1">
+                    <input 
+                      type="number" 
+                      class="form-control marks-control" 
+                      style="width: 70px; text-align: center;"
+                      [(ngModel)]="s.marks" 
+                      [max]="selectedAssignment?.marks" 
+                      min="0"
+                      [disabled]="s.status !== 'Submitted'"
+                    />
+                    <span class="text-xs text-gray-500 font-semibold">/ {{ selectedAssignment?.marks }}</span>
+                  </div>
+                </td>
+                <td>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="s.feedback" 
+                    placeholder="Enter remark..."
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer flex justify-end gap-3 p-4 border-t border-gray-100 bg-slate-50">
+        <button type="button" class="btn btn-light" (click)="closeGradeModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="saveGrades()">
+          ✓ Save & Finalize Grades
+        </button>
+      </div>
+    </div>
   </div>
 </div>
+

@@ -1,13 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthFacade } from '../../../core/facades/auth.facade';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
@@ -16,11 +12,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
+    FormsModule,
     MatIconModule,
-    MatProgressSpinnerModule,
     MatSnackBarModule
   ],
   templateUrl: './login.component.html',
@@ -34,11 +27,38 @@ export class LoginComponent {
 
   isLoading$ = this.authFacade.isLoading$;
   hidePassword = true;
+  rememberMe = true;
+  selectedRoleTab = 'admin';
 
   loginForm = this.fb.group({
-    email: ['admin@mycoaching.com', [Validators.required, Validators.email]],
-    password: ['Admin@123', Validators.required]
+    email: ['superadmin@apex.com', [Validators.required, Validators.email]],
+    password: ['Password@123', Validators.required]
   });
+
+  quickFill(role: string) {
+    this.selectedRoleTab = role;
+    if (role === 'admin') {
+      this.loginForm.patchValue({
+        email: 'superadmin@apex.com',
+        password: 'Password@123'
+      });
+    } else if (role === 'teacher') {
+      this.loginForm.patchValue({
+        email: 'physics@apex.com',
+        password: 'Password@123'
+      });
+    } else if (role === 'maths') {
+      this.loginForm.patchValue({
+        email: 'maths@apex.com',
+        password: 'Password@123'
+      });
+    } else if (role === 'reception') {
+      this.loginForm.patchValue({
+        email: 'reception@apex.com',
+        password: 'Password@123'
+      });
+    }
+  }
 
   onSubmit() {
     if (this.loginForm.valid) {
@@ -50,19 +70,20 @@ export class LoginComponent {
       
       this.authFacade.login(req).subscribe({
         next: () => {
-          this.snackBar.open('Welcome back, ' + (this.authFacade.currentUserValue?.name || 'User') + '!', 'Dismiss', {
+          const user = this.authFacade.currentUserValue;
+          this.snackBar.open(`✓ Welcome back, ${user?.name || 'User'}!`, 'Dismiss', {
             duration: 3000,
             horizontalPosition: 'center',
             verticalPosition: 'top',
             panelClass: ['success-snackbar']
           });
           
-          const role = this.authFacade.currentUserValue?.role;
+          const role = user?.role as string;
           
-          if (role === 'ADMIN') {
+          if (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'GLOBAL_ADMIN') {
             this.router.navigate(['/admin/dashboard']);
           } else if (role === 'TEACHER') {
-            this.router.navigate(['/teacher/notes']);
+            this.router.navigate(['/teacher/my-batches']);
           } else if (role === 'RECEPTIONIST') {
             this.router.navigate(['/receptionist/dashboard']);
           } else {
@@ -70,10 +91,10 @@ export class LoginComponent {
           }
         },
         error: (err) => {
-          console.error('Login failed in component', err);
-          // Handled by global HttpErrorInterceptor, no action needed here
+          console.error('Login failed', err);
         }
       });
     }
   }
 }
+

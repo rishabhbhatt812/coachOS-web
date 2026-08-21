@@ -1,5 +1,7 @@
 <app-page-header title="Batches" subtitle="Manage batches and assign teachers and courses">
   <button class="btn btn-primary" (click)="toggleForm()">
+    <svg *ngIf="!showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <svg *ngIf="showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     {{ showAddForm ? 'Close Form' : '+ Add Batch' }}
   </button>
 </app-page-header>
@@ -7,113 +9,147 @@
 <div class="batches-container">
   <!-- Collapsible Batch Form -->
   <div class="form-card card" *ngIf="showAddForm">
-    <div class="card-header">
-      <h3>{{ editingId ? 'Edit Batch' : 'Add New Batch' }}</h3>
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          {{ editingId ? 'Edit Batch' : 'Add New Batch' }}
+        </h3>
+        <p>Define batch timings, room, instructor assignment and student capacity</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleForm()">✕</button>
     </div>
     
-    <form [formGroup]="batchForm" (ngSubmit)="onSubmit()" class="batch-form p-4">
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Batch Code *</mat-label>
-          <input matInput formControlName="batchCode" placeholder="e.g. BATCH-001" />
-          <mat-error *ngIf="batchForm.get('batchCode')?.hasError('required')">Batch code is required</mat-error>
-        </mat-form-field>
+    <div class="form-card-body">
+      <form [formGroup]="batchForm" (ngSubmit)="onSubmit()" class="batch-form">
+        <div class="form-grid">
+          <!-- Batch Code -->
+          <div class="form-group">
+            <label>Batch Code <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="batchCode" placeholder="e.g. JEE-2026-M1" />
+            <span class="error-msg" *ngIf="batchForm.get('batchCode')?.touched && batchForm.get('batchCode')?.hasError('required')">
+              Batch code is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Batch Name *</mat-label>
-          <input matInput formControlName="name" placeholder="e.g. Morning Batch A" />
-          <mat-error *ngIf="batchForm.get('name')?.hasError('required')">Batch name is required</mat-error>
-        </mat-form-field>
+          <!-- Batch Name -->
+          <div class="form-group">
+            <label>Batch Name <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="name" placeholder="e.g. JEE Morning Achievers" />
+            <span class="error-msg" *ngIf="batchForm.get('name')?.touched && batchForm.get('name')?.hasError('required')">
+              Batch name is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Course *</mat-label>
-          <mat-select formControlName="courseId">
-            <mat-option *ngFor="let course of courses$ | async" [value]="course.id">
-              {{ course.name }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="batchForm.get('courseId')?.hasError('required')">Course selection is required</mat-error>
-        </mat-form-field>
+          <!-- Course -->
+          <div class="form-group">
+            <label>Select Course <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="courseId">
+              <option value="" disabled selected>Select course</option>
+              <option *ngFor="let course of courses$ | async" [value]="course.id">
+                {{ course.name }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="batchForm.get('courseId')?.touched && batchForm.get('courseId')?.hasError('required')">
+              Course selection is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Branch *</mat-label>
-          <mat-select formControlName="branchId">
-            <mat-option *ngFor="let branch of branches" [value]="branch.id">
-              {{ branch.name }} ({{ branch.code }})
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="batchForm.get('branchId')?.hasError('required')">Branch is required</mat-error>
-        </mat-form-field>
+          <!-- Branch -->
+          <div class="form-group">
+            <label>Select Branch <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="branchId">
+              <option value="" disabled selected>Select branch</option>
+              <option *ngFor="let branch of branches" [value]="branch.id">
+                {{ branch.name }} ({{ branch.code }})
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="batchForm.get('branchId')?.touched && batchForm.get('branchId')?.hasError('required')">
+              Branch selection is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Select Subjects</mat-label>
-          <mat-select formControlName="subjectIds" multiple>
-            <mat-option *ngFor="let s of subjects" [value]="s.id">{{ s.name }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+          <!-- Teacher -->
+          <div class="form-group">
+            <label>Assign Teacher</label>
+            <select class="form-control" formControlName="teacherUserId">
+              <option value="" selected>Select teacher (Optional)</option>
+              <option *ngFor="let t of teachers" [value]="t.id">
+                {{ t.fullName }}
+              </option>
+            </select>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Assign Teacher</mat-label>
-          <mat-select formControlName="teacherUserId">
-            <mat-option *ngFor="let t of teachers" [value]="t.id">{{ t.fullName }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+          <!-- Capacity -->
+          <div class="form-group">
+            <label>Capacity (Students) <span class="required-star">*</span></label>
+            <input type="number" class="form-control" formControlName="capacity" min="1" placeholder="e.g. 40" />
+            <span class="error-msg" *ngIf="batchForm.get('capacity')?.touched && batchForm.get('capacity')?.hasError('required')">
+              Capacity is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Capacity *</mat-label>
-          <input matInput type="number" formControlName="capacity" placeholder="e.g. 40" />
-          <mat-error *ngIf="batchForm.get('capacity')?.hasError('required')">Capacity is required</mat-error>
-        </mat-form-field>
+          <!-- Room Number -->
+          <div class="form-group">
+            <label>Room Number</label>
+            <input type="text" class="form-control" formControlName="roomNumber" placeholder="e.g. Room 101 (Aryabhata Hall)" />
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Room Number</mat-label>
-          <input matInput formControlName="roomNumber" placeholder="e.g. Room 101" />
-        </mat-form-field>
+          <!-- Status -->
+          <div class="form-group">
+            <label>Batch Status <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="batchStatus">
+              <option value="Upcoming">Upcoming</option>
+              <option value="Running">Running</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <span class="error-msg" *ngIf="batchForm.get('batchStatus')?.touched && batchForm.get('batchStatus')?.hasError('required')">
+              Status is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Status *</mat-label>
-          <mat-select formControlName="batchStatus">
-            <mat-option value="Upcoming">Upcoming</mat-option>
-            <mat-option value="Running">Running</mat-option>
-            <mat-option value="Completed">Completed</mat-option>
-            <mat-option value="Cancelled">Cancelled</mat-option>
-          </mat-select>
-          <mat-error *ngIf="batchForm.get('batchStatus')?.hasError('required')">Status is required</mat-error>
-        </mat-form-field>
+          <!-- Default Fee -->
+          <div class="form-group">
+            <label>Default Fee (INR) <span class="required-star">*</span></label>
+            <input type="number" class="form-control" formControlName="defaultFee" min="0" placeholder="e.g. 25000" />
+            <span class="error-msg" *ngIf="batchForm.get('defaultFee')?.touched && batchForm.get('defaultFee')?.hasError('required')">
+              Default fee is required
+            </span>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Default Fee (INR) *</mat-label>
-          <input matInput type="number" formControlName="defaultFee" placeholder="e.g. 15000" />
-          <mat-error *ngIf="batchForm.get('defaultFee')?.hasError('required')">Default fee is required</mat-error>
-        </mat-form-field>
-
-        <div class="time-grid full-width">
-          <mat-form-field appearance="outline">
-            <mat-label>Start Date</mat-label>
-            <input matInput type="date" formControlName="startDate" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>End Date</mat-label>
-            <input matInput type="date" formControlName="endDate" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Start Time</mat-label>
-            <input matInput type="time" formControlName="startTime" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>End Time</mat-label>
-            <input matInput type="time" formControlName="endTime" />
-          </mat-form-field>
+          <!-- Schedule Grid (Dates & Times) -->
+          <div class="form-group full-width">
+            <label>Batch Schedule & Timings</label>
+            <div class="time-grid">
+              <div class="form-group">
+                <label style="font-size: 12px; color: #64748b;">Start Date</label>
+                <input type="date" class="form-control" formControlName="startDate" />
+              </div>
+              <div class="form-group">
+                <label style="font-size: 12px; color: #64748b;">End Date</label>
+                <input type="date" class="form-control" formControlName="endDate" />
+              </div>
+              <div class="form-group">
+                <label style="font-size: 12px; color: #64748b;">Start Time</label>
+                <input type="time" class="form-control" formControlName="startTime" />
+              </div>
+              <div class="form-group">
+                <label style="font-size: 12px; color: #64748b;">End Time</label>
+                <input type="time" class="form-control" formControlName="endTime" />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="form-actions">
-        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="batchForm.invalid || (isLoading$ | async)">
-          {{ editingId ? 'Update Batch' : 'Create Batch' }}
-        </button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="batchForm.invalid || (isLoading$ | async)">
+            {{ editingId ? 'Update Batch' : 'Create Batch' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Batches Table List -->

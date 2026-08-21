@@ -6,11 +6,20 @@
     </div>
   </div>
 
-  <div class="batches-grid">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading your assigned batches...</p>
+  </div>
+
+  <!-- Batches Grid -->
+  <div class="batches-grid" *ngIf="!isLoading">
     <mat-card class="batch-card" *ngFor="let batch of batches">
       <div class="card-top-accent"></div>
       <mat-card-header>
-        <div class="batch-status" [class.active]="batch.status === 'Active'">{{ batch.status }}</div>
+        <div class="batch-status" [class.active]="batch.status === 'Active' || batch.status === 'Running'">
+          {{ batch.status }}
+        </div>
         <mat-card-title>{{ batch.name }}</mat-card-title>
         <mat-card-subtitle>{{ batch.course }} • {{ batch.subject }}</mat-card-subtitle>
       </mat-card-header>
@@ -42,13 +51,90 @@
       </mat-card-content>
 
       <mat-card-actions class="card-actions">
-        <button mat-button color="primary" class="action-btn">
+        <button mat-button color="primary" class="action-btn" (click)="viewStudents(batch)">
           <mat-icon>visibility</mat-icon> View Students
         </button>
-        <button mat-button color="accent" class="action-btn">
+        <button mat-button color="accent" class="action-btn" (click)="markAttendance(batch)">
           <mat-icon>how_to_reg</mat-icon> Mark Attendance
         </button>
       </mat-card-actions>
     </mat-card>
   </div>
+
+  <!-- View Students Modal Backdrop & Dialog -->
+  <div class="modal-overlay" *ngIf="showStudentsModal" (click)="closeStudentsModal()">
+    <div class="modal-dialog card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">
+            <mat-icon class="title-icon">groups</mat-icon>
+            Enrolled Students - {{ selectedBatch?.name }}
+          </h3>
+          <p class="modal-subtitle">{{ selectedBatch?.course }} • {{ batchStudents.length }} Active Students</p>
+        </div>
+        <button class="btn-close" (click)="closeStudentsModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="isLoadingStudents" class="modal-loading">
+          <div class="spinner"></div>
+          <p>Fetching enrolled student roster...</p>
+        </div>
+
+        <div *ngIf="!isLoadingStudents && batchStudents.length === 0" class="empty-state">
+          <mat-icon class="empty-icon">person_off</mat-icon>
+          <p>No students enrolled in this batch yet.</p>
+        </div>
+
+        <div class="table-responsive" *ngIf="!isLoadingStudents && batchStudents.length > 0">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th>Roll / Code</th>
+                <th>Student Name</th>
+                <th>Contact</th>
+                <th>Attendance %</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let student of batchStudents">
+                <td>
+                  <span class="code-badge">{{ student.rollNo || student.studentCode }}</span>
+                </td>
+                <td>
+                  <div class="student-name-col">
+                    <span class="name">{{ student.fullName || student.name }}</span>
+                    <span class="email">{{ student.email }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="mobile">{{ student.mobile || 'N/A' }}</span>
+                </td>
+                <td>
+                  <div class="attendance-pill" [class.high]="student.attendancePercentage >= 85" [class.medium]="student.attendancePercentage >= 70 && student.attendancePercentage < 85" [class.low]="student.attendancePercentage < 70">
+                    {{ student.attendancePercentage }}%
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" [class.active]="student.status === 'Active'">
+                    {{ student.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" (click)="closeStudentsModal()">Close</button>
+        <button class="btn btn-primary" (click)="markAttendance(selectedBatch)">
+          <mat-icon style="font-size: 18px; height: 18px; width: 18px; margin-right: 4px;">how_to_reg</mat-icon>
+          Mark Attendance For This Batch
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
+

@@ -1,5 +1,7 @@
 <app-page-header title="Courses" subtitle="Create and modify coaching programs and courses">
   <button class="btn btn-primary" (click)="toggleForm()">
+    <svg *ngIf="!showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <svg *ngIf="showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     {{ showAddForm ? 'Close Form' : '+ Add Course' }}
   </button>
 </app-page-header>
@@ -7,99 +9,123 @@
 <div class="courses-container">
   <!-- Collapsible Course Form -->
   <div class="form-card card" *ngIf="showAddForm">
-    <div class="card-header">
-      <h3>{{ editingId ? 'Edit Course' : 'Add New Course' }}</h3>
+    <div class="form-card-header">
+      <div>
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          {{ editingId ? 'Edit Course' : 'Add New Course' }}
+        </h3>
+        <p>Specify course details, duration, category and affiliated subjects</p>
+      </div>
+      <button type="button" class="btn-close" (click)="toggleForm()">✕</button>
     </div>
     
-    <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" class="course-form">
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Course Code</mat-label>
-          <input matInput formControlName="courseCode" placeholder="e.g. PHY-101" />
-          <mat-error *ngIf="courseForm.get('courseCode')?.hasError('required')">Course code is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Course Name</mat-label>
-          <input matInput formControlName="name" placeholder="e.g. JEE Advanced Physics" />
-          <mat-error *ngIf="courseForm.get('name')?.hasError('required')">Course name is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Course Category</mat-label>
-          <input matInput formControlName="courseCategory" placeholder="e.g. Engineering, Medical" />
-          <mat-error *ngIf="courseForm.get('courseCategory')?.hasError('required')">Course category is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Course Type</mat-label>
-          <select matNativeControl formControlName="courseType">
-            <option value="Online">Online</option>
-            <option value="Offline">Offline</option>
-            <option value="Hybrid">Hybrid</option>
-          </select>
-          <mat-error *ngIf="courseForm.get('courseType')?.hasError('required')">Course type is required</mat-error>
-        </mat-form-field>
-
-        <div style="display: flex; gap: 8px;">
-          <mat-form-field appearance="outline" style="flex: 1;">
-            <mat-label>Duration Value</mat-label>
-            <input type="number" matInput formControlName="durationValue" min="1" placeholder="e.g. 1" />
-            <mat-error *ngIf="courseForm.get('durationValue')?.hasError('required')">Duration value is required</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" style="flex: 1;">
-            <mat-label>Duration Type</mat-label>
-            <select matNativeControl formControlName="durationType">
-              <option value="Days">Days</option>
-              <option value="Months">Months</option>
-              <option value="Years">Years</option>
-            </select>
-          </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="outline" *ngIf="editingId">
-          <mat-label>Status</mat-label>
-          <select matNativeControl formControlName="isActive">
-            <option [value]="true">Active</option>
-            <option [value]="false">Inactive</option>
-          </select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" style="grid-column: span 2;">
-          <mat-label>Description</mat-label>
-          <textarea matInput formControlName="description" rows="2" placeholder="Enter course description details..."></textarea>
-        </mat-form-field>
-
-        <!-- Course Subjects Manager -->
-        <div class="subjects-manager" style="grid-column: span 2; margin: 10px 0 20px 0; padding: 15px; border: 1px solid var(--border-light); border-radius: var(--border-radius-md); background: #fafafa;">
-          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #334155;">Course Subjects</h4>
-          <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
-            <mat-form-field appearance="outline" style="flex: 1; margin-bottom: 0;">
-              <mat-label>Add Subject</mat-label>
-              <input matInput #subjectInput placeholder="e.g. Physics, Calculus" (keyup.enter)="addSubject(subjectInput.value); subjectInput.value = ''" />
-            </mat-form-field>
-            <button mat-stroked-button color="primary" type="button" (click)="addSubject(subjectInput.value); subjectInput.value = ''" style="height: 52px; margin-bottom: 16px;">Add Subject</button>
-          </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <span *ngFor="let subject of subjectsList; let idx = index" style="background: rgba(109, 40, 217, 0.1); border: 1px solid rgb(109, 40, 217); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: rgb(109, 40, 217);">
-              {{ subject }}
-              <button type="button" (click)="removeSubject(idx)" style="background: none; border: none; padding: 0; cursor: pointer; color: rgb(109, 40, 217); display: flex; align-items: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
+    <div class="form-card-body">
+      <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" class="course-form">
+        <div class="form-grid">
+          <!-- Course Code -->
+          <div class="form-group">
+            <label>Course Code <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="courseCode" placeholder="e.g. PHY-101" />
+            <span class="error-msg" *ngIf="courseForm.get('courseCode')?.touched && courseForm.get('courseCode')?.hasError('required')">
+              Course code is required
             </span>
-            <span *ngIf="subjectsList.length === 0" style="font-size: 13px; color: #64748b; font-style: italic;">No subjects added yet.</span>
+          </div>
+
+          <!-- Course Name -->
+          <div class="form-group">
+            <label>Course Name <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="name" placeholder="e.g. JEE Advanced Physics" />
+            <span class="error-msg" *ngIf="courseForm.get('name')?.touched && courseForm.get('name')?.hasError('required')">
+              Course name is required
+            </span>
+          </div>
+
+          <!-- Course Category -->
+          <div class="form-group">
+            <label>Course Category <span class="required-star">*</span></label>
+            <input type="text" class="form-control" formControlName="courseCategory" placeholder="e.g. Engineering, Medical" />
+            <span class="error-msg" *ngIf="courseForm.get('courseCategory')?.touched && courseForm.get('courseCategory')?.hasError('required')">
+              Course category is required
+            </span>
+          </div>
+
+          <!-- Course Type -->
+          <div class="form-group">
+            <label>Course Type <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="courseType">
+              <option value="Offline">Offline</option>
+              <option value="Online">Online</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+            <span class="error-msg" *ngIf="courseForm.get('courseType')?.touched && courseForm.get('courseType')?.hasError('required')">
+              Course type is required
+            </span>
+          </div>
+
+          <!-- Duration Value & Duration Type -->
+          <div class="form-group">
+            <label>Duration <span class="required-star">*</span></label>
+            <div class="duration-input-group">
+              <input type="number" class="form-control duration-val" formControlName="durationValue" min="1" placeholder="e.g. 1" />
+              <select class="form-control duration-type" formControlName="durationType">
+                <option value="Days">Days</option>
+                <option value="Weeks">Weeks</option>
+                <option value="Months">Months</option>
+                <option value="Years">Years</option>
+              </select>
+            </div>
+            <span class="error-msg" *ngIf="courseForm.get('durationValue')?.touched && courseForm.get('durationValue')?.hasError('required')">
+              Duration value is required
+            </span>
+          </div>
+
+          <!-- Status (for edit) -->
+          <div class="form-group" *ngIf="editingId">
+            <label>Status</label>
+            <select class="form-control" formControlName="isActive">
+              <option [ngValue]="true">Active</option>
+              <option [ngValue]="false">Inactive</option>
+            </select>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group full-width">
+            <label>Description</label>
+            <textarea class="form-control" formControlName="description" rows="3" placeholder="Enter course description details..."></textarea>
+          </div>
+
+          <!-- Course Subjects Manager -->
+          <div class="form-group full-width">
+            <label>Course Subjects</label>
+            <div class="subjects-box">
+              <div class="subject-input-row">
+                <input type="text" class="form-control" #subjectInput placeholder="Type subject name (e.g. Physics, Calculus) and press Add or Enter" (keyup.enter)="addSubject(subjectInput.value); subjectInput.value = ''" />
+                <button type="button" class="btn btn-light" (click)="addSubject(subjectInput.value); subjectInput.value = ''">
+                  + Add Subject
+                </button>
+              </div>
+              <div class="subject-chips">
+                <div class="subject-chip" *ngFor="let subject of subjectsList; let idx = index">
+                  <span>{{ subject }}</span>
+                  <button type="button" class="remove-chip-btn" (click)="removeSubject(idx)">✕</button>
+                </div>
+                <div *ngIf="subjectsList.length === 0" class="no-subjects-hint">
+                  No subjects added yet. Add subjects to define the curriculum.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="form-actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="courseForm.invalid || (isLoading$ | async)">
-          {{ editingId ? 'Update Course' : 'Create Course' }}
-        </button>
-        <button mat-button type="button" (click)="toggleForm()">Cancel</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="courseForm.invalid || (isLoading$ | async)">
+            {{ editingId ? 'Update Course' : 'Create Course' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Courses Table List -->
