@@ -28,37 +28,11 @@ export class LoginComponent {
   isLoading$ = this.authFacade.isLoading$;
   hidePassword = true;
   rememberMe = true;
-  selectedRoleTab = 'admin';
 
   loginForm = this.fb.group({
-    email: ['superadmin@apex.com', [Validators.required, Validators.email]],
-    password: ['Password@123', Validators.required]
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required]
   });
-
-  quickFill(role: string) {
-    this.selectedRoleTab = role;
-    if (role === 'admin') {
-      this.loginForm.patchValue({
-        email: 'superadmin@apex.com',
-        password: 'Password@123'
-      });
-    } else if (role === 'teacher') {
-      this.loginForm.patchValue({
-        email: 'physics@apex.com',
-        password: 'Password@123'
-      });
-    } else if (role === 'maths') {
-      this.loginForm.patchValue({
-        email: 'maths@apex.com',
-        password: 'Password@123'
-      });
-    } else if (role === 'reception') {
-      this.loginForm.patchValue({
-        email: 'reception@apex.com',
-        password: 'Password@123'
-      });
-    }
-  }
 
   onSubmit() {
     if (this.loginForm.valid) {

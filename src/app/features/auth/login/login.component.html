@@ -92,25 +92,6 @@
         <p class="welcome-subtitle">Please enter your credentials to access your administrative dashboard.</p>
       </div>
 
-      <!-- Quick Role Switcher Chips for Demo / Testing -->
-      <div class="quick-role-section">
-        <span class="quick-label">⚡ Quick Fill Demo Account:</span>
-        <div class="role-chips-group">
-          <button type="button" class="role-chip" [class.active]="selectedRoleTab === 'admin'" (click)="quickFill('admin')">
-            <span class="chip-icon">👑</span> Super Admin
-          </button>
-          <button type="button" class="role-chip" [class.active]="selectedRoleTab === 'teacher'" (click)="quickFill('teacher')">
-            <span class="chip-icon">🔬</span> Physics Faculty
-          </button>
-          <button type="button" class="role-chip" [class.active]="selectedRoleTab === 'maths'" (click)="quickFill('maths')">
-            <span class="chip-icon">📐</span> Maths Faculty
-          </button>
-          <button type="button" class="role-chip" [class.active]="selectedRoleTab === 'reception'" (click)="quickFill('reception')">
-            <span class="chip-icon">🏢</span> Receptionist
-          </button>
-        </div>
-      </div>
-
       <!-- Sign In Form -->
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
         <!-- Email Input -->
@@ -122,7 +103,7 @@
               type="email" 
               class="auth-control" 
               formControlName="email" 
-              placeholder="e.g. superadmin@apex.com" 
+              placeholder="e.g. name@apex.com" 
               autocomplete="email"
             />
           </div>
