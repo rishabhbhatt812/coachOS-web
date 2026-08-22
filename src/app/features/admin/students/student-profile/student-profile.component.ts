@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -26,11 +26,13 @@ export class StudentProfileComponent implements OnInit {
   private router = inject(Router);
   private admissionsService = inject(AdmissionsService);
   private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
 
   studentId!: string;
-  profileData: any;
-  feeHistory: any;
-  batchHistory: any;
+  profileData: any = null;
+  feeHistory: any = null;
+  batchHistory: any = null;
+  isLoading = true;
   isUploading = false;
 
   goBack() {
@@ -40,21 +42,46 @@ export class StudentProfileComponent implements OnInit {
   ngOnInit() {
     this.studentId = this.route.snapshot.paramMap.get('id')!;
     this.loadProfile();
-    // Load fee history eagerly for admission receipts
-    this.admissionsService.getFeeHistory(this.studentId).subscribe(res => this.feeHistory = res);
+    this.loadFeeHistory();
   }
 
   loadProfile() {
-    this.admissionsService.getStudentProfile(this.studentId).subscribe(data => {
-      this.profileData = data;
+    this.isLoading = true;
+    this.admissionsService.getStudentProfile(this.studentId).subscribe({
+      next: (data) => {
+        this.profileData = data;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading student profile:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadFeeHistory() {
+    this.admissionsService.getFeeHistory(this.studentId).subscribe({
+      next: (res) => {
+        this.feeHistory = res;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error loading fee history:', err)
     });
   }
 
   onTabChange(event: any) {
     if (event.index === 1 && !this.batchHistory) { // Batches Tab
-      this.admissionsService.getBatchHistory(this.studentId).subscribe(res => this.batchHistory = res);
+      this.admissionsService.getBatchHistory(this.studentId).subscribe({
+        next: (res) => {
+          this.batchHistory = res;
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Error loading batch history:', err)
+      });
     } else if (event.index === 2 && !this.feeHistory) { // Fees Tab
-      this.admissionsService.getFeeHistory(this.studentId).subscribe(res => this.feeHistory = res);
+      this.loadFeeHistory();
     }
   }
 
@@ -79,6 +106,8 @@ export class StudentProfileComponent implements OnInit {
     formData.append('file', file);
 
     this.isUploading = true;
+    this.cdr.detectChanges();
+
     this.admissionsService.uploadProfilePicture(this.studentId, formData).subscribe({
       next: (res) => {
         this.isUploading = false;
@@ -90,10 +119,12 @@ export class StudentProfileComponent implements OnInit {
         } else {
           this.snackBar.open(res.message || 'Failed to upload profile picture.', 'Close', { duration: 3000 });
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isUploading = false;
         this.snackBar.open(err.error?.message || 'Error uploading profile picture.', 'Close', { duration: 3000 });
+        this.cdr.detectChanges();
       }
     });
   }

@@ -5,232 +5,249 @@
     </button>
   </div>
 
-  <div *ngIf="profileData" class="profile-header-card">
-    <div class="profile-header-content">
-      
-      <!-- Avatar Section with Hover Photo Upload -->
-      <div class="avatar-container">
-        <div class="avatar-wrapper" [class.uploading]="isUploading">
-          <img [src]="getProfileUrl()" alt="Student Avatar" class="avatar-image" />
-          <div class="avatar-upload-overlay" (click)="fileInput.click()" title="Click to upload profile photo">
-            <mat-icon>photo_camera</mat-icon>
-            <span>UPLOAD</span>
-          </div>
-          <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;" />
-          <div class="avatar-spinner" *ngIf="isUploading"></div>
-        </div>
-      </div>
-
-      <!-- Info Section -->
-      <div class="profile-title-section">
-        <h1 class="profile-name">{{profileData.fullName}}</h1>
-        <p class="profile-meta">
-          <span class="meta-item code"><mat-icon>badge</mat-icon> {{profileData.studentCode}}</span>
-          <span class="meta-divider">|</span>
-          <span class="meta-item"><mat-icon>phone</mat-icon> {{profileData.mobile}}</span>
-        </p>
-        <div class="badge-row">
-          <span class="profile-status-badge active">
-            Active Student
-          </span>
-        </div>
-      </div>
-
-      <!-- Quick Action Buttons -->
-      <div class="profile-actions">
-        <button mat-flat-button color="primary" class="admission-receipt-btn" (click)="downloadAdmissionReceipt()">
-          <mat-icon>print</mat-icon> Admission Receipt
-        </button>
-      </div>
-
-    </div>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="profile-loading-card">
+    <div class="spinner"></div>
+    <p>Loading student profile...</p>
   </div>
 
-  <!-- Tabs Panel -->
-  <mat-tab-group class="profile-tabs-card" (selectedTabChange)="onTabChange($event)">
-    
-    <!-- TAB 1: Overview -->
-    <mat-tab label="Overview">
-      <div class="tab-padding" *ngIf="profileData">
-        <div class="overview-grid">
-          
-          <div class="overview-column">
-            <h3 class="details-heading">Personal Details</h3>
-            <ul class="details-list">
-              <li>
-                <span class="detail-label">Email Address</span>
-                <span class="detail-value">{{profileData.email || 'N/A'}}</span>
-              </li>
-              <li>
-                <span class="detail-label">Date of Birth</span>
-                <span class="detail-value">{{profileData.dateOfBirth || 'N/A'}}</span>
-              </li>
-              <li>
-                <span class="detail-label">Admission Date</span>
-                <span class="detail-value">{{profileData.admissionDate || 'N/A'}}</span>
-              </li>
-            </ul>
-          </div>
+  <!-- Error / Not Found State -->
+  <div *ngIf="!isLoading && !profileData" class="profile-empty-card">
+    <mat-icon class="empty-icon">person_off</mat-icon>
+    <h3>Student Profile Not Found</h3>
+    <p>The student profile could not be loaded. Please return to the students list.</p>
+    <button mat-flat-button color="primary" (click)="goBack()">Back to Students</button>
+  </div>
 
-          <div class="overview-column">
-            <h3 class="details-heading">Parents & Guardians</h3>
-            <div *ngFor="let p of profileData.parents" class="parent-card">
-              <div class="parent-relationship">{{p.relationshipType}}</div>
-              <div class="parent-info">
-                <span class="parent-name">{{p.fullName}}</span>
-                <span class="parent-mobile"><mat-icon>phone</mat-icon> {{p.mobile}}</span>
+  <ng-container *ngIf="!isLoading && profileData">
+    <!-- Header Card -->
+    <div class="profile-header-card">
+      <div class="profile-header-content">
+        
+        <!-- Avatar Section with Hover Photo Upload -->
+        <div class="avatar-container">
+          <div class="avatar-wrapper" [class.uploading]="isUploading">
+            <img [src]="getProfileUrl()" alt="Student Avatar" class="avatar-image" />
+            <div class="avatar-upload-overlay" (click)="fileInput.click()" title="Click to upload profile photo">
+              <mat-icon>photo_camera</mat-icon>
+              <span>UPLOAD</span>
+            </div>
+            <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;" />
+            <div class="avatar-spinner" *ngIf="isUploading"></div>
+          </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="profile-title-section">
+          <h1 class="profile-name">{{profileData.fullName}}</h1>
+          <p class="profile-meta">
+            <span class="meta-item code"><mat-icon>badge</mat-icon> {{profileData.studentCode}}</span>
+            <span class="meta-divider">|</span>
+            <span class="meta-item"><mat-icon>phone</mat-icon> {{profileData.mobile}}</span>
+          </p>
+          <div class="badge-row">
+            <span class="profile-status-badge active">
+              Active Student
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="profile-actions">
+          <button mat-flat-button color="primary" class="admission-receipt-btn" (click)="downloadAdmissionReceipt()">
+            <mat-icon>print</mat-icon> Admission Receipt
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Tabs Panel -->
+    <mat-tab-group class="profile-tabs-card" (selectedTabChange)="onTabChange($event)">
+      
+      <!-- TAB 1: Overview -->
+      <mat-tab label="Overview">
+        <div class="tab-padding">
+          <div class="overview-grid">
+            
+            <div class="overview-column">
+              <h3 class="details-heading">Personal Details</h3>
+              <ul class="details-list">
+                <li>
+                  <span class="detail-label">Email Address</span>
+                  <span class="detail-value">{{profileData.email || 'N/A'}}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Date of Birth</span>
+                  <span class="detail-value">{{profileData.dateOfBirth || 'N/A'}}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Admission Date</span>
+                  <span class="detail-value">{{profileData.admissionDate || 'N/A'}}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="overview-column">
+              <h3 class="details-heading">Parents & Guardians</h3>
+              <div *ngFor="let p of profileData.parents" class="parent-card">
+                <div class="parent-relationship">{{p.relationshipType}}</div>
+                <div class="parent-info">
+                  <span class="parent-name">{{p.fullName}}</span>
+                  <span class="parent-mobile"><mat-icon>phone</mat-icon> {{p.mobile}}</span>
+                </div>
+              </div>
+              <div *ngIf="!profileData.parents || profileData.parents.length === 0" class="empty-state">
+                No parent details recorded.
               </div>
             </div>
-            <div *ngIf="!profileData.parents || profileData.parents.length === 0" class="empty-state">
-              No parent details recorded.
+
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- TAB 2: Batches -->
+      <mat-tab label="Batches">
+        <div class="tab-padding">
+          <h3 class="details-heading">Academic Batch History</h3>
+          
+          <div class="table-responsive" *ngIf="batchHistory">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Course Program</th>
+                  <th>Assigned Batch</th>
+                  <th>Joined Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let b of batchHistory">
+                  <td>{{b.courseName}}</td>
+                  <td class="font-medium">{{b.batchName}}</td>
+                  <td>{{b.joinedDate}}</td>
+                  <td>
+                    <span class="badge-status" [ngClass]="b.isActive ? 'active' : 'inactive'">
+                      {{b.isActive ? 'Active' : 'Transferred/Left'}}
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="batchHistory.length === 0">
+                  <td colspan="4" class="text-center empty-text">No batch assignments found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div *ngIf="!batchHistory" class="loading-state">
+            <div class="small-spinner"></div>
+            <p>Loading batch history...</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- TAB 3: Fees -->
+      <mat-tab label="Fees">
+        <div class="tab-padding" *ngIf="feeHistory">
+          
+          <!-- Fee Plans -->
+          <h3 class="details-heading">Assigned Fee Plans</h3>
+          <div class="plans-grid">
+            <div *ngFor="let fp of feeHistory.feePlans" class="fee-plan-card">
+              <div class="fee-plan-header">
+                <span class="plan-course">{{fp.courseName}} <small>({{fp.batchName}})</small></span>
+                <span class="plan-amount">{{fp.finalFee | currency:'INR'}}</span>
+              </div>
+              <div class="fee-plan-details">
+                <span><strong>Plan Type:</strong> {{fp.planType}}</span>
+                <span><strong>Scholarship/Discount:</strong> {{fp.discountAmount | currency:'INR'}}</span>
+              </div>
+            </div>
+            <div *ngIf="!feeHistory.feePlans || feeHistory.feePlans.length === 0" class="empty-state">
+              No fee plan assigned.
             </div>
           </div>
 
-        </div>
-      </div>
-    </mat-tab>
+          <!-- Installments -->
+          <h3 class="details-heading mt-6">Installment Milestones</h3>
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Due Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let inst of feeHistory.installments">
+                  <td>Installment #{{inst.installmentNo}}</td>
+                  <td>{{inst.dueDate}}</td>
+                  <td class="font-medium">{{inst.amount | currency:'INR'}}</td>
+                  <td>
+                    <span class="badge-status" [ngClass]="{'active': inst.status === 'Paid', 'warning': inst.status === 'Partial', 'danger': inst.status === 'Pending'}">
+                      {{inst.status}}
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="!feeHistory.installments || feeHistory.installments.length === 0">
+                  <td colspan="4" class="text-center empty-text">No installments scheduled.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-    <!-- TAB 2: Batches -->
-    <mat-tab label="Batches">
-      <div class="tab-padding">
-        <h3 class="details-heading">Academic Batch History</h3>
-        
-        <div class="table-responsive" *ngIf="batchHistory">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>Course Program</th>
-                <th>Assigned Batch</th>
-                <th>Joined Date</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let b of batchHistory">
-                <td>{{b.courseName}}</td>
-                <td class="font-medium">{{b.batchName}}</td>
-                <td>{{b.joinedDate}}</td>
-                <td>
-                  <span class="badge-status" [ngClass]="b.isActive ? 'active' : 'inactive'">
-                    {{b.isActive ? 'Active' : 'Transferred/Left'}}
-                  </span>
-                </td>
-              </tr>
-              <tr *ngIf="batchHistory.length === 0">
-                <td colspan="4" class="text-center empty-text">No batch assignments found.</td>
-              </tr>
-            </tbody>
-          </table>
+          <!-- Payment Receipts -->
+          <h3 class="details-heading mt-6">Payment Receipts</h3>
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Transaction Date</th>
+                  <th>Receipt Number</th>
+                  <th>Amount Paid</th>
+                  <th>Payment Mode</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of feeHistory.payments">
+                  <td>{{p.paymentDate | date:'dd MMM yyyy, hh:mm a'}}</td>
+                  <td class="receipt-code">{{p.receiptNo}}</td>
+                  <td class="font-bold text-success">{{p.amount | currency:'INR'}}</td>
+                  <td>{{p.paymentMode}}</td>
+                  <td class="text-right">
+                    <button mat-icon-button color="primary" class="print-row-btn" (click)="downloadSinglePaymentReceipt(p)" title="Print Receipt">
+                      <mat-icon>print</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="!feeHistory.payments || feeHistory.payments.length === 0">
+                  <td colspan="5" class="text-center empty-text">No payments recorded yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
         </div>
         
-        <div *ngIf="!batchHistory" class="loading-state">
+        <div *ngIf="!feeHistory" class="tab-padding loading-state">
           <div class="small-spinner"></div>
-          <p>Loading batch history...</p>
+          <p>Loading fee details...</p>
         </div>
-      </div>
-    </mat-tab>
+      </mat-tab>
 
-    <!-- TAB 3: Fees -->
-    <mat-tab label="Fees">
-      <div class="tab-padding" *ngIf="feeHistory">
-        
-        <!-- Fee Plans -->
-        <h3 class="details-heading">Assigned Fee Plans</h3>
-        <div class="plans-grid">
-          <div *ngFor="let fp of feeHistory.feePlans" class="fee-plan-card">
-            <div class="fee-plan-header">
-              <span class="plan-course">{{fp.courseName}} <small>({{fp.batchName}})</small></span>
-              <span class="plan-amount">{{fp.finalFee | currency:'INR'}}</span>
-            </div>
-            <div class="fee-plan-details">
-              <span><strong>Plan Type:</strong> {{fp.planType}}</span>
-              <span><strong>Scholarship/Discount:</strong> {{fp.discountAmount | currency:'INR'}}</span>
-            </div>
-          </div>
-          <div *ngIf="!feeHistory.feePlans || feeHistory.feePlans.length === 0" class="empty-state">
-            No fee plan assigned.
+      <!-- TAB 4: Documents -->
+      <mat-tab label="Documents">
+        <div class="tab-padding text-center">
+          <div class="empty-state">
+            <mat-icon class="large-icon">folder_open</mat-icon>
+            <p>Documents panel and attachments module is coming soon.</p>
           </div>
         </div>
+      </mat-tab>
 
-        <!-- Installments -->
-        <h3 class="details-heading mt-6">Installment Milestones</h3>
-        <div class="table-responsive">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>No.</th>
-                <th>Due Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let inst of feeHistory.installments">
-                <td>Installment #{{inst.installmentNo}}</td>
-                <td>{{inst.dueDate}}</td>
-                <td class="font-medium">{{inst.amount | currency:'INR'}}</td>
-                <td>
-                  <span class="badge-status" [ngClass]="{'active': inst.status === 'Paid', 'warning': inst.status === 'Partial', 'danger': inst.status === 'Pending'}">
-                    {{inst.status}}
-                  </span>
-                </td>
-              </tr>
-              <tr *ngIf="!feeHistory.installments || feeHistory.installments.length === 0">
-                <td colspan="4" class="text-center empty-text">No installments scheduled.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Payment Receipts -->
-        <h3 class="details-heading mt-6">Payment Receipts</h3>
-        <div class="table-responsive">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>Transaction Date</th>
-                <th>Receipt Number</th>
-                <th>Amount Paid</th>
-                <th>Payment Mode</th>
-                <th class="text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of feeHistory.payments">
-                <td>{{p.paymentDate | date:'dd MMM yyyy, hh:mm a'}}</td>
-                <td class="receipt-code">{{p.receiptNo}}</td>
-                <td class="font-bold text-success">{{p.amount | currency:'INR'}}</td>
-                <td>{{p.paymentMode}}</td>
-                <td class="text-right">
-                  <button mat-icon-button color="primary" class="print-row-btn" (click)="downloadSinglePaymentReceipt(p)" title="Print Receipt">
-                    <mat-icon>print</mat-icon>
-                  </button>
-                </td>
-              </tr>
-              <tr *ngIf="!feeHistory.payments || feeHistory.payments.length === 0">
-                <td colspan="5" class="text-center empty-text">No payments recorded yet.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-      
-      <div *ngIf="!feeHistory" class="tab-padding loading-state">
-        <div class="small-spinner"></div>
-        <p>Loading fee details...</p>
-      </div>
-    </mat-tab>
-
-    <!-- TAB 4: Documents -->
-    <mat-tab label="Documents">
-      <div class="tab-padding text-center">
-        <div class="empty-state">
-          <mat-icon class="large-icon">folder_open</mat-icon>
-          <p>Documents panel and attachments module is coming soon.</p>
-        </div>
-      </div>
-    </mat-tab>
-
-  </mat-tab-group>
+    </mat-tab-group>
+  </ng-container>
 </div>

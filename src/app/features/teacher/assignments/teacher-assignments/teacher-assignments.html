@@ -117,16 +117,26 @@
 
   <!-- Grading Submissions Modal -->
   <div class="modal-overlay" *ngIf="showGradeModal" (click)="closeGradeModal()">
-    <div class="modal-dialog card" (click)="$event.stopPropagation()">
+    <div class="modal-dialog card evaluate-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <div>
-          <h3 class="modal-title">
-            <mat-icon class="title-icon">grading</mat-icon>
-            Evaluate: {{ selectedAssignment?.title }}
-          </h3>
-          <p class="modal-subtitle">
-            {{ selectedAssignment?.batch }} • Maximum Marks: <strong>{{ selectedAssignment?.marks }}</strong>
-          </p>
+        <div class="header-left">
+          <div class="modal-badge-icon">
+            <mat-icon>grading</mat-icon>
+          </div>
+          <div>
+            <h3 class="modal-title">Evaluate: {{ selectedAssignment?.title }}</h3>
+            <div class="modal-meta-pills">
+              <span class="meta-pill batch">
+                <mat-icon>group</mat-icon> {{ selectedAssignment?.batch }}
+              </span>
+              <span class="meta-pill marks">
+                <mat-icon>military_tech</mat-icon> Maximum Marks: <strong>{{ selectedAssignment?.marks }}</strong>
+              </span>
+              <span class="meta-pill submissions">
+                <mat-icon>done_all</mat-icon> {{ studentSubmissions.length }} Students Enrolled
+              </span>
+            </div>
+          </div>
         </div>
         <button type="button" class="btn-close" (click)="closeGradeModal()">✕</button>
       </div>
@@ -136,54 +146,62 @@
           <table class="sub-table w-full">
             <thead>
               <tr>
-                <th style="width: 110px;">Roll / ID</th>
+                <th style="width: 120px;">Roll / ID</th>
                 <th style="min-width: 180px;">Student Name</th>
-                <th style="width: 130px;">Status</th>
-                <th style="min-width: 160px;">Submitted File</th>
-                <th style="width: 150px;">Score</th>
-                <th>Feedback</th>
+                <th style="width: 140px;">Status</th>
+                <th style="min-width: 220px;">Submitted File</th>
+                <th style="width: 170px;">Score</th>
+                <th style="min-width: 260px;">Teacher Remarks & Feedback</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let s of studentSubmissions">
+              <tr *ngFor="let s of studentSubmissions" [class.row-pending]="s.status !== 'Submitted'">
                 <td>
-                  <span class="badge" style="background: #f1f5f9; color: #334155; font-family: monospace;">{{ s.rollNo }}</span>
+                  <span class="roll-badge">{{ s.rollNo }}</span>
                 </td>
                 <td>
-                  <span class="font-semibold text-gray-900">{{ s.name }}</span>
+                  <div class="student-cell">
+                    <span class="student-name">{{ s.name }}</span>
+                  </div>
                 </td>
                 <td>
                   <span class="badge" [ngClass]="s.status === 'Submitted' ? 'green' : 'amber'">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-right: 2px;">
+                      {{ s.status === 'Submitted' ? 'check_circle' : 'hourglass_empty' }}
+                    </mat-icon>
                     {{ s.status }}
                   </span>
                 </td>
                 <td>
-                  <span *ngIf="s.file" class="file-link flex items-center gap-1 text-blue-600 text-xs font-medium cursor-pointer">
-                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">description</mat-icon>
+                  <span *ngIf="s.file" class="file-link flex items-center gap-1.5 text-blue-600 text-sm font-medium cursor-pointer">
+                    <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: #2563eb;">picture_as_pdf</mat-icon>
                     {{ s.file }}
                   </span>
-                  <span *ngIf="!s.file" class="text-xs text-gray-400 italic">No file attached</span>
+                  <span *ngIf="!s.file" class="text-xs text-gray-400 italic flex items-center gap-1">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">cloud_off</mat-icon>
+                    No file submitted
+                  </span>
                 </td>
                 <td>
-                  <div class="marks-input-group flex items-center gap-1">
+                  <div class="marks-input-group flex items-center gap-2">
                     <input 
                       type="number" 
                       class="form-control marks-control" 
-                      style="width: 70px; text-align: center;"
                       [(ngModel)]="s.marks" 
                       [max]="selectedAssignment?.marks" 
                       min="0"
                       [disabled]="s.status !== 'Submitted'"
+                      placeholder="--"
                     />
-                    <span class="text-xs text-gray-500 font-semibold">/ {{ selectedAssignment?.marks }}</span>
+                    <span class="marks-divider">/ {{ selectedAssignment?.marks }}</span>
                   </div>
                 </td>
                 <td>
                   <input 
                     type="text" 
-                    class="form-control" 
+                    class="form-control feedback-control" 
                     [(ngModel)]="s.feedback" 
-                    placeholder="Enter remark..."
+                    placeholder="Add feedback / comments for student..."
                   />
                 </td>
               </tr>
@@ -192,11 +210,17 @@
         </div>
       </div>
 
-      <div class="modal-footer flex justify-end gap-3 p-4 border-t border-gray-100 bg-slate-50">
-        <button type="button" class="btn btn-light" (click)="closeGradeModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="saveGrades()">
-          ✓ Save & Finalize Grades
-        </button>
+      <div class="modal-footer flex justify-between items-center p-4 border-t border-gray-100 bg-slate-50">
+        <div class="text-xs text-gray-500 font-medium">
+          Graded values are saved directly to student gradebooks.
+        </div>
+        <div class="flex items-center gap-3">
+          <button type="button" class="btn btn-light" (click)="closeGradeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="saveGrades()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Save & Finalize Grades
+          </button>
+        </div>
       </div>
     </div>
   </div>
