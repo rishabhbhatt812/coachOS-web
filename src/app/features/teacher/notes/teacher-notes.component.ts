@@ -12,9 +12,9 @@ import { DataTableComponent, TableColumn } from '../../../shared/components/data
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload';
 import { TeacherFacade } from '../../../core/facades/teacher.facade';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../core/constants/api-endpoints';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-teacher-notes',
@@ -39,6 +39,7 @@ export class TeacherNotesComponent implements OnInit {
   private teacherFacade = inject(TeacherFacade);
   private snackBar = inject(MatSnackBar);
   private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
 
   notes$ = this.teacherFacade.notes$;
   isLoading$ = this.teacherFacade.isLoading$;
@@ -116,21 +117,19 @@ export class TeacherNotesComponent implements OnInit {
 
   onActionClicked(event: any) {
     if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete this study material: ' + event.row.title + '?')) {
-        this.teacherFacade.deleteNote(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Study material deleted successfully!', 'Dismiss', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
-          },
-          error: (err) => {
-            console.error('Failed to delete note:', err);
-          }
-        });
-      }
+      this.dialogService.delete(event.row.title ? `study material: "${event.row.title}"` : 'Study Material').subscribe(confirmed => {
+        if (confirmed) {
+          this.teacherFacade.deleteNote(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Study material deleted successfully!');
+            },
+            error: (err) => {
+              console.error('Failed to delete note:', err);
+              this.dialogService.error('Failed to delete study material.');
+            }
+          });
+        }
+      });
     } else if (event.action === 'download') {
       if (event.row.filePath) {
         let url = event.row.filePath;

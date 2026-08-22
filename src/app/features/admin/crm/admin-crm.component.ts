@@ -7,9 +7,11 @@ import { CrmFacade } from '../../../core/facades/crm.facade';
 import { CourseFacade } from '../../../core/facades/course.facade';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateEnquiryRequest, UpdateEnquiryRequest } from '../../../core/models/api-schemas';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-crm',
@@ -21,6 +23,7 @@ import { CreateEnquiryRequest, UpdateEnquiryRequest } from '../../../core/models
     DataTableComponent,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatSnackBarModule
   ],
@@ -32,6 +35,7 @@ export class AdminCrmComponent implements OnInit {
   private courseFacade = inject(CourseFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialogService = inject(DialogService);
 
   enquiries$ = this.crmFacade.enquiries$;
   courses$ = this.courseFacade.courses$;
@@ -129,14 +133,19 @@ export class AdminCrmComponent implements OnInit {
       });
       this.showAddForm = true;
     } else if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete this enquiry: ' + event.row.fullName + '?')) {
-        this.crmFacade.deleteEnquiry(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Enquiry deleted successfully!', 'Dismiss', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top', panelClass: ['success-snackbar'] });
-          },
-          error: (err) => console.error('Failed to delete enquiry:', err)
-        });
-      }
+      this.dialogService.delete(event.row.fullName ? `enquiry from ${event.row.fullName}` : 'Enquiry').subscribe(confirmed => {
+        if (confirmed) {
+          this.crmFacade.deleteEnquiry(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Enquiry deleted successfully!');
+            },
+            error: (err) => {
+              console.error('Failed to delete enquiry:', err);
+              this.dialogService.error('Failed to delete enquiry.');
+            }
+          });
+        }
+      });
     }
   }
 }

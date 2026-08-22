@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateStudentRequest, UpdateStudentRequest } from '../../../core/models/api-schemas';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-students',
@@ -31,13 +32,14 @@ export class AdminStudentsComponent implements OnInit {
   private studentFacade = inject(StudentAdminFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
+  private dialogService = inject(DialogService);
 
   students$ = this.studentFacade.students$;
   isLoading$ = this.studentFacade.isLoading$;
   showAddForm = false;
   editingId: string | null = null;
   studentForm!: FormGroup;
-  private router = inject(Router);
 
   columns: TableColumn[] = [
     { key: 'studentCode', header: 'Student Code' },
@@ -126,14 +128,19 @@ export class AdminStudentsComponent implements OnInit {
       this.studentForm.get('studentCode')?.disable();
       this.showAddForm = true;
     } else if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete student: ' + event.row.fullName + '?')) {
-        this.studentFacade.deleteStudent(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Student deleted successfully!', 'Dismiss', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top', panelClass: ['success-snackbar'] });
-          },
-          error: (err) => console.error('Failed to delete student:', err)
-        });
-      }
+      this.dialogService.delete(event.row.fullName ? `student: ${event.row.fullName}` : 'Student').subscribe(confirmed => {
+        if (confirmed) {
+          this.studentFacade.deleteStudent(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Student deleted successfully!');
+            },
+            error: (err) => {
+              console.error('Failed to delete student:', err);
+              this.dialogService.error('Failed to delete student.');
+            }
+          });
+        }
+      });
     }
   }
 }

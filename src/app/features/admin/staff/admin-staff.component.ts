@@ -12,6 +12,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
 import { StaffService } from '../../../core/services/staff.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-staff',
@@ -37,6 +38,7 @@ export class AdminStaffComponent implements OnInit {
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private cdr = inject(ChangeDetectorRef);
+  private dialogService = inject(DialogService);
 
   staff: any[] = [];
   branches: any[] = [];
@@ -274,21 +276,23 @@ export class AdminStaffComponent implements OnInit {
 
       this.showForm = true;
     } else if (event.action === 'delete') {
-      if (confirm('Are you sure you want to deactivate/delete staff: ' + event.row.fullName + '?')) {
-        this.isLoading = true;
-        this.staffService.deleteStaff(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Staff deleted successfully!', 'Dismiss', { duration: 3000 });
-            this.loadStaff();
-            this.isLoading = false;
-          },
-          error: (err) => {
-            const msg = err.error?.message || 'Failed to delete staff.';
-            this.snackBar.open(msg, 'Dismiss', { duration: 5000 });
-            this.isLoading = false;
-          }
-        });
-      }
+      this.dialogService.delete(event.row.fullName ? `staff member: ${event.row.fullName}` : 'Staff').subscribe(confirmed => {
+        if (confirmed) {
+          this.isLoading = true;
+          this.staffService.deleteStaff(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Staff deleted successfully!');
+              this.loadStaff();
+              this.isLoading = false;
+            },
+            error: (err) => {
+              const msg = err.error?.message || 'Failed to delete staff.';
+              this.dialogService.error(msg);
+              this.isLoading = false;
+            }
+          });
+        }
+      });
     }
   }
 }

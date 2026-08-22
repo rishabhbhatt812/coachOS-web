@@ -8,7 +8,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { CreateCourseRequest } from '../../../core/models/api-schemas';
+import { CreateCourseRequest, UpdateCourseRequest } from '../../../core/models/api-schemas';
+import { DialogService } from '../../../core/services/dialog.service';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-admin-courses',
@@ -21,6 +23,7 @@ import { CreateCourseRequest } from '../../../core/models/api-schemas';
     DataTableComponent,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatSnackBarModule
   ],
@@ -31,6 +34,7 @@ export class AdminCoursesComponent implements OnInit {
   private courseFacade = inject(CourseFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialogService = inject(DialogService);
 
   courses$ = this.courseFacade.courses$;
   isLoading$ = this.courseFacade.isLoading$;
@@ -146,14 +150,19 @@ export class AdminCoursesComponent implements OnInit {
       this.subjectsList = event.row.subjects ? event.row.subjects.map((s: any) => s.name) : [];
       this.showAddForm = true;
     } else if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete course: ' + event.row.name + '?')) {
-        this.courseFacade.deleteCourse(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Course deleted successfully!', 'Dismiss', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top', panelClass: ['success-snackbar'] });
-          },
-          error: (err) => console.error('Failed to delete course:', err)
-        });
-      }
+      this.dialogService.delete(event.row.name || 'Course').subscribe(confirmed => {
+        if (confirmed) {
+          this.courseFacade.deleteCourse(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Course deleted successfully!');
+            },
+            error: (err) => {
+              console.error('Failed to delete course:', err);
+              this.dialogService.error('Failed to delete course.');
+            }
+          });
+        }
+      });
     }
   }
 }

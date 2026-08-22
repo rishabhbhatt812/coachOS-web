@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -11,6 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
 import { FileUploadComponent } from '../../../../shared/components/file-upload/file-upload';
+import { DialogService } from '../../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-teacher-assignments',
@@ -19,7 +20,7 @@ import { FileUploadComponent } from '../../../../shared/components/file-upload/f
     CommonModule, 
     MatCardModule, 
     MatButtonModule, 
-    MatIconModule,
+    MatIconModule, 
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
@@ -33,6 +34,8 @@ import { FileUploadComponent } from '../../../../shared/components/file-upload/f
   styleUrl: './teacher-assignments.scss',
 })
 export class TeacherAssignments {
+  private dialogService = inject(DialogService);
+
   showCreateForm = false;
 
   assignments = [
@@ -114,7 +117,7 @@ export class TeacherAssignments {
 
   submitAssignment() {
     if (!this.newAssignment.title) {
-      alert('Please enter an assignment title.');
+      this.dialogService.alert('Please enter an assignment title.', 'Validation Error', 'warning');
       return;
     }
 
@@ -134,7 +137,7 @@ export class TeacherAssignments {
     };
 
     this.assignments.unshift(created);
-    alert('✓ Assignment created and assigned to batch students successfully!');
+    this.dialogService.success('Assignment created and assigned to batch students successfully!');
     this.toggleCreateForm();
   }
 
@@ -202,13 +205,16 @@ export class TeacherAssignments {
   }
 
   saveGrades() {
-    alert('✓ Student grades and teacher feedback have been saved successfully!');
+    this.dialogService.success('Student grades and teacher feedback have been saved successfully!');
     this.closeGradeModal();
   }
 
   deleteAssignment(assignment: any) {
-    if (confirm(`Are you sure you want to delete assignment "${assignment.title}"?`)) {
-      this.assignments = this.assignments.filter(a => a.id !== assignment.id);
-    }
+    this.dialogService.delete(`assignment "${assignment.title}"`).subscribe(confirmed => {
+      if (confirmed) {
+        this.assignments = this.assignments.filter(a => a.id !== assignment.id);
+        this.dialogService.success('Assignment deleted successfully!');
+      }
+    });
   }
 }

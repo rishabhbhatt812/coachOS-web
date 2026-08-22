@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateAttendanceSessionRequest } from '../../../core/models/api-schemas';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-attendance',
@@ -32,6 +33,7 @@ export class AdminAttendanceComponent implements OnInit {
   private batchFacade = inject(BatchFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialogService = inject(DialogService);
 
   sessions$ = this.attendanceFacade.sessions$;
   batches$ = this.batchFacade.batches$;
@@ -101,27 +103,21 @@ export class AdminAttendanceComponent implements OnInit {
 
   onActionClicked(event: any) {
     if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete this attendance session?')) {
-        this.attendanceFacade.deleteSession(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Attendance session deleted successfully!', 'Dismiss', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
-          },
-          error: (err) => {
-            console.error('Failed to delete attendance session:', err);
-          }
-        });
-      }
-    } else {
-      this.snackBar.open(`Action "${event.action}" clicked for Batch ${event.row.batchName}`, 'Dismiss', {
-        duration: 2500,
-        horizontalPosition: 'center',
-        verticalPosition: 'top'
+      this.dialogService.delete(`attendance session for ${event.row.batchName || 'Batch'}`).subscribe(confirmed => {
+        if (confirmed) {
+          this.attendanceFacade.deleteSession(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Attendance session deleted successfully!');
+            },
+            error: (err) => {
+              console.error('Failed to delete attendance session:', err);
+              this.dialogService.error('Failed to delete attendance session.');
+            }
+          });
+        }
       });
+    } else {
+      this.dialogService.alert(`Details for Batch ${event.row.batchName} (Date: ${event.row.attendanceDate})`, 'Attendance Session Info', 'info');
     }
   }
 }

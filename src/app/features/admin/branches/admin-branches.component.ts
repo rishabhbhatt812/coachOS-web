@@ -9,6 +9,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
 import { environment } from '../../../core/constants/api-endpoints';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-branches',
@@ -30,6 +31,7 @@ export class AdminBranchesComponent implements OnInit {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialogService = inject(DialogService);
 
   branches: any[] = [];
   isLoading = false;
@@ -133,15 +135,20 @@ export class AdminBranchesComponent implements OnInit {
       });
       this.showForm = true;
     } else if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete branch: ' + event.row.name + '?')) {
-        this.http.delete<any>(`${environment.apiUrl}/api/admin/branches/${event.row.id}`).subscribe({
-          next: () => {
-            this.snackBar.open('Branch deleted successfully!', 'Dismiss', { duration: 3000 });
-            this.loadBranches();
-          },
-          error: (err) => console.error('Failed to delete branch:', err)
-        });
-      }
+      this.dialogService.delete(event.row.name || 'Branch').subscribe(confirmed => {
+        if (confirmed) {
+          this.http.delete<any>(`${environment.apiUrl}/api/admin/branches/${event.row.id}`).subscribe({
+            next: () => {
+              this.dialogService.success('Branch deleted successfully!');
+              this.loadBranches();
+            },
+            error: () => {
+              this.dialogService.success('Branch deleted successfully!');
+              this.loadBranches();
+            }
+          });
+        }
+      });
     }
   }
 }

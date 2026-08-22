@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateBatchRequest, UpdateBatchRequest } from '../../../core/models/api-schemas';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../core/constants/api-endpoints';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-batches',
@@ -37,6 +38,7 @@ export class AdminBatchesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
 
   batches$ = this.batchFacade.batches$;
   courses$ = this.courseFacade.courses$;
@@ -201,14 +203,19 @@ export class AdminBatchesComponent implements OnInit {
       });
       this.showAddForm = true;
     } else if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete batch: ' + event.row.name + '?')) {
-        this.batchFacade.deleteBatch(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Batch deleted successfully!', 'Dismiss', { duration: 3000 });
-          },
-          error: (err) => console.error('Failed to delete batch:', err)
-        });
-      }
+      this.dialogService.delete(event.row.name || 'Batch').subscribe(confirmed => {
+        if (confirmed) {
+          this.batchFacade.deleteBatch(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Batch deleted successfully!');
+            },
+            error: (err) => {
+              console.error('Failed to delete batch:', err);
+              this.dialogService.error('Failed to delete batch.');
+            }
+          });
+        }
+      });
     }
   }
 }

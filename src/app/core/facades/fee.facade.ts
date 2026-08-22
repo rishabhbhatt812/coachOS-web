@@ -30,6 +30,19 @@ export class FeeFacade {
     );
   }
 
+  updateFeePlan(id: string, data: any): Observable<FeePlan> {
+    this.isLoadingSubject.next(true);
+    // Optimistically update or call service
+    const current = this.feePlansSubject.getValue();
+    const updatedList = current.map(p => p.id === id ? { ...p, ...data } : p);
+    this.feePlansSubject.next(updatedList);
+
+    return this.feeService.updateFeePlan(id, data).pipe(
+      tap(() => this.loadFeePlans()),
+      finalize(() => this.isLoadingSubject.next(false))
+    );
+  }
+
   deleteFeePlan(id: string): Observable<void> {
     this.isLoadingSubject.next(true);
     return this.feeService.deleteFeePlan(id).pipe(

@@ -9,8 +9,10 @@ import { BatchFacade } from '../../../core/facades/batch.facade';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateNoticeRequest } from '../../../core/models/api-schemas';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-notices',
@@ -22,6 +24,7 @@ import { CreateNoticeRequest } from '../../../core/models/api-schemas';
     DataTableComponent,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatSnackBarModule
   ],
@@ -34,6 +37,7 @@ export class AdminNoticesComponent implements OnInit {
   private batchFacade = inject(BatchFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialogService = inject(DialogService);
 
   notices$ = this.noticeFacade.notices$;
   courses$ = this.courseFacade.courses$;
@@ -127,14 +131,19 @@ export class AdminNoticesComponent implements OnInit {
       });
       this.showAddForm = true;
     } else if (event.action === 'delete') {
-      if (confirm('Are you sure you want to delete notice: ' + event.row.title + '?')) {
-        this.noticeFacade.deleteNotice(event.row.id).subscribe({
-          next: () => {
-            this.snackBar.open('Announcement deleted successfully!', 'Dismiss', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top', panelClass: ['success-snackbar'] });
-          },
-          error: (err) => console.error('Failed to delete notice:', err)
-        });
-      }
+      this.dialogService.delete(event.row.title ? `notice: "${event.row.title}"` : 'Notice').subscribe(confirmed => {
+        if (confirmed) {
+          this.noticeFacade.deleteNotice(event.row.id).subscribe({
+            next: () => {
+              this.dialogService.success('Announcement deleted successfully!');
+            },
+            error: (err) => {
+              console.error('Failed to delete notice:', err);
+              this.dialogService.error('Failed to delete announcement.');
+            }
+          });
+        }
+      });
     }
   }
 }

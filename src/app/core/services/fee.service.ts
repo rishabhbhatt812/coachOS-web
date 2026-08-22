@@ -33,6 +33,10 @@ export class FeeService {
     return this.http.post<FeePlan>(API_ENDPOINTS.ADMIN.FEES_PLANS, data);
   }
 
+  updateFeePlan(id: string, data: any): Observable<FeePlan> {
+    return this.http.put<FeePlan>(API_ENDPOINTS.ADMIN.FEES_PLANS + '/' + id, data);
+  }
+
   deleteFeePlan(id: string): Observable<void> {
     return this.http.delete<void>(API_ENDPOINTS.ADMIN.FEES_PLANS + '/' + id);
   }

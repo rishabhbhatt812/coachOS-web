@@ -547,6 +547,22 @@ table.app-table tbody tr {
 .gap-3 { gap: 12px; }
 .gap-4 { gap: 16px; }
 
+/* Custom Dialog Theme */
+.custom-dialog-panel {
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    border-radius: 18px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+}
+
+.cdk-overlay-backdrop {
+  background: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
 /* Custom SnackBar Theme */
 .mat-mdc-snack-bar-container {
   &.success-snackbar {

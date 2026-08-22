@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule } from '@angular/material/select';
@@ -8,6 +8,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
+import { DialogService } from '../../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-teacher-results',
@@ -27,9 +28,11 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './teacher-results.scss',
 })
 export class TeacherResults {
+  private dialogService = inject(DialogService);
+
   tests = [
-    { id: '1', name: 'Mid-Term Physics Exam', batch: 'Class 12 - Physics', maxMarks: 100 },
-    { id: '2', name: 'Weekly Math Quiz', batch: 'Class 10 - Mathematics', maxMarks: 50 }
+    { id: '1', name: 'Math Weekly Test 1', batch: 'Class 10A', maxMarks: 50 },
+    { id: '2', name: 'Physics Unit Test', batch: 'Class 12B', maxMarks: 100 }
   ];
 
   selectedTestId: string | null = null;
@@ -51,16 +54,21 @@ export class TeacherResults {
   }
 
   saveDraft() {
-    console.log('Saving draft...', this.students);
-    alert('Draft saved successfully!');
+    this.dialogService.success('Draft marks saved successfully!');
   }
 
   publishResults() {
-    if(confirm('Are you sure you want to publish these results? Students will be notified.')) {
-      console.log('Publishing results...', this.students);
-      alert('Results published successfully!');
-      this.isLoaded = false;
-      this.selectedTestId = null;
-    }
+    this.dialogService.confirm({
+      title: 'Publish Results',
+      message: 'Are you sure you want to publish these test results? Students and parents will be notified.',
+      type: 'info',
+      confirmText: 'Yes, Publish'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        this.dialogService.success('Results published successfully!');
+        this.isLoaded = false;
+        this.selectedTestId = null;
+      }
+    });
   }
 }

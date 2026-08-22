@@ -121,4 +121,80 @@
       (actionClicked)="onActionClicked($event)">
     </app-data-table>
   </div>
+
+  <!-- Edit Fee Plan Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal-dialog card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            Edit Student Fee Plan
+          </h3>
+          <p class="modal-subtitle">
+            Student: <strong>{{ editFeeForm.get('studentName')?.value }}</strong> • Course: <strong>{{ editFeeForm.get('courseName')?.value }}</strong>
+          </p>
+        </div>
+        <button type="button" class="btn-close" (click)="closeEditModal()">✕</button>
+      </div>
+
+      <form [formGroup]="editFeeForm" (ngSubmit)="onSaveEdit()">
+        <div class="modal-body p-6">
+          <div class="form-grid">
+            <!-- Total Fee -->
+            <div class="form-group">
+              <label>Total Fee (INR) <span class="required-star">*</span></label>
+              <input type="number" class="form-control" formControlName="totalFee" min="0" />
+            </div>
+
+            <!-- Discount Amount -->
+            <div class="form-group">
+              <label>Discount Amount (INR)</label>
+              <input type="number" class="form-control" formControlName="discountAmount" min="0" />
+            </div>
+
+            <!-- Paid Amount -->
+            <div class="form-group">
+              <label>Paid Amount (INR) <span class="required-star">*</span></label>
+              <input type="number" class="form-control" formControlName="paidAmount" min="0" />
+            </div>
+
+            <!-- Status -->
+            <div class="form-group">
+              <label>Payment Status <span class="required-star">*</span></label>
+              <select class="form-control" formControlName="status">
+                <option value="Paid">Paid</option>
+                <option value="Due">Due</option>
+                <option value="Partial">Partial</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>
+
+            <!-- Plan Type -->
+            <div class="form-group">
+              <label>Billing Plan Type <span class="required-star">*</span></label>
+              <select class="form-control" formControlName="planType">
+                <option value="OneTime">One Time Payment</option>
+                <option value="Installments">Installments</option>
+                <option value="Monthly">Monthly Recurring</option>
+              </select>
+            </div>
+
+            <!-- Remarks -->
+            <div class="form-group">
+              <label>Payment Remarks</label>
+              <input type="text" class="form-control" formControlName="remarks" placeholder="e.g. Cleared via UPI / Cash" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer flex justify-end gap-3 p-4 border-t border-gray-100 bg-slate-50">
+          <button type="button" class="btn btn-light" (click)="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="editFeeForm.invalid">
+            ✓ Save & Update Record
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
