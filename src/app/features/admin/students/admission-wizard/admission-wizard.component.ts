@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
@@ -38,6 +38,7 @@ export class AdmissionWizardComponent implements OnInit {
   private batchFacade = inject(BatchFacade);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   courses$ = this.courseFacade.courses$;
   batches$ = this.batchFacade.batches$;
@@ -62,10 +63,13 @@ export class AdmissionWizardComponent implements OnInit {
       demoDurationDays: [null]
     });
 
-    // Fetch initial student code
+    // Fetch initial student code for Permanent Admission
     this.fetchNextStudentCode('STU');
 
     this.studentForm.get('admissionType')?.valueChanges.subscribe(type => {
+      const prefix = type === 'Demo' ? 'DEMO' : 'STU';
+      this.fetchNextStudentCode(prefix);
+
       const demoDaysControl = this.studentForm.get('demoDurationDays');
       if (type === 'Demo') {
         demoDaysControl?.setValidators([Validators.required, Validators.min(1)]);
@@ -101,21 +105,26 @@ export class AdmissionWizardComponent implements OnInit {
   private fetchNextStudentCode(prefix: string) {
     this.admissionsService.getNextStudentCode(prefix).subscribe({
       next: (res) => {
-        if (res && res.success && res.data) {
-          this.studentForm.get('studentCode')?.setValue(res.data);
+        let code = '';
+        if (typeof res === 'string') {
+          code = res;
+        } else if (res && typeof res === 'object') {
+          code = res.data || res.code || (res.success && res.data ? res.data : '');
+        }
+
+        if (code) {
+          this.studentForm.get('studentCode')?.setValue(code);
+          this.cdr.detectChanges();
         }
       },
-      error: (err) => console.error('Error fetching student code', err)
+      error: (err) => console.error('Error fetching student code:', err)
     });
   }
 
   onStudentCodeBlur() {
     const val = this.studentForm.get('studentCode')?.value || '';
-    if (val) {
-      const prefix = val.split('-')[0].trim();
-      if (prefix) {
-        this.fetchNextStudentCode(prefix);
-      }
+    if (val && !val.includes('-')) {
+      this.fetchNextStudentCode(val);
     }
   }
 

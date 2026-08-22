@@ -11,6 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateStudentRequest, UpdateStudentRequest } from '../../../core/models/api-schemas';
 import { DialogService } from '../../../core/services/dialog.service';
+import { AdmissionsService } from '../../../core/services/admissions.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-admin-students',
@@ -30,10 +32,12 @@ import { DialogService } from '../../../core/services/dialog.service';
 })
 export class AdminStudentsComponent implements OnInit {
   private studentFacade = inject(StudentAdminFacade);
+  private admissionsService = inject(AdmissionsService);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private dialogService = inject(DialogService);
+  private cdr = inject(ChangeDetectorRef);
 
   students$ = this.studentFacade.students$;
   isLoading$ = this.studentFacade.isLoading$;
@@ -64,6 +68,26 @@ export class AdminStudentsComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       dateOfBirth: ['', [Validators.required]],
       admissionDate: [today, [Validators.required]]
+    });
+
+    this.fetchNextStudentCode('STU');
+  }
+
+  fetchNextStudentCode(prefix: string) {
+    this.admissionsService.getNextStudentCode(prefix).subscribe({
+      next: (res) => {
+        let code = '';
+        if (typeof res === 'string') {
+          code = res;
+        } else if (res && typeof res === 'object') {
+          code = res.data || res.code || (res.success && res.data ? res.data : '');
+        }
+        if (code && !this.editingId) {
+          this.studentForm.get('studentCode')?.setValue(code);
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => console.error('Error fetching student code:', err)
     });
   }
 

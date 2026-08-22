@@ -1,0 +1,146 @@
+.pwa-toast-banner {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  max-width: 440px;
+  width: calc(100% - 48px);
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+
+  @media (max-width: 600px) {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+
+  &.install-banner {
+    border-left: 4px solid #4f46e5;
+  }
+
+  &.update-banner {
+    border-left: 4px solid #10b981;
+    background: #064e3b;
+  }
+
+  &.ios-banner {
+    border-left: 4px solid #0ea5e9;
+  }
+
+  .toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+
+    .pwa-app-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: white;
+      padding: 2px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .toast-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .toast-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      strong {
+        font-size: 13px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      span {
+        font-size: 11px;
+        color: #94a3b8;
+        line-height: 1.35;
+
+        svg {
+          display: inline-block;
+          vertical-align: middle;
+        }
+
+        strong {
+          color: #e2e8f0;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  .toast-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    .btn-pwa-action {
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+
+      &:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+        transform: translateY(-1px);
+      }
+    }
+
+    .btn-pwa-dismiss {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #94a3b8;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

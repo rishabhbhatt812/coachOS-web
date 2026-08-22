@@ -71,6 +71,7 @@ export class OrganizationModulesComponent implements OnInit {
         console.error('Failed to load institutes:', err);
         this.isLoadingInstitutes = false;
         this.snackBar.open('Error loading coaching centers.', 'Dismiss', { duration: 3000 });
+        this.cdr.detectChanges();
       }
     });
   }
@@ -81,12 +82,14 @@ export class OrganizationModulesComponent implements OnInit {
       this.loadModules(instituteId);
     } else {
       this.modules = [];
+      this.cdr.detectChanges();
     }
   }
 
   loadModules(instituteId: string): void {
     if (!instituteId) return;
     this.isLoadingModules = true;
+    this.cdr.detectChanges();
     this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes/${instituteId}/modules`).subscribe({
       next: (res) => {
         this.modules = res || [];
@@ -97,6 +100,7 @@ export class OrganizationModulesComponent implements OnInit {
         console.error('Failed to load modules:', err);
         this.isLoadingModules = false;
         this.snackBar.open('Error loading module configuration.', 'Dismiss', { duration: 3000 });
+        this.cdr.detectChanges();
       }
     });
   }
