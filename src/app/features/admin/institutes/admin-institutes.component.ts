@@ -40,6 +40,27 @@ export class AdminInstitutesComponent implements OnInit {
   instituteForm!: FormGroup;
   currentStep = 1;
   subjectsList: string[] = [];
+  logoPreviewUrl: string | null = null;
+
+  onLogoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.logoPreviewUrl = e.target?.result as string;
+        this.instituteForm.patchValue({ logo: this.logoPreviewUrl });
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeLogo() {
+    this.logoPreviewUrl = null;
+    this.instituteForm.patchValue({ logo: '' });
+    this.cdr.detectChanges();
+  }
 
   columns: TableColumn[] = [
     { key: 'instituteCode', header: 'Code' },

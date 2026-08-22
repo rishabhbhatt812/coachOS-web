@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { SubscriptionPlan, PlanPurchaseInquiry } from '../models/plan.model';
-import { API_ENDPOINTS } from '../constants/api-endpoints';
+import { environment } from '../constants/api-endpoints';
 
 @Injectable({ providedIn: 'root' })
 export class PlanService {
@@ -182,22 +183,55 @@ export class PlanService {
     return of(true);
   }
 
-  submitInquiry(inquiry: PlanPurchaseInquiry): Observable<{ success: boolean; message: string; ticketId: string }> {
-    const inquiries = this.getStoredInquiries();
-    inquiry.id = 'INQ-' + Math.floor(100000 + Math.random() * 900000);
-    inquiry.createdAt = new Date().toISOString();
-    inquiry.status = 'New';
-    inquiries.unshift(inquiry);
-    localStorage.setItem(this.INQUIRIES_KEY, JSON.stringify(inquiries));
-    return of({
-      success: true,
-      message: 'Plan subscription inquiry received! Our onboarding specialist will contact you shortly.',
-      ticketId: inquiry.id
-    });
+  submitInquiry(data: Omit<PlanPurchaseInquiry, 'id' | 'createdAt' | 'status'>): Observable<{ success: boolean; message: string; ticketId: string }> {
+    return this.http.post<any>(`${environment.apiUrl}/api/PublicInquiries/submit`, data).pipe(
+      map((res: any): { success: boolean; message: string; ticketId: string } => {
+        const ticketId: string = (res && res.ticketId) ? String(res.ticketId) : ('INQ-' + Math.floor(100000 + Math.random() * 900000));
+        const inquiry: PlanPurchaseInquiry = {
+          ...data,
+          id: ticketId,
+          status: 'New',
+          createdAt: new Date().toISOString()
+        };
+        const inquiries = this.getStoredInquiries();
+        inquiries.unshift(inquiry);
+        localStorage.setItem(this.INQUIRIES_KEY, JSON.stringify(inquiries));
+        return {
+          success: true,
+          message: res?.message || 'Plan subscription application received!',
+          ticketId: ticketId
+        };
+      }),
+      catchError(() => {
+        const generatedId = 'INQ-' + Math.floor(100000 + Math.random() * 900000);
+        const inquiry: PlanPurchaseInquiry = {
+          ...data,
+          id: generatedId,
+          status: 'New',
+          createdAt: new Date().toISOString()
+        };
+        const inquiries = this.getStoredInquiries();
+        inquiries.unshift(inquiry);
+        localStorage.setItem(this.INQUIRIES_KEY, JSON.stringify(inquiries));
+        return of<{ success: boolean; message: string; ticketId: string }>({
+          success: true,
+          message: 'Plan subscription inquiry received!',
+          ticketId: generatedId
+        });
+      })
+    );
   }
 
   getInquiries(): Observable<PlanPurchaseInquiry[]> {
-    return of(this.getStoredInquiries());
+    return this.http.get<any>(`${environment.apiUrl}/api/PublicInquiries`).pipe(
+      map((res: any) => {
+        if (res && res.data && Array.isArray(res.data)) {
+          return res.data;
+        }
+        return this.getStoredInquiries();
+      }),
+      catchError(() => of(this.getStoredInquiries()))
+    );
   }
 
   private getLocalPlans(): SubscriptionPlan[] {

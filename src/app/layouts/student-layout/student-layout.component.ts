@@ -13,6 +13,7 @@ import { AuthFacade } from '../../core/facades/auth.facade';
 export class StudentLayoutComponent {
   private authFacade = inject(AuthFacade);
   user$ = this.authFacade.currentUser$;
+  currentTenant$ = this.authFacade.currentTenant$;
 
   logout(): void {
     this.authFacade.logout();

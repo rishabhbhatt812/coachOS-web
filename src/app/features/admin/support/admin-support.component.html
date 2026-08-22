@@ -1,0 +1,237 @@
+<div class="support-page-container">
+  
+  <!-- Header Bar -->
+  <div class="support-header">
+    <div>
+      <h1 class="page-title">Client Support & Help Desk</h1>
+      <p class="page-subtitle">
+        {{ isGlobalAdmin ? 'Manage client inquiries, technical tickets, and system feature requests with automated email notifications.' : 'Raise technical inquiries, feature suggestions, or billing questions to EduNex Support.' }}
+      </p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary" (click)="openNewTicketModal()">
+        <mat-icon>add</mat-icon> Raise New Ticket
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Support Grid -->
+  <div class="support-layout-grid">
+    
+    <!-- LEFT COLUMN: Tickets List & Filter -->
+    <div class="card tickets-list-card">
+      <div class="list-search-row">
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search by ticket #, subject, client..." 
+          [(ngModel)]="searchQuery" 
+          (input)="applyFilter()" />
+      </div>
+
+      <!-- Status Filters -->
+      <div class="filter-tabs">
+        <button type="button" class="filter-tab" [class.active]="activeFilter === 'ALL'" (click)="setFilter('ALL')">
+          All ({{ tickets.length }})
+        </button>
+        <button type="button" class="filter-tab" [class.active]="activeFilter === 'OPEN'" (click)="setFilter('OPEN')">
+          Open
+        </button>
+        <button type="button" class="filter-tab" [class.active]="activeFilter === 'IN_PROGRESS'" (click)="setFilter('IN_PROGRESS')">
+          In Progress
+        </button>
+        <button type="button" class="filter-tab" [class.active]="activeFilter === 'RESOLVED'" (click)="setFilter('RESOLVED')">
+          Resolved
+        </button>
+      </div>
+
+      <!-- Tickets Scroll List -->
+      <div class="tickets-scroll-area">
+        <div *ngIf="isLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading support tickets...</p>
+        </div>
+
+        <div *ngIf="!isLoading && filteredTickets.length === 0" class="empty-state">
+          <mat-icon class="empty-icon">support_agent</mat-icon>
+          <h4>No support tickets found</h4>
+          <p>Click "Raise New Ticket" to create a support inquiry.</p>
+        </div>
+
+        <div 
+          *ngFor="let t of filteredTickets" 
+          class="ticket-item" 
+          [class.selected]="selectedTicket?.id === t.id"
+          (click)="selectTicket(t)">
+          
+          <div class="ticket-header-row">
+            <span class="ticket-num font-mono">{{ t.ticketNumber }}</span>
+            <span class="status-pill" [ngClass]="{
+              'open': t.status === 'Open',
+              'in-progress': t.status === 'In Progress',
+              'resolved': t.status === 'Resolved' || t.status === 'Closed'
+            }">
+              {{ t.status }}
+            </span>
+          </div>
+
+          <h4 class="ticket-subject">{{ t.subject }}</h4>
+          <p class="ticket-meta">
+            <span>{{ t.category }}</span> • <span>{{ t.instituteName }}</span>
+          </p>
+          <div class="ticket-footer-row">
+            <span class="ticket-priority" [ngClass]="t.priority.toLowerCase()">{{ t.priority }} Priority</span>
+            <span class="ticket-date">{{ t.createdAt | date:'dd MMM, hh:mm a' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Selected Ticket Details & Conversation -->
+    <div class="card ticket-detail-card" *ngIf="selectedTicket">
+      <div class="detail-header">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="detail-token font-mono">{{ selectedTicket.ticketNumber }}</span>
+            <span class="category-tag">{{ selectedTicket.category }}</span>
+            <span class="status-pill" [ngClass]="{
+              'open': selectedTicket.status === 'Open',
+              'in-progress': selectedTicket.status === 'In Progress',
+              'resolved': selectedTicket.status === 'Resolved' || selectedTicket.status === 'Closed'
+            }">
+              {{ selectedTicket.status }}
+            </span>
+          </div>
+          <h2 class="detail-title">{{ selectedTicket.subject }}</h2>
+          <p class="detail-author">
+            Submitted by <strong>{{ selectedTicket.userName }}</strong> ({{ selectedTicket.userRole }}) • {{ selectedTicket.instituteName }} • {{ selectedTicket.createdAt | date:'medium' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Messages Thread -->
+      <div class="messages-thread">
+        
+        <!-- Original Inquiry -->
+        <div class="message-bubble client-bubble">
+          <div class="bubble-header">
+            <strong>{{ selectedTicket.userName }}</strong>
+            <span>{{ selectedTicket.createdAt | date:'short' }}</span>
+          </div>
+          <div class="bubble-body">
+            {{ selectedTicket.message }}
+          </div>
+        </div>
+
+        <!-- Replies -->
+        <div *ngFor="let rep of selectedTicket.replies" class="message-bubble support-bubble">
+          <div class="bubble-header">
+            <strong>{{ rep.repliedBy }} ({{ rep.repliedByRole }})</strong>
+            <span>{{ rep.createdAt | date:'short' }}</span>
+          </div>
+          <div class="bubble-body">
+            {{ rep.replyMessage }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Reply Box (for Global Admin or Client) -->
+      <div class="reply-section">
+        <h4 class="reply-heading">Post Response & Dispatch Email</h4>
+        <textarea 
+          class="reply-textarea" 
+          rows="4" 
+          placeholder="Type your official response here... This will be emailed directly to the client."
+          [(ngModel)]="replyMessage"></textarea>
+        
+        <div class="reply-actions">
+          <div class="flex items-center gap-2" *ngIf="isGlobalAdmin">
+            <label class="text-xs font-semibold text-slate-500">Update Status:</label>
+            <select class="status-select" [(ngModel)]="replyStatus">
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+          <button 
+            type="button" 
+            class="btn btn-primary" 
+            [disabled]="!replyMessage.trim() || isSendingReply" 
+            (click)="sendReply()">
+            <mat-icon *ngIf="!isSendingReply">send</mat-icon>
+            <span>{{ isSendingReply ? 'Sending Email...' : 'Send Reply & Email Alert' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty Detail Placeholder -->
+    <div class="card ticket-detail-card empty-detail" *ngIf="!selectedTicket">
+      <mat-icon class="empty-icon">chat_bubble_outline</mat-icon>
+      <h3>No Ticket Selected</h3>
+      <p>Select a support inquiry from the left list to view conversation history and send responses.</p>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: RAISE NEW SUPPORT TICKET                                          -->
+  <!-- ========================================================================= -->
+  <div class="modal-backdrop" *ngIf="showNewTicketModal" (click)="closeNewTicketModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge">🎫 New Support Inquiry</span>
+          <h3 class="modal-title">Submit a Helpdesk Ticket</h3>
+        </div>
+        <button type="button" class="btn-close" (click)="closeNewTicketModal()">✕</button>
+      </div>
+
+      <form [formGroup]="newTicketForm" (ngSubmit)="submitNewTicket()" class="modal-form">
+        <div class="modal-body">
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Inquiry Category <span class="text-red-500">*</span></label>
+              <select class="form-control" formControlName="category">
+                <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Priority Level <span class="text-red-500">*</span></label>
+              <select class="form-control" formControlName="priority">
+                <option *ngFor="let p of priorities" [value]="p">{{ p }} Priority</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mt-4">
+            <label>Subject / Brief Summary <span class="text-red-500">*</span></label>
+            <input type="text" class="form-control" placeholder="e.g. Student fee receipt calculation query" formControlName="subject" />
+          </div>
+
+          <div class="form-group mt-4">
+            <label>Detailed Description <span class="text-red-500">*</span></label>
+            <textarea class="form-control" rows="5" placeholder="Explain the issue, suggestion, or query in detail..." formControlName="message"></textarea>
+          </div>
+
+          <div class="notice-box mt-4">
+            <mat-icon>mail</mat-icon>
+            <span>An immediate notification email will be dispatched to the EduNex engineering desk (rishabhbhatt437@gmail.com) upon submission.</span>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeNewTicketModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="newTicketForm.invalid || isSubmittingTicket">
+            <span>{{ isSubmittingTicket ? 'Submitting & Dispatching...' : 'Submit Support Ticket' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

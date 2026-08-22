@@ -72,7 +72,8 @@ export const routes: Routes = [
       { path: 'attendance', canActivate: [moduleAccessGuard], data: { module: 'ATTENDANCE' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },
       { path: 'notices', canActivate: [moduleAccessGuard], data: { module: 'COMMUNICATION' }, loadComponent: () => import('./features/admin/notices/admin-notices.component').then(m => m.AdminNoticesComponent) },
       { path: 'institutes', canActivate: [roleGuard], data: { roles: ['ADMIN'], requiresGlobalAdmin: true }, loadComponent: () => import('./features/admin/institutes/admin-institutes.component').then(m => m.AdminInstitutesComponent) },
-      { path: 'plans', canActivate: [roleGuard], data: { roles: ['ADMIN'], requiresGlobalAdmin: true }, loadComponent: () => import('./features/admin/plans/admin-plans.component').then(m => m.AdminPlansComponent) }
+      { path: 'plans', canActivate: [roleGuard], data: { roles: ['ADMIN'], requiresGlobalAdmin: true }, loadComponent: () => import('./features/admin/plans/admin-plans.component').then(m => m.AdminPlansComponent) },
+      { path: 'support', loadComponent: () => import('./features/admin/support/admin-support.component').then(m => m.AdminSupportComponent) }
     ]
   },
   {
@@ -83,7 +84,8 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/receptionist/dashboard/receptionist-dashboard.component').then(m => m.ReceptionistDashboardComponent) },
       { path: 'crm', canActivate: [moduleAccessGuard], data: { module: 'CRM' }, loadComponent: () => import('./features/admin/crm/admin-crm.component').then(m => m.AdminCrmComponent) },
-      { path: 'notices', canActivate: [moduleAccessGuard], data: { module: 'COMMUNICATION' }, loadComponent: () => import('./features/admin/notices/admin-notices.component').then(m => m.AdminNoticesComponent) }
+      { path: 'notices', canActivate: [moduleAccessGuard], data: { module: 'COMMUNICATION' }, loadComponent: () => import('./features/admin/notices/admin-notices.component').then(m => m.AdminNoticesComponent) },
+      { path: 'support', loadComponent: () => import('./features/admin/support/admin-support.component').then(m => m.AdminSupportComponent) }
     ]
   },
   {
@@ -93,7 +95,8 @@ export const routes: Routes = [
     data: { roles: ['ADMIN'], requiresGlobalAdmin: true },
     children: [
       { path: 'organization-modules', loadComponent: () => import('./features/super-admin/organization-modules/organization-modules.component').then(m => m.OrganizationModulesComponent) },
-      { path: 'plans', loadComponent: () => import('./features/admin/plans/admin-plans.component').then(m => m.AdminPlansComponent) }
+      { path: 'plans', loadComponent: () => import('./features/admin/plans/admin-plans.component').then(m => m.AdminPlansComponent) },
+      { path: 'support', loadComponent: () => import('./features/admin/support/admin-support.component').then(m => m.AdminSupportComponent) }
     ]
   },
   { path: '**', redirectTo: 'auth/login' }

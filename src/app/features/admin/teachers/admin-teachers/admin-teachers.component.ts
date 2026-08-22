@@ -48,6 +48,27 @@ export class AdminTeachersComponent implements OnInit {
   teachers: any[] = [];
   subjects: any[] = [];
   activeTab = 0;
+  photoPreviewUrl: string | null = null;
+
+  onPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.photoPreviewUrl = e.target?.result as string;
+        this.teacherForm.patchValue({ profilePhotoPath: this.photoPreviewUrl });
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removePhoto() {
+    this.photoPreviewUrl = null;
+    this.teacherForm.patchValue({ profilePhotoPath: '' });
+    this.cdr.detectChanges();
+  }
 
   teacherForm!: FormGroup;
 

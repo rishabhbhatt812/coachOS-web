@@ -104,9 +104,10 @@
     backdrop-filter: blur(12px);
 
     .brand-icon {
-      height: 32px;
-      width: auto;
-      border-radius: 6px;
+      height: 36px;
+      width: 36px;
+      object-fit: contain;
+      border-radius: 8px;
     }
 
     .brand-name {

@@ -279,13 +279,13 @@
           <div class="receipt-header">
             <div class="brand-col">
               <div class="brand-line">
-                <img src="/logo.png" alt="EduNex" class="brand-logo" />
+                <img [src]="getInstituteLogo()" [alt]="getInstituteName()" class="brand-logo" />
                 <div>
-                  <h2 class="institute-name">EduNex Coaching & Academy</h2>
-                  <p class="institute-tag">Premier Competitive Exam Preparation & Academic Coaching</p>
+                  <h2 class="institute-name">{{ getInstituteName() }}</h2>
+                  <p class="institute-tag">{{ getInstituteTagline() }}</p>
                 </div>
               </div>
-              <p class="institute-meta">Campus: Main Branch, Sector 62 • Contact: +91 98765 43210 • Email: admissions@edunex.in</p>
+              <p class="institute-meta">{{ getInstituteAddress() }} • Contact: {{ getInstituteContact() }} • Email: {{ getInstituteEmail() }}</p>
             </div>
             <div class="badge-col">
               <span class="receipt-title-badge">OFFICIAL ADMISSION RECEIPT</span>
@@ -430,12 +430,13 @@
           <div class="receipt-header">
             <div class="brand-col">
               <div class="brand-line">
-                <img src="/logo.png" alt="EduNex" class="brand-logo" />
+                <img [src]="getInstituteLogo()" [alt]="getInstituteName()" class="brand-logo" />
                 <div>
-                  <h2 class="institute-name">EduNex Institute</h2>
+                  <h2 class="institute-name">{{ getInstituteName() }}</h2>
                   <p class="institute-tag">Fee Payment Voucher</p>
                 </div>
               </div>
+              <p class="institute-meta">{{ getInstituteAddress() }} • Contact: {{ getInstituteContact() }}</p>
             </div>
             <div class="badge-col">
               <span class="receipt-title-badge green">TRANSACTION RECEIPT</span>

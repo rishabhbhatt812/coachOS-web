@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { tap, finalize, catchError } from 'rxjs/operators';
+import { tap, finalize } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { User, Tenant, Role } from '../models/user.model';
 import { Router } from '@angular/router';
@@ -45,6 +45,17 @@ export class AuthFacade {
         const token = res?.data?.accessToken || res?.token || res?.accessToken || res?.jwtToken || (typeof res === 'string' ? res : null);
         if (token) {
           localStorage.removeItem('active_institute_id');
+          if (res?.data?.instituteName || res?.instituteName) {
+            const instInfo = {
+              name: res?.data?.instituteName || res?.instituteName,
+              logo: res?.data?.instituteLogo || res?.instituteLogo,
+              code: res?.data?.instituteCode || res?.instituteCode,
+              contact: res?.data?.instituteContact || res?.instituteContact,
+              email: res?.data?.instituteEmail || res?.instituteEmail,
+              address: res?.data?.instituteAddress || res?.instituteAddress
+            };
+            localStorage.setItem('active_institute_branding', JSON.stringify(instInfo));
+          }
           this.handleToken(token);
         } else {
           console.error('No token found in response', res);
@@ -81,8 +92,29 @@ export class AuthFacade {
         role = 'RECEPTIONIST';
       }
       
-      const user: User = { id, name, email, role, tenantId, rawRole: String(rawRole) };
+      let cachedBranding: any = null;
+      try {
+        const rawBranding = localStorage.getItem('active_institute_branding');
+        if (rawBranding) cachedBranding = JSON.parse(rawBranding);
+      } catch {}
+
+      const user: User = { 
+        id, 
+        name, 
+        email, 
+        role, 
+        tenantId, 
+        rawRole: String(rawRole),
+        instituteName: cachedBranding?.name,
+        instituteLogo: cachedBranding?.logo,
+        instituteContact: cachedBranding?.contact,
+        instituteEmail: cachedBranding?.email,
+        instituteAddress: cachedBranding?.address
+      };
       this.currentUserSubject.next(user);
+
+      // Load active institute details
+      this.loadMyInstitute(tenantId);
 
       // Fetch dynamic active modules from AuthController
       this.http.get<any[]>(`${environment.apiUrl}/api/auth/my-enabled-modules`).subscribe({
@@ -90,7 +122,12 @@ export class AuthFacade {
           const activeModuleCodes = (modules || []).map(m => m.moduleCode.toUpperCase());
           const tenant: Tenant = {
             id: tenantId,
-            name: 'My Institute',
+            name: cachedBranding?.name || 'EduNex Academy',
+            logoUrl: cachedBranding?.logo || '/logo.png',
+            code: cachedBranding?.code || 'EDUNEX',
+            contact: cachedBranding?.contact,
+            email: cachedBranding?.email,
+            address: cachedBranding?.address,
             activeModules: activeModuleCodes
           };
           this.currentTenantSubject.next(tenant);
@@ -98,11 +135,11 @@ export class AuthFacade {
         },
         error: (err) => {
           console.error('Failed to fetch active modules', err);
-          // Fallback to all enabled
           const fallbackCodes = ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL'];
           const tenant: Tenant = {
             id: tenantId,
-            name: 'My Institute',
+            name: cachedBranding?.name || 'EduNex Academy',
+            logoUrl: cachedBranding?.logo || '/logo.png',
             activeModules: fallbackCodes
           };
           this.currentTenantSubject.next(tenant);
@@ -116,6 +153,51 @@ export class AuthFacade {
     }
   }
 
+  loadMyInstitute(tenantId?: string) {
+    this.http.get<any>(`${environment.apiUrl}/api/auth/my-institute`).subscribe({
+      next: (res) => {
+        const data = res?.data || res;
+        if (data && data.name) {
+          const branding = {
+            name: data.name,
+            logo: data.logo || '/logo.png',
+            code: data.instituteCode,
+            contact: data.mobileNumber,
+            email: data.emailAddress,
+            address: data.address
+          };
+          localStorage.setItem('active_institute_branding', JSON.stringify(branding));
+
+          const currentTenant = this.currentTenantSubject.value;
+          this.currentTenantSubject.next({
+            id: tenantId || currentTenant?.id || 'tenant',
+            name: data.name,
+            code: data.instituteCode,
+            logoUrl: data.logo || '/logo.png',
+            contact: data.mobileNumber,
+            email: data.emailAddress,
+            address: data.address,
+            activeModules: currentTenant?.activeModules || ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION']
+          });
+
+          const currentUser = this.currentUserSubject.value;
+          if (currentUser) {
+            this.currentUserSubject.next({
+              ...currentUser,
+              instituteName: data.name,
+              instituteLogo: data.logo || '/logo.png',
+              instituteCode: data.instituteCode,
+              instituteContact: data.mobileNumber,
+              instituteEmail: data.emailAddress,
+              instituteAddress: data.address
+            });
+          }
+        }
+      },
+      error: () => {}
+    });
+  }
+
   private checkInitialAuth() {
     const token = localStorage.getItem('auth_token');
     if (token) {
@@ -127,6 +209,7 @@ export class AuthFacade {
     this.authService.logout().subscribe(() => {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('active_institute_id');
+      localStorage.removeItem('active_institute_branding');
       this.currentUserSubject.next(null);
       this.currentTenantSubject.next(null);
       this.router.navigate(['/auth/login']);

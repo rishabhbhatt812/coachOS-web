@@ -88,8 +88,22 @@
               </div>
 
               <div class="form-group full-width">
-                <label>Profile Photo URL</label>
-                <input type="text" class="form-control" formControlName="profilePhotoPath" placeholder="/assets/images/teachers/photo.png" />
+                <label>Teacher Profile Photo</label>
+                <div class="photo-upload-dropzone" (click)="photoInput.click()">
+                  <input type="file" #photoInput (change)="onPhotoSelected($event)" accept="image/*" style="display: none;" />
+                  <div *ngIf="!photoPreviewUrl" class="upload-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span class="upload-title">Click or browse to upload Teacher Photo</span>
+                    <span class="upload-hint">PNG, JPG or JPEG (Max 5MB)</span>
+                  </div>
+                  <div *ngIf="photoPreviewUrl" class="upload-preview-wrap">
+                    <img [src]="photoPreviewUrl" alt="Teacher Photo Preview" class="photo-preview-img" />
+                    <div class="preview-actions">
+                      <button type="button" class="btn-change-photo" (click)="$event.stopPropagation(); photoInput.click()">Change Photo</button>
+                      <button type="button" class="btn-remove-photo" (click)="$event.stopPropagation(); removePhoto()">Remove</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </mat-tab>

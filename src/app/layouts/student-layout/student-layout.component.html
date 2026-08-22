@@ -2,8 +2,19 @@
   <!-- Desktop Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="brand">
-        <img src="/logo.png" alt="EduNex Logo" style="width: 36px; height: 36px; border-radius: 8px; object-fit: contain; background: white; padding: 2px;" />
+      <div class="brand" *ngIf="currentTenant$ | async as tenant">
+        <div class="brand-logo-wrap">
+          <img [src]="tenant.logoUrl || '/logo.png'" [alt]="tenant.name" class="brand-img" />
+        </div>
+        <div class="brand-text">
+          <h2 class="truncate" [title]="tenant.name">{{ tenant.name || 'EduNex' }}</h2>
+          <p>{{ tenant.code ? (tenant.code + ' • Student') : 'Student Portal' }}</p>
+        </div>
+      </div>
+      <div class="brand" *ngIf="!(currentTenant$ | async)">
+        <div class="brand-logo-wrap">
+          <img src="/logo.png" alt="EduNex Logo" class="brand-img" />
+        </div>
         <div class="brand-text">
           <h2>EduNex</h2>
           <p>Student Portal</p>

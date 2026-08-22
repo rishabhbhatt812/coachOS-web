@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { AdmissionsService } from '../../../../core/services/admissions.service';
+import { AuthFacade } from '../../../../core/facades/auth.facade';
 import { environment } from '../../../../core/constants/api-endpoints';
 
 @Component({
@@ -25,6 +26,7 @@ export class StudentProfileComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private admissionsService = inject(AdmissionsService);
+  private authFacade = inject(AuthFacade);
   private snackBar = inject(MatSnackBar);
   private cdr = inject(ChangeDetectorRef);
 
@@ -167,6 +169,36 @@ export class StudentProfileComponent implements OnInit {
 
   downloadSinglePaymentReceipt(payment: any) {
     this.openPaymentReceiptModal(payment);
+  }
+
+  // Dynamic Institute Branding Getters
+  getInstituteName(): string {
+    const tenant = this.authFacade.currentTenantValue;
+    return tenant?.name || 'EduNex Coaching & Academy';
+  }
+
+  getInstituteLogo(): string {
+    const tenant = this.authFacade.currentTenantValue;
+    return tenant?.logoUrl || '/logo.png';
+  }
+
+  getInstituteTagline(): string {
+    return 'Premier Competitive Exam Preparation & Academic Coaching';
+  }
+
+  getInstituteAddress(): string {
+    const tenant = this.authFacade.currentTenantValue;
+    return tenant?.address || 'Campus: Main Branch, Sector 62';
+  }
+
+  getInstituteContact(): string {
+    const tenant = this.authFacade.currentTenantValue;
+    return tenant?.contact || '+91 98765 43210';
+  }
+
+  getInstituteEmail(): string {
+    const tenant = this.authFacade.currentTenantValue;
+    return tenant?.email || 'admissions@edunex.in';
   }
 
   // Helper getters for robust receipt rendering

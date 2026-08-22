@@ -1,101 +1,388 @@
-<div class="attendance-container p-6">
-  <div class="header-section mb-8">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Mark Attendance</h1>
-      <p class="text-gray-500 mt-1">Select a batch and date to record daily attendance.</p>
+<div class="attendance-studio-container">
+  
+  <!-- Studio Header -->
+  <div class="studio-header">
+    <div class="header-left">
+      <div class="badge-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Teacher Attendance Studio</span>
+      </div>
+      <h1 class="page-title">Daily Student Attendance</h1>
+      <p class="page-subtitle">Record and verify classroom attendance with photo identification and instant statistics.</p>
+    </div>
+
+    <div class="header-actions" *ngIf="isLoaded && students.length > 0">
+      <button class="btn btn-save-primary" [disabled]="isSaving" (click)="saveAttendance()">
+        <svg *ngIf="!isSaving" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span *ngIf="isSaving" class="spinner-small"></span>
+        <span>{{ isSaving ? 'Saving Records...' : 'Save Attendance' }}</span>
+      </button>
     </div>
   </div>
 
-  <mat-card class="filter-card mb-8">
-    <mat-card-content class="filter-flex">
-      <mat-form-field appearance="outline" class="flex-1">
-        <mat-label>Select Batch</mat-label>
-        <mat-select [(ngModel)]="selectedBatchId" (selectionChange)="loadStudents()">
-          <mat-option *ngFor="let batch of batches" [value]="batch.id">
-            {{ batch.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+  <!-- Session Selector Card -->
+  <div class="card selector-card">
+    <div class="selector-grid">
+      
+      <!-- Batch Picker -->
+      <div class="selector-col batch-col">
+        <label class="col-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Select Coaching Batch
+        </label>
+        <div class="custom-select-wrap">
+          <select class="form-select" [(ngModel)]="selectedBatchId" (change)="onBatchChange()">
+            <option *ngFor="let batch of batches" [value]="batch.id">
+              {{ batch.name }} • {{ batch.timing || 'Regular Schedule' }}
+            </option>
+          </select>
+        </div>
+      </div>
 
-      <mat-form-field appearance="outline" class="flex-1">
-        <mat-label>Date</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate">
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-      </mat-form-field>
+      <!-- Date Picker & Shortcuts -->
+      <div class="selector-col date-col">
+        <div class="date-header-row">
+          <label class="col-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Attendance Date
+          </label>
+          <div class="quick-date-pills">
+            <button type="button" class="date-pill" (click)="setToday()">Today</button>
+            <button type="button" class="date-pill" (click)="setYesterday()">Yesterday</button>
+          </div>
+        </div>
+        
+        <div class="date-input-wrap">
+          <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate" class="date-input" readonly (click)="picker.open()">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </div>
+      </div>
 
-      <button mat-flat-button color="primary" class="load-btn" [disabled]="!selectedBatchId || isLoadingStudents" (click)="loadStudents()">
-        <mat-icon *ngIf="!isLoadingStudents">search</mat-icon>
-        <span *ngIf="isLoadingStudents" class="spinner-inline"></span>
-        {{ isLoadingStudents ? 'Loading...' : 'Load Students' }}
-      </button>
-    </mat-card-content>
-  </mat-card>
+      <!-- Load Button -->
+      <div class="selector-col action-col">
+        <button class="btn btn-load" [disabled]="!selectedBatchId || isLoadingStudents" (click)="loadStudents()">
+          <svg *ngIf="!isLoadingStudents" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span *ngIf="isLoadingStudents" class="spinner-small"></span>
+          <span>{{ isLoadingStudents ? 'Loading Roster...' : 'Fetch Students' }}</span>
+        </button>
+      </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoadingStudents" class="loading-state" style="display: flex; flex-direction: column; align-items: center; padding: 40px; color: #64748b;">
-    <div style="width: 36px; height: 36px; border: 3px solid rgba(79, 70, 229, 0.15); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s linear infinite; margin-bottom: 12px;"></div>
-    <p>Loading student roster for this batch...</p>
+    </div>
   </div>
 
-  <!-- Attendance Card -->
-  <mat-card class="attendance-card" *ngIf="isLoaded && !isLoadingStudents">
-    <mat-card-header class="flex justify-between items-center mb-4">
-      <div>
-        <mat-card-title>Student Roster ({{ students.length }} Students)</mat-card-title>
-        <mat-card-subtitle>Check or uncheck boxes to mark present or absent</mat-card-subtitle>
+  <!-- Loading State -->
+  <div *ngIf="isLoadingStudents" class="loading-container">
+    <div class="spinner-pulse"></div>
+    <p class="loading-text">Fetching batch roster and student profile photos...</p>
+  </div>
+
+  <!-- Main Content When Roster Loaded -->
+  <ng-container *ngIf="isLoaded && !isLoadingStudents">
+    
+    <!-- Real-time Attendance KPI Stats -->
+    <div class="stats-overview-grid">
+      
+      <!-- Total Students -->
+      <div class="stat-card total">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-title">Total Enrolled</span>
+          <div class="stat-number">{{ students.length }} <span class="stat-sub">Students</span></div>
+        </div>
       </div>
-      <button mat-stroked-button color="primary" (click)="markAllPresent()">
-        <mat-icon>done_all</mat-icon> Mark All Present
-      </button>
-    </mat-card-header>
 
-    <mat-card-content>
-      <table mat-table [dataSource]="students" class="w-full attendance-table">
+      <!-- Present -->
+      <div class="stat-card present">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-title">Present</span>
+          <div class="stat-number text-green">{{ presentCount }} <span class="stat-badge green">{{ attendanceRate }}%</span></div>
+        </div>
+      </div>
+
+      <!-- Absent -->
+      <div class="stat-card absent">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-title">Absent</span>
+          <div class="stat-number text-red">{{ absentCount }} <span class="stat-sub">Unexcused</span></div>
+        </div>
+      </div>
+
+      <!-- Late -->
+      <div class="stat-card late">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-title">Late Arrival</span>
+          <div class="stat-number text-amber">{{ lateCount }} <span class="stat-sub">Students</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick Actions Toolbar -->
+    <div class="roster-toolbar-card card">
+      <div class="toolbar-left">
+        <!-- Search Input -->
+        <div class="search-box">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            placeholder="Search student by name or code (e.g. Rahul, STU-2026-001)..." 
+            class="search-input" />
+          <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Bulk Marking Buttons -->
+        <div class="bulk-btn-group">
+          <button type="button" class="btn btn-bulk-present" (click)="markAll('PRESENT')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>All Present</span>
+          </button>
+          <button type="button" class="btn btn-bulk-absent" (click)="markAll('ABSENT')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>All Absent</span>
+          </button>
+        </div>
+
+        <!-- View Mode Switcher -->
+        <div class="view-switch-group">
+          <button 
+            type="button" 
+            class="view-btn" 
+            [class.active]="viewMode === 'grid'" 
+            (click)="viewMode = 'grid'" 
+            title="Visual Student Cards">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          </button>
+          <button 
+            type="button" 
+            class="view-btn" 
+            [class.active]="viewMode === 'table'" 
+            (click)="viewMode = 'table'" 
+            title="Data Table View">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty Filter Result -->
+    <div *ngIf="filteredStudents.length === 0" class="empty-state card">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <h3>No students matched "{{ searchQuery }}"</h3>
+      <p>Try searching with another name or roll number.</p>
+      <button class="btn btn-outline" (click)="searchQuery = ''">Clear Search</button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: VISUAL STUDENT PHOTO CARDS (GRID VIEW)                           -->
+    <!-- ========================================================================= -->
+    <div class="students-photo-grid" *ngIf="viewMode === 'grid' && filteredStudents.length > 0">
+      <div 
+        class="student-card card" 
+        *ngFor="let s of filteredStudents" 
+        [class.is-present]="s.status === 'PRESENT'"
+        [class.is-absent]="s.status === 'ABSENT'"
+        [class.is-late]="s.status === 'LATE'">
         
-        <!-- Checkbox Column -->
-        <ng-container matColumnDef="present">
-          <th mat-header-cell *matHeaderCellDef> Present </th>
-          <td mat-cell *matCellDef="let element">
-            <mat-checkbox [(ngModel)]="element.isPresent" color="primary"></mat-checkbox>
-          </td>
-        </ng-container>
+        <!-- Top Card Row: Photo + Meta -->
+        <div class="card-main">
+          
+          <!-- Student Photo / Initial Avatar -->
+          <div class="photo-container" (click)="toggleStudentStatus(s)">
+            <img 
+              *ngIf="s.profileImagePath" 
+              [src]="s.profileImagePath" 
+              [alt]="s.name" 
+              class="student-photo-img" />
+            <div 
+              *ngIf="!s.profileImagePath" 
+              class="student-initials-avatar" 
+              [style.background-color]="getAvatarColor(s.name)">
+              {{ getInitials(s.name) }}
+            </div>
+            
+            <!-- Quick Status Badge Overlay -->
+            <span class="photo-status-badge" [class.present]="s.status === 'PRESENT'" [class.absent]="s.status === 'ABSENT'" [class.late]="s.status === 'LATE'">
+              <span *ngIf="s.status === 'PRESENT'">✓</span>
+              <span *ngIf="s.status === 'ABSENT'">✕</span>
+              <span *ngIf="s.status === 'LATE'">⏱</span>
+            </span>
+          </div>
 
-        <!-- Roll No Column -->
-        <ng-container matColumnDef="rollNo">
-          <th mat-header-cell *matHeaderCellDef> Roll / ID </th>
-          <td mat-cell *matCellDef="let element">
-            <span style="background: #f1f5f9; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: monospace;">{{element.rollNo}}</span>
-          </td>
-        </ng-container>
+          <!-- Student Information -->
+          <div class="student-details">
+            <div class="code-row">
+              <span class="student-code-badge">{{ s.studentCode }}</span>
+              <span class="attendance-rate-tag" [title]="'Historical Attendance'">
+                {{ s.attendancePercentage || 92 }}% Avg
+              </span>
+            </div>
+            <h4 class="student-name" [title]="s.name">{{ s.name }}</h4>
+            <p class="student-contact" *ngIf="s.mobile">{{ s.mobile }}</p>
+          </div>
 
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef> Student Name </th>
-          <td mat-cell *matCellDef="let element" class="font-medium text-gray-800"> {{element.name}} </td>
-        </ng-container>
+        </div>
 
-        <!-- Remarks Column -->
-        <ng-container matColumnDef="remarks">
-          <th mat-header-cell *matHeaderCellDef> Remarks </th>
-          <td mat-cell *matCellDef="let element">
-            <mat-form-field appearance="outline" class="w-full remarks-input" subscriptSizing="dynamic">
-              <input matInput [(ngModel)]="element.remarks" placeholder="Optional remark (e.g. Leave, Late)">
-            </mat-form-field>
-          </td>
-        </ng-container>
+        <!-- Middle: 3-Way Status Toggle Segmented Pills -->
+        <div class="status-segment-control">
+          <button 
+            type="button" 
+            class="seg-btn seg-present" 
+            [class.active]="s.status === 'PRESENT'"
+            (click)="setStudentStatus(s, 'PRESENT')">
+            <span class="seg-dot"></span> Present
+          </button>
+          <button 
+            type="button" 
+            class="seg-btn seg-absent" 
+            [class.active]="s.status === 'ABSENT'"
+            (click)="setStudentStatus(s, 'ABSENT')">
+            <span class="seg-dot"></span> Absent
+          </button>
+          <button 
+            type="button" 
+            class="seg-btn seg-late" 
+            [class.active]="s.status === 'LATE'"
+            (click)="setStudentStatus(s, 'LATE')">
+            <span class="seg-dot"></span> Late
+          </button>
+        </div>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" [class.absent-row]="!row.isPresent"></tr>
+        <!-- Remarks Input -->
+        <div class="card-footer-remarks">
+          <input 
+            type="text" 
+            [(ngModel)]="s.remarks" 
+            placeholder="Add note (optional)..." 
+            class="remarks-field" />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 2: HIGH-DENSITY DATA TABLE VIEW                                      -->
+    <!-- ========================================================================= -->
+    <div class="table-container card" *ngIf="viewMode === 'table' && filteredStudents.length > 0">
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">Photo</th>
+            <th style="width: 140px;">Student ID</th>
+            <th>Full Name & Contact</th>
+            <th style="width: 110px;">Avg Attend.</th>
+            <th style="width: 280px;">Mark Status</th>
+            <th>Remarks / Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            *ngFor="let s of filteredStudents"
+            [class.row-present]="s.status === 'PRESENT'"
+            [class.row-absent]="s.status === 'ABSENT'"
+            [class.row-late]="s.status === 'LATE'">
+            
+            <!-- Photo -->
+            <td>
+              <div class="table-photo-wrap">
+                <img *ngIf="s.profileImagePath" [src]="s.profileImagePath" [alt]="s.name" class="table-avatar-img" />
+                <div *ngIf="!s.profileImagePath" class="table-initials-avatar" [style.background-color]="getAvatarColor(s.name)">
+                  {{ getInitials(s.name) }}
+                </div>
+              </div>
+            </td>
+
+            <!-- Student ID -->
+            <td>
+              <span class="table-code-badge font-mono">{{ s.studentCode }}</span>
+            </td>
+
+            <!-- Name -->
+            <td>
+              <div class="table-name-wrap">
+                <span class="student-row-name">{{ s.name }}</span>
+                <span class="student-row-sub" *ngIf="s.email || s.mobile">{{ s.email || s.mobile }}</span>
+              </div>
+            </td>
+
+            <!-- Avg Attendance -->
+            <td>
+              <span class="table-rate-pill">{{ s.attendancePercentage || 92 }}%</span>
+            </td>
+
+            <!-- Status Buttons -->
+            <td>
+              <div class="table-status-pill-group">
+                <button 
+                  type="button" 
+                  class="tbl-pill pill-p" 
+                  [class.active]="s.status === 'PRESENT'"
+                  (click)="setStudentStatus(s, 'PRESENT')">
+                  P
+                </button>
+                <button 
+                  type="button" 
+                  class="tbl-pill pill-a" 
+                  [class.active]="s.status === 'ABSENT'"
+                  (click)="setStudentStatus(s, 'ABSENT')">
+                  A
+                </button>
+                <button 
+                  type="button" 
+                  class="tbl-pill pill-l" 
+                  [class.active]="s.status === 'LATE'"
+                  (click)="setStudentStatus(s, 'LATE')">
+                  L
+                </button>
+                <span class="status-text-label" [class.text-green]="s.status === 'PRESENT'" [class.text-red]="s.status === 'ABSENT'" [class.text-amber]="s.status === 'LATE'">
+                  {{ s.status }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Remarks -->
+            <td>
+              <input 
+                type="text" 
+                [(ngModel)]="s.remarks" 
+                placeholder="Remarks..." 
+                class="table-remarks-input" />
+            </td>
+
+          </tr>
+        </tbody>
       </table>
-    </mat-card-content>
+    </div>
 
-    <mat-card-actions class="flex justify-end p-4 border-t border-gray-100">
-      <button mat-flat-button color="accent" class="save-btn" [disabled]="isSaving" (click)="saveAttendance()">
-        <mat-icon *ngIf="!isSaving">save</mat-icon>
-        <span *ngIf="isSaving" class="spinner-inline"></span>
-        {{ isSaving ? 'Saving Records...' : 'Save Attendance' }}
-      </button>
-    </mat-card-actions>
-  </mat-card>
+    <!-- Floating / Bottom Sticky Summary & Save Bar -->
+    <div class="bottom-action-bar">
+      <div class="bottom-bar-content">
+        <div class="bar-summary">
+          <span class="summary-highlight">{{ presentCount }} of {{ students.length }} Present</span>
+          <span class="summary-sub">• {{ absentCount }} Absent • {{ lateCount }} Late • Session Date: {{ selectedDate | date:'dd MMM yyyy' }}</span>
+        </div>
+        <button class="btn btn-save-footer" [disabled]="isSaving" (click)="saveAttendance()">
+          <svg *ngIf="!isSaving" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span *ngIf="isSaving" class="spinner-small"></span>
+          <span>{{ isSaving ? 'Saving Records...' : 'Save Daily Attendance' }}</span>
+        </button>
+      </div>
+    </div>
+
+  </ng-container>
+
 </div>
