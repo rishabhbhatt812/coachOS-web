@@ -13,7 +13,13 @@
           <img src="/logo.png" alt="EduNex Logo" class="brand-icon" />
           <span class="brand-name">EduNex</span>
         </div>
-        <span class="version-tag">Enterprise v2.6</span>
+        <div class="flex items-center gap-3">
+          <a routerLink="/pricing" class="pricing-nav-link">
+            <span class="pulse-dot-small"></span>
+            Plans & Pricing →
+          </a>
+          <span class="version-tag">Enterprise v2.6</span>
+        </div>
       </div>
 
       <!-- Main Headline -->
@@ -34,7 +40,7 @@
       <div class="hero-features-grid">
         <div class="feature-item">
           <div class="feature-icon-box">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="20 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
           </div>
           <div class="feature-info">
             <h4>Academic & Batch Scheduling</h4>
@@ -85,6 +91,18 @@
       <div class="mobile-brand">
         <img src="/logo.png" alt="EduNex" class="mobile-logo" />
         <h2>EduNex</h2>
+      </div>
+
+      <!-- Pricing Top Banner Link for visitors -->
+      <div class="pricing-callout-banner">
+        <div class="callout-left">
+          <span class="callout-sparkle">✨</span>
+          <div class="callout-text">
+            <strong>Looking for EduNex for your institute?</strong>
+            <span>Explore transparent pricing & custom tiers</span>
+          </div>
+        </div>
+        <a routerLink="/pricing" class="callout-link">View Plans →</a>
       </div>
 
       <div class="form-header">

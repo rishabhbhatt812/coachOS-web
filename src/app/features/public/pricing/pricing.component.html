@@ -1,0 +1,400 @@
+<div class="pricing-page-wrapper">
+  <!-- Top Public Header Navigation -->
+  <header class="public-nav">
+    <div class="nav-container">
+      <div class="brand-logo" routerLink="/auth/login">
+        <img src="/logo.png" alt="EduNex Logo" class="logo-img" />
+        <span class="logo-text">EduNex</span>
+        <span class="badge-pill">Enterprise Cloud</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#plans" class="nav-link">Plans & Pricing</a>
+        <a href="#comparison" class="nav-link">Feature Matrix</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="btn btn-outline" (click)="goToLogin()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+          Sign In to Portal
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero & Pricing Switcher Section -->
+  <section class="pricing-hero" id="plans">
+    <div class="hero-glow-bg"></div>
+    <div class="container hero-inner">
+      <div class="hero-tag-pill">
+        <span class="pulse-indicator"></span>
+        <span>Transparent, Predictable Subscription Pricing</span>
+      </div>
+      <h1 class="hero-headline">
+        Power your academy with <span class="gradient-text">intelligent coaching infrastructure</span>.
+      </h1>
+      <p class="hero-subtext">
+        Choose the ideal tier designed to scale your admissions, streamline online fee collections, automate exams, and delight students & parents.
+      </p>
+
+      <!-- Billing Cycle Switcher -->
+      <div class="billing-switcher-container">
+        <div class="switcher-box">
+          <button 
+            type="button" 
+            class="switch-btn" 
+            [class.active]="billingCycle === 'monthly'" 
+            (click)="setBillingCycle('monthly')">
+            Monthly Billing
+          </button>
+          <button 
+            type="button" 
+            class="switch-btn" 
+            [class.active]="billingCycle === 'yearly'" 
+            (click)="setBillingCycle('yearly')">
+            Annual Billing
+            <span class="discount-pill">Save 20% 🎉</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Cards Grid Section -->
+  <section class="pricing-cards-section">
+    <div class="container">
+      <div class="plans-grid">
+        <div 
+          *ngFor="let plan of (activePlans$ | async)" 
+          class="plan-card" 
+          [class.popular]="plan.isPopular"
+          [style.--accent-color]="plan.accentColor || '#4f46e5'">
+          
+          <!-- Popular Ribbon Badge -->
+          <div class="popular-ribbon" *ngIf="plan.isPopular">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            {{ plan.badgeText || 'MOST POPULAR' }}
+          </div>
+
+          <div class="plan-header">
+            <span class="plan-badge-top" *ngIf="!plan.isPopular">{{ plan.badgeText || plan.code }}</span>
+            <h3 class="plan-name">{{ plan.name }}</h3>
+            <p class="plan-tagline">{{ plan.tagline }}</p>
+          </div>
+
+          <!-- Price Display -->
+          <div class="price-box">
+            <div class="price-main">
+              <span class="currency-symbol">₹</span>
+              <span class="price-number">{{ getMonthlyEquivalent(plan) | number }}</span>
+              <span class="price-period">/ month</span>
+            </div>
+            <p class="price-billing-note" *ngIf="billingCycle === 'yearly'">
+              Billed annually at <strong>₹{{ plan.annualPrice | number }} / yr</strong> (Save ₹{{ (plan.monthlyPrice * 12 - plan.annualPrice) | number }})
+            </p>
+            <p class="price-billing-note" *ngIf="billingCycle === 'monthly'">
+              Billed monthly at <strong>₹{{ plan.monthlyPrice | number }} / mo</strong>
+            </p>
+          </div>
+
+          <!-- Capacity Quota Badges -->
+          <div class="capacity-stats">
+            <div class="stat-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>{{ plan.maxStudents >= 99999 ? 'Unlimited' : (plan.maxStudents | number) }} Students</span>
+            </div>
+            <div class="stat-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              <span>{{ plan.maxBranches >= 999 ? 'Unlimited' : plan.maxBranches }} {{ plan.maxBranches === 1 ? 'Branch' : 'Branches' }}</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Included Modules Checklist -->
+          <div class="modules-overview">
+            <h4 class="section-micro-title">Core Modules Included:</h4>
+            <div class="module-pills-row">
+              <span class="mod-pill" [class.included]="plan.modules.crm">CRM Leads</span>
+              <span class="mod-pill" [class.included]="plan.modules.fees">Fee Plans</span>
+              <span class="mod-pill" [class.included]="plan.modules.attendance">Attendance</span>
+              <span class="mod-pill" [class.included]="plan.modules.lms">LMS & Notes</span>
+              <span class="mod-pill" [class.included]="plan.modules.tests">Exams/Tests</span>
+              <span class="mod-pill" [class.included]="plan.modules.assignments">Assignments</span>
+              <span class="mod-pill" [class.included]="plan.modules.multiBranch">Multi-Branch</span>
+              <span class="mod-pill" [class.included]="plan.modules.customDomain">Custom Domain</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Feature Highlights List -->
+          <div class="features-list">
+            <h4 class="section-micro-title">Key Capabilities:</h4>
+            <ul>
+              <li *ngFor="let feat of plan.features">
+                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>{{ feat }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Action Button -->
+          <div class="card-action">
+            <button 
+              type="button" 
+              class="btn btn-cta" 
+              [class.btn-popular]="plan.isPopular" 
+              (click)="openPurchaseModal(plan)">
+              <span>Get Started with {{ plan.name }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detailed Feature Comparison Matrix -->
+  <section class="comparison-section" id="comparison">
+    <div class="container">
+      <div class="section-header text-center">
+        <h2 class="section-title">Comprehensive Module & Feature Matrix</h2>
+        <p class="section-subtitle">Side-by-side technical breakdown of everything included in every tier.</p>
+      </div>
+
+      <div class="comparison-table-wrap card">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th class="feature-col">Platform Capability / Module</th>
+              <th class="tier-col">Foundation Tier</th>
+              <th class="tier-col popular-header">Growth Pro 🔥</th>
+              <th class="tier-col">Apex Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of comparisonModules">
+              <td class="feature-name">
+                <strong>{{ row.name }}</strong>
+              </td>
+              <td class="tier-cell">
+                <ng-container *ngIf="row.starter === true">
+                  <span class="icon-check">✓</span>
+                </ng-container>
+                <ng-container *ngIf="row.starter === false">
+                  <span class="icon-cross">—</span>
+                </ng-container>
+                <ng-container *ngIf="row.starter !== true && row.starter !== false">
+                  <span class="text-pill">{{ row.starter }}</span>
+                </ng-container>
+              </td>
+              <td class="tier-cell popular-col">
+                <ng-container *ngIf="row.growth === true">
+                  <span class="icon-check bold">✓</span>
+                </ng-container>
+                <ng-container *ngIf="row.growth === false">
+                  <span class="icon-cross">—</span>
+                </ng-container>
+                <ng-container *ngIf="row.growth !== true && row.growth !== false">
+                  <span class="text-pill highlight">{{ row.growth }}</span>
+                </ng-container>
+              </td>
+              <td class="tier-cell">
+                <ng-container *ngIf="row.enterprise === true">
+                  <span class="icon-check bold">✓</span>
+                </ng-container>
+                <ng-container *ngIf="row.enterprise === false">
+                  <span class="icon-cross">—</span>
+                </ng-container>
+                <ng-container *ngIf="row.enterprise !== true && row.enterprise !== false">
+                  <span class="text-pill highlight">{{ row.enterprise }}</span>
+                </ng-container>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Enterprise Banner -->
+  <section class="enterprise-banner-section">
+    <div class="container">
+      <div class="enterprise-card">
+        <div class="banner-content">
+          <div class="banner-badge">🏢 CUSTOM ACADEMY SOLUTIONS</div>
+          <h2>Need a custom multi-campus setup or dedicated cloud server?</h2>
+          <p>We provide tailored SLA contracts, automated custom payment gateways, and custom branding for large multi-city coaching networks.</p>
+        </div>
+        <div class="banner-action">
+          <button type="button" class="btn btn-white" (click)="goToLogin()">
+            Request Executive Demo
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <div class="section-header text-center">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-subtitle">Everything you need to know about EduNex subscription billing and migration.</p>
+      </div>
+
+      <div class="faq-accordion-list">
+        <div 
+          *ngFor="let item of faqs; let i = index" 
+          class="faq-card" 
+          [class.open]="item.open" 
+          (click)="toggleFaq(i)">
+          <div class="faq-question">
+            <span>{{ item.q }}</span>
+            <span class="faq-toggle-icon">{{ item.open ? '−' : '+' }}</span>
+          </div>
+          <div class="faq-answer" *ngIf="item.open">
+            <p>{{ item.a }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="public-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="/logo.png" alt="EduNex" class="footer-logo" />
+        <span class="footer-title">EduNex Technologies</span>
+        <p>Enterprise coaching management and academic automation platform.</p>
+      </div>
+      <div class="footer-links">
+        <a routerLink="/auth/login">Administrative Sign In</a>
+        <a href="#plans">Subscription Plans</a>
+        <a href="#comparison">Feature Matrix</a>
+      </div>
+    </div>
+    <div class="footer-bottom text-center">
+      <p>© 2026 EduNex Technologies. All rights reserved. 256-bit SSL encrypted & ISO certified infrastructure.</p>
+    </div>
+  </footer>
+
+  <!-- Plan Purchase / Inquiry Modal -->
+  <div class="modal-overlay" *ngIf="showInquiryModal" (click)="closePurchaseModal()">
+    <div class="modal-dialog card purchase-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-content">
+          <div class="modal-badge-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Institute Plan Subscription Application</h3>
+            <p class="modal-subtitle">
+              Selected Tier: <strong>{{ selectedPlan?.name }}</strong> ({{ billingCycle === 'yearly' ? 'Annual Billing - 20% Off' : 'Monthly Billing' }})
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closePurchaseModal()">✕</button>
+      </div>
+
+      <!-- Success State -->
+      <div class="modal-body p-8 text-center" *ngIf="submissionSuccess">
+        <div class="success-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mt-4">Subscription Inquiry Received!</h2>
+        <p class="text-gray-600 mt-2 max-w-md mx-auto">
+          Thank you for choosing <strong>{{ selectedPlan?.name }}</strong>. Your registration ticket ID is <span class="ticket-badge">{{ submittedTicketId }}</span>.
+        </p>
+        <div class="success-next-steps card bg-slate-50 border border-slate-200 p-4 mt-6 text-left">
+          <h4 class="font-bold text-gray-800 text-sm">What happens next:</h4>
+          <ul class="text-xs text-gray-600 space-y-1.5 mt-2">
+            <li>✓ Our onboarding team will verify your coaching details.</li>
+            <li>✓ You will receive an official activation invite and sandbox credentials within 2 hours.</li>
+            <li>✓ Free assistance with existing student & batch data migration.</li>
+          </ul>
+        </div>
+        <div class="mt-6">
+          <button type="button" class="btn btn-primary" (click)="closePurchaseModal()">
+            Return to Pricing Overview
+          </button>
+        </div>
+      </div>
+
+      <!-- Application Form -->
+      <form [formGroup]="inquiryForm" (ngSubmit)="onSubmitInquiry()" *ngIf="!submissionSuccess">
+        <div class="modal-body p-6">
+          <!-- Summary Banner -->
+          <div class="plan-summary-pill-bar mb-6" *ngIf="selectedPlan">
+            <div class="summary-left">
+              <span class="plan-badge-highlight">{{ selectedPlan.name }}</span>
+              <span class="plan-quota-text">Max {{ selectedPlan.maxStudents >= 99999 ? 'Unlimited' : selectedPlan.maxStudents }} Students • {{ selectedPlan.maxBranches }} Branch(es)</span>
+            </div>
+            <div class="summary-right">
+              <span class="summary-total-label">Total Payable:</span>
+              <span class="summary-total-val">₹{{ getCalculatedPrice(selectedPlan) | number }}</span>
+              <span class="summary-cycle-tag">/ {{ billingCycle === 'yearly' ? 'year' : 'month' }}</span>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Coaching / Institute Name <span class="required-star">*</span></label>
+              <input type="text" class="form-control" formControlName="instituteName" placeholder="e.g. Apex IIT Academy" />
+            </div>
+
+            <div class="form-group">
+              <label>Primary Contact Person <span class="required-star">*</span></label>
+              <input type="text" class="form-control" formControlName="contactPerson" placeholder="e.g. Dr. Rajesh Kumar (Director)" />
+            </div>
+
+            <div class="form-group">
+              <label>Mobile Number / WhatsApp <span class="required-star">*</span></label>
+              <input type="tel" class="form-control" formControlName="phone" placeholder="e.g. +91 98765 43210" />
+            </div>
+
+            <div class="form-group">
+              <label>Official Email Address <span class="required-star">*</span></label>
+              <input type="email" class="form-control" formControlName="email" placeholder="e.g. director@apexacademy.in" />
+            </div>
+
+            <div class="form-group">
+              <label>City <span class="required-star">*</span></label>
+              <input type="text" class="form-control" formControlName="city" placeholder="e.g. New Delhi" />
+            </div>
+
+            <div class="form-group">
+              <label>State / Province <span class="required-star">*</span></label>
+              <input type="text" class="form-control" formControlName="state" placeholder="e.g. Delhi" />
+            </div>
+
+            <div class="form-group">
+              <label>Expected Active Student Count <span class="required-star">*</span></label>
+              <input type="number" class="form-control" formControlName="expectedStudents" min="10" placeholder="e.g. 250" />
+            </div>
+
+            <div class="form-group full-width">
+              <label>Special Instructions / Custom Module Requirements</label>
+              <input type="text" class="form-control" formControlName="remarks" placeholder="e.g. Need biometric hardware sync and migration from Excel sheets..." />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer flex justify-between items-center p-4 border-t border-gray-100 bg-slate-50">
+          <div class="text-xs text-gray-500">
+            🔒 Fully encrypted submission. No instant credit card charge required.
+          </div>
+          <div class="flex items-center gap-3">
+            <button type="button" class="btn btn-light" (click)="closePurchaseModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="inquiryForm.invalid">
+              ✓ Submit Plan Subscription
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
