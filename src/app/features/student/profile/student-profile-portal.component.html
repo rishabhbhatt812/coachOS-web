@@ -1,5 +1,19 @@
 <div class="profile-container">
-  <div *ngIf="profileData" class="profile-header-card">
+  <!-- Loading skeleton -->
+  <div *ngIf="isLoading" class="profile-header-card animate-pulse">
+    <div class="profile-header-content">
+      <div class="avatar-container">
+        <div class="avatar-wrapper skeleton-avatar"></div>
+      </div>
+      <div class="profile-title-section">
+        <div class="skeleton-line title"></div>
+        <div class="skeleton-line subtitle"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Header Card -->
+  <div *ngIf="!isLoading && profileData" class="profile-header-card">
     <div class="profile-header-content">
       
       <!-- Avatar Section with Hover Photo Upload -->
@@ -34,7 +48,7 @@
   </div>
 
   <!-- Tabs Panel -->
-  <mat-tab-group class="profile-tabs-card">
+  <mat-tab-group class="profile-tabs-card" *ngIf="!isLoading">
     
     <!-- TAB 1: Overview -->
     <mat-tab label="Overview">

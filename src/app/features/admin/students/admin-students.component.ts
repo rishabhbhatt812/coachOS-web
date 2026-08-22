@@ -42,8 +42,8 @@ export class AdminStudentsComponent implements OnInit {
   studentForm!: FormGroup;
 
   columns: TableColumn[] = [
-    { key: 'studentCode', header: 'Student Code' },
-    { key: 'fullName', header: 'Full Name' },
+    { key: 'studentCode', header: 'Student Code', clickable: true },
+    { key: 'fullName', header: 'Full Name', clickable: true },
     { key: 'email', header: 'Email' },
     { key: 'mobile', header: 'Phone' },
     { key: 'admissionDate', header: 'Admission Date', type: 'date' },
@@ -69,6 +69,12 @@ export class AdminStudentsComponent implements OnInit {
 
   navigateToAddStudent() {
     this.router.navigate(['/admin/students/admission']);
+  }
+
+  openStudentProfile(student: any) {
+    if (student && student.id) {
+      this.router.navigate(['/admin/students/profile', student.id]);
+    }
   }
 
   cancelEdit() {
@@ -115,7 +121,9 @@ export class AdminStudentsComponent implements OnInit {
   }
 
   onActionClicked(event: any) {
-    if (event.action === 'edit') {
+    if (event.action === 'view') {
+      this.openStudentProfile(event.row);
+    } else if (event.action === 'edit') {
       this.editingId = event.row.id;
       this.studentForm.patchValue({
         studentCode: event.row.studentCode,

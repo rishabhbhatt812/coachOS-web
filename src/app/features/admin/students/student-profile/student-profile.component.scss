@@ -2,9 +2,43 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.top-nav-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: -4px;
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted, #475569);
+    background: white;
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 8px;
+    padding: 6px 16px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background: #f8fafc;
+      color: var(--primary, #6366f1);
+      border-color: #cbd5e1;
+      transform: translateX(-2px);
+    }
+  }
 }
 
 /* Header Card */

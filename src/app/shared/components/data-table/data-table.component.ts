@@ -6,6 +6,7 @@ export interface TableColumn {
   header: string;
   type?: 'text' | 'badge' | 'date' | 'action' | 'currency';
   badgeColorMap?: Record<string, string>; // e.g. { 'Active': 'green', 'Inactive': 'red' }
+  clickable?: boolean;
 }
 
 @Component({
@@ -26,7 +27,10 @@ export interface TableColumn {
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of filteredData; let i = index">
+            <tr 
+              *ngFor="let row of filteredData; let i = index"
+              [class.clickable-row]="isRowClickable || rowClicked.observed"
+              (click)="onRowClick(row)">
               <td *ngFor="let col of columns">
                 <ng-container [ngSwitch]="col.type">
                   <!-- Badge Type -->
@@ -45,18 +49,26 @@ export interface TableColumn {
                   </span>
                   
                   <!-- Action Type -->
-                  <div *ngSwitchCase="'action'" class="action-buttons">
-                    <button class="btn-icon" *ngIf="row.filePath" (click)="actionClicked.emit({ action: 'download', row: row })">📥</button>
+                  <div *ngSwitchCase="'action'" class="action-buttons" (click)="$event.stopPropagation()">
+                    <button class="btn-icon" *ngIf="row.filePath" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'download', row: row })" title="Download">📥</button>
                     <!-- Modules button shown only on Coaching Centers (institutes) list -->
-                    <button class="btn-icon" *ngIf="row.instituteCode" (click)="actionClicked.emit({ action: 'modules', row: row })" title="Manage Modules">⚙️</button>
+                    <button class="btn-icon" *ngIf="row.instituteCode" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'modules', row: row })" title="Manage Modules">⚙️</button>
                     
+                    <!-- View button for students -->
+                    <button class="btn-icon view" *ngIf="row.studentCode" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'view', row: row })" title="View Full Profile">👁️</button>
+
                     <!-- Standard edit/delete buttons shown only for non-institute rows -->
-                    <button class="btn-icon" *ngIf="!row.instituteCode" (click)="actionClicked.emit({ action: 'edit', row: row })" title="Edit">✏️</button>
-                    <button class="btn-icon delete" *ngIf="!row.instituteCode" (click)="actionClicked.emit({ action: 'delete', row: row })" title="Delete">🗑️</button>
+                    <button class="btn-icon" *ngIf="!row.instituteCode" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'edit', row: row })" title="Edit">✏️</button>
+                    <button class="btn-icon delete" *ngIf="!row.instituteCode" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'delete', row: row })" title="Delete">🗑️</button>
                   </div>
                   
                   <!-- Default Text -->
-                  <span *ngSwitchDefault>{{ row[col.key] }}</span>
+                  <span 
+                    *ngSwitchDefault 
+                    [class.table-link]="col.clickable"
+                    (click)="col.clickable ? onCellClick($event, col, row) : null">
+                    {{ row[col.key] }}
+                  </span>
                 </ng-container>
               </td>
             </tr>
@@ -82,9 +94,14 @@ export interface TableColumn {
     .table-toolbar { padding: 16px; border-bottom: 1px solid var(--border-table); }
     .search-input { max-width: 300px; }
     .text-center { text-align: center; padding: 30px !important; }
+    .clickable-row { cursor: pointer; transition: background-color 0.15s ease; }
+    .clickable-row:hover td { background-color: #f1f5f9 !important; }
+    .table-link { color: #6366f1; font-weight: 600; cursor: pointer; }
+    .table-link:hover { text-decoration: underline; color: #4338ca; }
     .action-buttons { display: flex; gap: 8px; }
-    .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; opacity: 0.7; transition: opacity 0.2s; }
-    .btn-icon:hover { opacity: 1; }
+    .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; opacity: 0.7; transition: all 0.2s; }
+    .btn-icon:hover { opacity: 1; transform: scale(1.1); }
+    .btn-icon.view { opacity: 0.85; }
     .pagination { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-top: 1px solid var(--border-table); font-size: 13px; }
     .page-controls { display: flex; gap: 8px; }
     .page-controls button { padding: 6px 12px; font-size: 13px; }
@@ -101,8 +118,10 @@ export class DataTableComponent {
   
   @Input() showSearch = true;
   @Input() showPagination = true;
+  @Input() isRowClickable = false;
   
   @Output() actionClicked = new EventEmitter<{action: string, row: any}>();
+  @Output() rowClicked = new EventEmitter<any>();
 
   filteredData: any[] = [];
 
@@ -117,5 +136,18 @@ export class DataTableComponent {
         String(val).toLowerCase().includes(term)
       );
     });
+  }
+
+  onRowClick(row: any) {
+    if (this.isRowClickable || this.rowClicked.observed) {
+      this.rowClicked.emit(row);
+    }
+  }
+
+  onCellClick(event: MouseEvent, col: TableColumn, row: any) {
+    if (col.clickable) {
+      event.stopPropagation();
+      this.rowClicked.emit(row);
+    }
   }
 }

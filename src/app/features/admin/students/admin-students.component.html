@@ -72,6 +72,8 @@
       *ngIf="!(isLoading$ | async)"
       [columns]="columns" 
       [data]="(students$ | async) || []"
+      [isRowClickable]="true"
+      (rowClicked)="openStudentProfile($event)"
       (actionClicked)="onActionClicked($event)">
     </app-data-table>
   </div>

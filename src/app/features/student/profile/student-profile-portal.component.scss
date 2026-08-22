@@ -526,3 +526,39 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Skeleton Loading */
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-avatar {
+  background: #e2e8f0 !important;
+}
+
+.skeleton-line {
+  height: 16px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  margin-bottom: 10px;
+
+  &.title {
+    width: 220px;
+    height: 24px;
+  }
+
+  &.subtitle {
+    width: 160px;
+    height: 14px;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+

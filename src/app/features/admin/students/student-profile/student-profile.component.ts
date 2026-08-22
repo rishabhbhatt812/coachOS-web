@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +23,7 @@ import { environment } from '../../../../core/constants/api-endpoints';
 })
 export class StudentProfileComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private admissionsService = inject(AdmissionsService);
   private snackBar = inject(MatSnackBar);
 
@@ -31,6 +32,10 @@ export class StudentProfileComponent implements OnInit {
   feeHistory: any;
   batchHistory: any;
   isUploading = false;
+
+  goBack() {
+    this.router.navigate(['/admin/students']);
+  }
 
   ngOnInit() {
     this.studentId = this.route.snapshot.paramMap.get('id')!;
