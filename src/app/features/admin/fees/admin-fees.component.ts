@@ -149,6 +149,14 @@ export class AdminFeesComponent implements OnInit {
     this.editingFeePlan = null;
   }
 
+  calculateDuePreview(): number {
+    if (!this.editFeeForm) return 0;
+    const total = Number(this.editFeeForm.get('totalFee')?.value) || 0;
+    const discount = Number(this.editFeeForm.get('discountAmount')?.value) || 0;
+    const paid = Number(this.editFeeForm.get('paidAmount')?.value) || 0;
+    return Math.max(0, total - discount - paid);
+  }
+
   onSaveEdit() {
     if (this.editFeeForm.valid) {
       const val = this.editFeeForm.value;
