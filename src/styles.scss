@@ -685,14 +685,27 @@ select option {
   color: #0f172a !important;
 }
 
-/* Fix Angular Material mat-select panel transparent backgrounds */
+/* Fix Angular Material mat-select and menu panel transparent backgrounds */
 .mat-mdc-select-panel, 
 .mat-select-panel,
 .mat-mdc-option,
 .mat-option,
-.cdk-overlay-pane {
+.mat-mdc-menu-panel,
+.mat-menu-panel {
   background-color: #ffffff !important;
   color: #0f172a !important;
+}
+
+/* Ensure CDK overlay panes for SnackBars and Dialogs are completely transparent */
+.cdk-overlay-pane {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.mat-mdc-snack-bar-container {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .mat-mdc-option:hover, 
