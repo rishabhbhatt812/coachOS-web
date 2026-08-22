@@ -54,8 +54,8 @@
 
         <!-- Quick Action Buttons -->
         <div class="profile-actions">
-          <button mat-flat-button color="primary" class="admission-receipt-btn" (click)="downloadAdmissionReceipt()">
-            <mat-icon>print</mat-icon> Admission Receipt
+          <button mat-flat-button color="primary" class="admission-receipt-btn" (click)="openAdmissionReceiptModal()">
+            <mat-icon>receipt_long</mat-icon> Admission Receipt
           </button>
         </div>
 
@@ -83,7 +83,7 @@
                 </li>
                 <li>
                   <span class="detail-label">Admission Date</span>
-                  <span class="detail-value">{{profileData.admissionDate || 'N/A'}}</span>
+                  <span class="detail-value">{{profileData.admissionDate || (todayDate | date:'dd MMM yyyy')}}</span>
                 </li>
               </ul>
             </div>
@@ -218,7 +218,7 @@
                   <td class="font-bold text-success">{{p.amount | currency:'INR'}}</td>
                   <td>{{p.paymentMode}}</td>
                   <td class="text-right">
-                    <button mat-icon-button color="primary" class="print-row-btn" (click)="downloadSinglePaymentReceipt(p)" title="Print Receipt">
+                    <button mat-icon-button color="primary" class="print-row-btn" (click)="openPaymentReceiptModal(p)" title="Print Receipt">
                       <mat-icon>print</mat-icon>
                     </button>
                   </td>
@@ -243,11 +243,244 @@
         <div class="tab-padding text-center">
           <div class="empty-state">
             <mat-icon class="large-icon">folder_open</mat-icon>
-            <p>Documents panel and attachments module is coming soon.</p>
+            <p>Documents panel and attachments module is active.</p>
           </div>
         </div>
       </mat-tab>
 
     </mat-tab-group>
   </ng-container>
+
+  <!-- ========================================================================= -->
+  <!-- 1. OFFICIAL ADMISSION RECEIPT MODAL PREVIEW                               -->
+  <!-- ========================================================================= -->
+  <div class="receipt-modal-backdrop" *ngIf="showAdmissionReceiptModal" (click)="closeAdmissionReceiptModal()">
+    <div class="receipt-modal-card card" (click)="$event.stopPropagation()">
+      
+      <!-- Modal Action Bar -->
+      <div class="receipt-modal-topbar">
+        <div class="topbar-left">
+          <span class="preview-badge">📋 Document Preview</span>
+          <h3 class="preview-title">Student Admission & Enrollment Receipt</h3>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" class="btn btn-outline" (click)="printReceiptElement('admission-receipt-print-area')">
+            <mat-icon>print</mat-icon> Print Official Receipt
+          </button>
+          <button type="button" class="btn btn-close-modal" (click)="closeAdmissionReceiptModal()">✕</button>
+        </div>
+      </div>
+
+      <!-- Scrollable Receipt Body -->
+      <div class="receipt-modal-scroll-body">
+        <div id="admission-receipt-print-area" class="receipt-document">
+          
+          <!-- Header Banner -->
+          <div class="receipt-header">
+            <div class="brand-col">
+              <div class="brand-line">
+                <img src="/logo.png" alt="EduNex" class="brand-logo" />
+                <div>
+                  <h2 class="institute-name">EduNex Coaching & Academy</h2>
+                  <p class="institute-tag">Premier Competitive Exam Preparation & Academic Coaching</p>
+                </div>
+              </div>
+              <p class="institute-meta">Campus: Main Branch, Sector 62 • Contact: +91 98765 43210 • Email: admissions@edunex.in</p>
+            </div>
+            <div class="badge-col">
+              <span class="receipt-title-badge">OFFICIAL ADMISSION RECEIPT</span>
+              <div class="receipt-meta-row">
+                <div><strong>Token No:</strong> ADM-{{ profileData?.studentCode || '2026-01' }}</div>
+                <div><strong>Date:</strong> {{ profileData?.admissionDate || (todayDate | date:'dd MMM yyyy') }}</div>
+                <div><strong>Session:</strong> 2025 – 2026</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Student Information -->
+          <div class="section-box">
+            <h4 class="section-label">1. Student Identification & Contact</h4>
+            <div class="info-grid">
+              <div class="info-item"><span class="lbl">Student Code:</span><span class="val font-mono">{{ profileData?.studentCode }}</span></div>
+              <div class="info-item"><span class="lbl">Student Full Name:</span><span class="val">{{ profileData?.fullName }}</span></div>
+              <div class="info-item"><span class="lbl">Mobile Contact:</span><span class="val">{{ profileData?.mobile }}</span></div>
+              <div class="info-item"><span class="lbl">Email Address:</span><span class="val">{{ profileData?.email || 'N/A' }}</span></div>
+              <div class="info-item"><span class="lbl">Date of Birth:</span><span class="val">{{ profileData?.dateOfBirth || 'N/A' }}</span></div>
+              <div class="info-item"><span class="lbl">Admission Date:</span><span class="val">{{ profileData?.admissionDate || (todayDate | date:'dd MMM yyyy') }}</span></div>
+            </div>
+          </div>
+
+          <!-- Section 2: Academic Program & Batch -->
+          <div class="section-box">
+            <h4 class="section-label">2. Academic Course & Batch Allotment</h4>
+            <div class="info-grid">
+              <div class="info-item"><span class="lbl">Enrolled Course:</span><span class="val text-indigo">{{ getCourseName() }}</span></div>
+              <div class="info-item"><span class="lbl">Assigned Batch:</span><span class="val">{{ getBatchName() }}</span></div>
+              <div class="info-item"><span class="lbl">Program Stream:</span><span class="val">Regular Classroom / Entrance Prep</span></div>
+              <div class="info-item"><span class="lbl">Enrollment Status:</span><span class="val text-green">Active & Confirmed</span></div>
+            </div>
+          </div>
+
+          <!-- Section 3: Guardian Details -->
+          <div class="section-box" *ngIf="profileData?.parents?.length">
+            <h4 class="section-label">3. Parent / Guardian Information</h4>
+            <div class="info-grid" *ngFor="let p of profileData.parents">
+              <div class="info-item"><span class="lbl">{{ p.relationshipType || 'Parent' }} Name:</span><span class="val">{{ p.fullName }}</span></div>
+              <div class="info-item"><span class="lbl">Emergency Phone:</span><span class="val">{{ p.mobile }}</span></div>
+            </div>
+          </div>
+
+          <!-- Section 4: Fee Breakdown & Ledger -->
+          <div class="section-box">
+            <h4 class="section-label">4. Fee Structure & Assessment Summary</h4>
+            <table class="receipt-table">
+              <thead>
+                <tr>
+                  <th>Particulars / Fee Component</th>
+                  <th>Payment Type</th>
+                  <th class="text-right">Amount (INR)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Total Program Course Fee</td>
+                  <td>{{ feeHistory?.feePlans?.[0]?.planType || 'Installments' }}</td>
+                  <td class="text-right">₹{{ getTotalFee() | number }}</td>
+                </tr>
+                <tr>
+                  <td>Applied Scholarship / Academic Concession</td>
+                  <td>Special Merit Discount</td>
+                  <td class="text-right text-red">- ₹{{ getDiscountAmount() | number }}</td>
+                </tr>
+                <tr class="total-row">
+                  <td colspan="2">Net Course Fee Payable</td>
+                  <td class="text-right text-indigo font-black">₹{{ getNetFee() | number }}</td>
+                </tr>
+                <tr>
+                  <td colspan="2">Total Amount Received Till Date</td>
+                  <td class="text-right text-green font-bold">₹{{ getPaidAmount() | number }}</td>
+                </tr>
+                <tr>
+                  <td colspan="2">Remaining Fee Balance Due</td>
+                  <td class="text-right text-amber font-bold">₹{{ getDueAmount() | number }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 5: Terms & Conditions -->
+          <div class="declaration-box">
+            <strong>Terms & Policy Declaration:</strong>
+            <p>1. Admission fees and enrollment charges are non-refundable and non-transferable under standard institute rules.</p>
+            <p>2. Students must adhere to institute discipline, attend scheduled test series, and maintain at least 75% attendance.</p>
+            <p>3. This is an official digital record issued by EduNex Academic Management Infrastructure.</p>
+          </div>
+
+          <!-- Section 6: Signatures -->
+          <div class="signatures-row">
+            <div class="signature-block">
+              <span>Parent / Student Signature</span>
+            </div>
+            <div class="stamp-box">
+              <span>EDUNEX<br/>OFFICIAL<br/>SEAL</span>
+            </div>
+            <div class="signature-block">
+              <span>Authorized Administrator</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer Bar -->
+      <div class="receipt-modal-footer">
+        <span class="footer-note">🔒 System Verified Admission Receipt • Generated on {{ todayDate | date:'medium' }}</span>
+        <div class="flex items-center gap-2">
+          <button type="button" class="btn btn-secondary" (click)="closeAdmissionReceiptModal()">Close</button>
+          <button type="button" class="btn btn-primary" (click)="printReceiptElement('admission-receipt-print-area')">
+            <mat-icon>print</mat-icon> Print / Save PDF
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. PAYMENT TRANSACTION RECEIPT MODAL                                      -->
+  <!-- ========================================================================= -->
+  <div class="receipt-modal-backdrop" *ngIf="showPaymentReceiptModal" (click)="closePaymentReceiptModal()">
+    <div class="receipt-modal-card card max-w-2xl" (click)="$event.stopPropagation()">
+      
+      <div class="receipt-modal-topbar">
+        <div class="topbar-left">
+          <span class="preview-badge">💳 Transaction Slip</span>
+          <h3 class="preview-title">Payment Voucher Receipt</h3>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" class="btn btn-outline" (click)="printReceiptElement('payment-receipt-print-area')">
+            <mat-icon>print</mat-icon> Print Slip
+          </button>
+          <button type="button" class="btn btn-close-modal" (click)="closePaymentReceiptModal()">✕</button>
+        </div>
+      </div>
+
+      <div class="receipt-modal-scroll-body">
+        <div id="payment-receipt-print-area" class="receipt-document">
+          <div class="receipt-header">
+            <div class="brand-col">
+              <div class="brand-line">
+                <img src="/logo.png" alt="EduNex" class="brand-logo" />
+                <div>
+                  <h2 class="institute-name">EduNex Institute</h2>
+                  <p class="institute-tag">Fee Payment Voucher</p>
+                </div>
+              </div>
+            </div>
+            <div class="badge-col">
+              <span class="receipt-title-badge green">TRANSACTION RECEIPT</span>
+              <div class="receipt-meta-row">
+                <div><strong>Receipt No:</strong> {{ selectedPayment?.receiptNo }}</div>
+                <div><strong>Date:</strong> {{ selectedPayment?.paymentDate | date:'dd MMM yyyy, hh:mm a' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-box">
+            <div class="info-grid">
+              <div class="info-item"><span class="lbl">Student Code:</span><span class="val font-mono">{{ profileData?.studentCode }}</span></div>
+              <div class="info-item"><span class="lbl">Student Name:</span><span class="val">{{ profileData?.fullName }}</span></div>
+              <div class="info-item"><span class="lbl">Course Program:</span><span class="val">{{ getCourseName() }}</span></div>
+              <div class="info-item"><span class="lbl">Payment Mode:</span><span class="val font-bold">{{ selectedPayment?.paymentMode || 'Online / Cash' }}</span></div>
+            </div>
+          </div>
+
+          <!-- Highlight Amount Paid Box -->
+          <div class="payment-highlight-card">
+            <span class="paid-label">Total Amount Paid</span>
+            <span class="paid-value">₹{{ (selectedPayment?.amount || 0) | number }}.00</span>
+            <span class="paid-words">Transaction Confirmed & Credited</span>
+          </div>
+
+          <div class="signatures-row mt-6">
+            <div class="signature-block">
+              <span>Depositor Signature</span>
+            </div>
+            <div class="signature-block">
+              <span>Authorized Cashier / Accountant</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="receipt-modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closePaymentReceiptModal()">Close</button>
+        <button type="button" class="btn btn-primary" (click)="printReceiptElement('payment-receipt-print-area')">
+          <mat-icon>print</mat-icon> Print Voucher
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </div>

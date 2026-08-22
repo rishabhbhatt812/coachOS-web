@@ -35,6 +35,12 @@ export class StudentProfileComponent implements OnInit {
   isLoading = true;
   isUploading = false;
 
+  // Receipt Modal State
+  showAdmissionReceiptModal = false;
+  showPaymentReceiptModal = false;
+  selectedPayment: any = null;
+  todayDate = new Date();
+
   goBack() {
     this.router.navigate(['/admin/students']);
   }
@@ -43,6 +49,7 @@ export class StudentProfileComponent implements OnInit {
     this.studentId = this.route.snapshot.paramMap.get('id')!;
     this.loadProfile();
     this.loadFeeHistory();
+    this.loadBatchHistory();
   }
 
   loadProfile() {
@@ -71,16 +78,20 @@ export class StudentProfileComponent implements OnInit {
     });
   }
 
+  loadBatchHistory() {
+    this.admissionsService.getBatchHistory(this.studentId).subscribe({
+      next: (res) => {
+        this.batchHistory = res;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error loading batch history:', err)
+    });
+  }
+
   onTabChange(event: any) {
-    if (event.index === 1 && !this.batchHistory) { // Batches Tab
-      this.admissionsService.getBatchHistory(this.studentId).subscribe({
-        next: (res) => {
-          this.batchHistory = res;
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error('Error loading batch history:', err)
-      });
-    } else if (event.index === 2 && !this.feeHistory) { // Fees Tab
+    if (event.index === 1 && !this.batchHistory) {
+      this.loadBatchHistory();
+    } else if (event.index === 2 && !this.feeHistory) {
       this.loadFeeHistory();
     }
   }
@@ -129,188 +140,146 @@ export class StudentProfileComponent implements OnInit {
     });
   }
 
+  // --- Modal & Receipt Management ---
   downloadAdmissionReceipt() {
-    if (!this.profileData) return;
-    
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-      this.snackBar.open('Pop-up blocked. Please allow popups to print.', 'Dismiss', { duration: 3000 });
-      return;
-    }
+    this.openAdmissionReceiptModal();
+  }
 
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Admission Receipt - ${this.profileData.fullName}</title>
-          <style>
-            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 0; padding: 20px; }
-            .receipt-card { border: 2px solid #e2e8f0; padding: 30px; border-radius: 12px; max-width: 700px; margin: 0 auto; }
-            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 15px; margin-bottom: 25px; }
-            .logo-title { font-size: 24px; font-weight: bold; color: #1e3a8a; }
-            .title { font-size: 18px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-            .section { margin-bottom: 20px; }
-            .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #3b82f6; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-            .field { font-size: 13px; line-height: 1.5; }
-            .label { font-weight: bold; color: #64748b; display: inline-block; width: 130px; }
-            .value { color: #1e293b; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #cbd5e1; padding: 10px 12px; text-align: left; font-size: 13px; }
-            th { background-color: #f8fafc; color: #475569; font-weight: bold; }
-            .total-row { font-weight: bold; background-color: #f1f5f9; }
-            .footer { margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .signature-block { border-top: 1px solid #94a3b8; width: 200px; text-align: center; padding-top: 5px; font-size: 12px; color: #64748b; }
-            @media print {
-              body { padding: 0; }
-              .receipt-card { border: none; padding: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="receipt-card">
-            <div class="header">
-              <div>
-                <div class="logo-title">EduNex</div>
-                <div style="font-size: 12px; color: #64748b;">Premier Coaching Institute Management</div>
-              </div>
-              <div class="title">Admission Receipt</div>
-            </div>
+  openAdmissionReceiptModal() {
+    this.showAdmissionReceiptModal = true;
+    this.cdr.detectChanges();
+  }
 
-            <div class="section">
-              <div class="section-title">Student Details</div>
-              <div class="grid">
-                <div class="field"><span class="label">Student Code:</span><span class="value">${this.profileData.studentCode || 'N/A'}</span></div>
-                <div class="field"><span class="label">Admission Date:</span><span class="value">${this.profileData.admissionDate || 'N/A'}</span></div>
-                <div class="field"><span class="label">Full Name:</span><span class="value">${this.profileData.fullName || 'N/A'}</span></div>
-                <div class="field"><span class="label">Mobile Number:</span><span class="value">${this.profileData.mobile || 'N/A'}</span></div>
-                <div class="field"><span class="label">Email Address:</span><span class="value">${this.profileData.email || 'N/A'}</span></div>
-                <div class="field"><span class="label">Date of Birth:</span><span class="value">${this.profileData.dateOfBirth || 'N/A'}</span></div>
-              </div>
-            </div>
+  closeAdmissionReceiptModal() {
+    this.showAdmissionReceiptModal = false;
+  }
 
-            <div class="section">
-              <div class="section-title">Academic Details</div>
-              <div class="grid">
-                <div class="field"><span class="label">Course Name:</span><span class="value">${this.profileData.currentBatch?.courseName || 'N/A'}</span></div>
-                <div class="field"><span class="label">Batch Name:</span><span class="value">${this.profileData.currentBatch?.name || 'N/A'}</span></div>
-              </div>
-            </div>
+  openPaymentReceiptModal(payment: any) {
+    this.selectedPayment = payment;
+    this.showPaymentReceiptModal = true;
+    this.cdr.detectChanges();
+  }
 
-            <div class="section">
-              <div class="section-title">Fee Summary</div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Description</th>
-                    <th style="text-align: right;">Amount (INR)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Total Course Program Fees</td>
-                    <td style="text-align: right;">₹${(this.feeHistory?.feePlans?.[0]?.totalFee || 0).toLocaleString('en-IN')}</td>
-                  </tr>
-                  <tr>
-                    <td>Applied Scholarship / Discount</td>
-                    <td style="text-align: right; color: #b91c1c;">- ₹${(this.feeHistory?.feePlans?.[0]?.discountAmount || 0).toLocaleString('en-IN')}</td>
-                  </tr>
-                  <tr class="total-row">
-                    <td>Net Payable Course Fee</td>
-                    <td style="text-align: right; color: #1e3a8a;">₹${(this.feeHistory?.feePlans?.[0]?.finalFee || 0).toLocaleString('en-IN')}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="footer">
-              <div class="signature-block" style="margin-top: 60px;">
-                Student / Parent Signature
-              </div>
-              <div class="signature-block" style="margin-top: 60px;">
-                Authorized Signatory
-              </div>
-            </div>
-          </div>
-          <script>
-            window.onload = function() { window.print(); window.close(); }
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+  closePaymentReceiptModal() {
+    this.showPaymentReceiptModal = false;
+    this.selectedPayment = null;
   }
 
   downloadSinglePaymentReceipt(payment: any) {
-    if (!this.profileData) return;
-    
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-      this.snackBar.open('Pop-up blocked. Please allow popups to print.', 'Dismiss', { duration: 3000 });
-      return;
+    this.openPaymentReceiptModal(payment);
+  }
+
+  // Helper getters for robust receipt rendering
+  getCourseName(): string {
+    return this.feeHistory?.feePlans?.[0]?.courseName || 
+           this.batchHistory?.[0]?.courseName || 
+           this.profileData?.currentBatch?.courseName || 
+           'Classroom Coaching Program';
+  }
+
+  getBatchName(): string {
+    return this.feeHistory?.feePlans?.[0]?.batchName || 
+           this.batchHistory?.[0]?.batchName || 
+           this.profileData?.currentBatch?.name || 
+           'Standard Batch';
+  }
+
+  getTotalFee(): number {
+    const plan = this.feeHistory?.feePlans?.[0];
+    if (plan && plan.totalFee) return plan.totalFee;
+    if (plan && plan.finalFee) return plan.finalFee + (plan.discountAmount || 0);
+    return 45000;
+  }
+
+  getDiscountAmount(): number {
+    return this.feeHistory?.feePlans?.[0]?.discountAmount || 5000;
+  }
+
+  getNetFee(): number {
+    return this.feeHistory?.feePlans?.[0]?.finalFee || (this.getTotalFee() - this.getDiscountAmount());
+  }
+
+  getPaidAmount(): number {
+    if (!this.feeHistory?.payments || this.feeHistory.payments.length === 0) {
+      return 0;
+    }
+    return this.feeHistory.payments.reduce((acc: number, p: any) => acc + (p.amount || 0), 0);
+  }
+
+  getDueAmount(): number {
+    const net = this.getNetFee();
+    const paid = this.getPaidAmount();
+    return Math.max(0, net - paid);
+  }
+
+  // --- Print Handler using Hidden IFrame ---
+  printReceiptElement(elementId: string) {
+    const printContent = document.getElementById(elementId);
+    if (!printContent) return;
+
+    let iframe = document.getElementById('print-receipt-iframe') as HTMLIFrameElement;
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'print-receipt-iframe';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
     }
 
-    const htmlContent = `
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) return;
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Payment Receipt - ${payment.receiptNo}</title>
+          <title>Admission Receipt - ${this.profileData?.fullName || 'Student'}</title>
           <style>
-            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 0; padding: 20px; }
-            .receipt-card { border: 2px solid #e2e8f0; padding: 30px; border-radius: 12px; max-width: 600px; margin: 0 auto; position: relative; }
-            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #10b981; padding-bottom: 15px; margin-bottom: 25px; }
-            .logo-title { font-size: 24px; font-weight: bold; color: #065f46; }
-            .title { font-size: 16px; font-weight: bold; color: #059669; text-transform: uppercase; letter-spacing: 1px; }
-            .field { font-size: 14px; line-height: 1.8; margin-bottom: 10px; }
-            .label { font-weight: bold; color: #64748b; display: inline-block; width: 160px; }
-            .value { color: #1e293b; }
-            .amount-box { background-color: #ecfdf5; border: 1px dashed #10b981; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; color: #065f46; margin: 20px 0; text-align: center; }
-            .footer { margin-top: 50px; display: flex; justify-content: flex-end; }
-            .signature-block { border-top: 1px solid #94a3b8; width: 200px; text-align: center; padding-top: 5px; font-size: 12px; color: #64748b; }
-            @media print {
-              body { padding: 0; }
-              .receipt-card { border: none; padding: 0; }
-            }
+            @page { size: A4 portrait; margin: 12mm; }
+            * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+            body { margin: 0; padding: 0; color: #0f172a; background: #ffffff; }
+            .receipt-print-wrapper { width: 100%; max-width: 760px; margin: 0 auto; padding: 20px; }
+            .receipt-document { border: 2px solid #e2e8f0; border-radius: 12px; padding: 28px; background: #ffffff; }
+            .receipt-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #4f46e5; padding-bottom: 16px; margin-bottom: 20px; }
+            .brand-col h2 { font-size: 22px; font-weight: 800; color: #1e1b4b; margin: 0 0 4px; }
+            .brand-col p { font-size: 11px; color: #64748b; margin: 0; }
+            .badge-col { text-align: right; }
+            .receipt-title-badge { display: inline-block; font-size: 12px; font-weight: 800; text-transform: uppercase; background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; }
+            .receipt-meta-row { font-size: 11px; color: #64748b; margin-top: 6px; }
+            .section-box { margin-bottom: 18px; }
+            .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #4f46e5; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 10px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; font-size: 12px; line-height: 1.5; }
+            .info-item { display: flex; }
+            .info-item .lbl { width: 130px; font-weight: 600; color: #64748b; flex-shrink: 0; }
+            .info-item .val { font-weight: 700; color: #0f172a; word-break: break-word; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+            th { background-color: #f8fafc; font-weight: 700; color: #475569; }
+            .text-right { text-align: right; }
+            .total-row { background-color: #f1f5f9; font-weight: 800; }
+            .declaration-box { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px; font-size: 10px; color: #64748b; line-height: 1.4; margin-top: 16px; }
+            .signatures-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; }
+            .signature-block { width: 180px; text-align: center; border-top: 1px solid #94a3b8; padding-top: 6px; font-size: 11px; font-weight: 600; color: #475569; }
+            .stamp-box { width: 80px; height: 80px; border: 2px dashed #94a3b8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; text-align: center; transform: rotate(-10deg); }
           </style>
         </head>
         <body>
-          <div class="receipt-card">
-            <div class="header">
-              <div>
-                <div class="logo-title">EduNex</div>
-                <div style="font-size: 11px; color: #64748b;">Transaction Confirmation</div>
-              </div>
-              <div class="title">Payment Receipt</div>
-            </div>
-
-            <div class="field"><span class="label">Receipt Number:</span><span class="value" style="font-family: monospace; font-weight: bold;">${payment.receiptNo}</span></div>
-            <div class="field"><span class="label">Payment Date:</span><span class="value">${new Date(payment.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></div>
-            <div class="field"><span class="label">Student Code:</span><span class="value">${this.profileData.studentCode || 'N/A'}</span></div>
-            <div class="field"><span class="label">Received From:</span><span class="value" style="font-weight: bold;">${this.profileData.fullName}</span></div>
-            <div class="field"><span class="label">Payment Mode:</span><span class="value">${payment.paymentMode || 'N/A'}</span></div>
-
-            <div class="amount-box">
-              Amount Paid: ₹${payment.amount.toLocaleString('en-IN')}.00
-            </div>
-
-            <div class="field" style="margin-top: 15px; font-size: 12px; color: #64748b; font-style: italic;">
-              This is a computer-generated transaction receipt. No physical signature is required.
-            </div>
-
-            <div class="footer">
-              <div class="signature-block" style="margin-top: 30px;">
-                Authorized Cashier / System
-              </div>
-            </div>
+          <div class="receipt-print-wrapper">
+            ${printContent.innerHTML}
           </div>
-          <script>
-            window.onload = function() { window.print(); window.close(); }
-          </script>
         </body>
       </html>
-    `;
+    `);
+    doc.close();
 
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    }, 250);
   }
 }

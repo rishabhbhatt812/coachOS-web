@@ -99,23 +99,34 @@ export class AdminInstitutesComponent implements OnInit {
 
   loadInstituteModules(instituteId: string) {
     this.isLoadingModules = true;
+    this.cdr.detectChanges();
+
     this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes/${instituteId}/modules`).subscribe({
       next: (res) => {
-        this.instituteModules = res || [];
+        let list: any[] = [];
+        if (Array.isArray(res)) {
+          list = res;
+        } else if (res && Array.isArray(res.data)) {
+          list = res.data;
+        }
+        this.instituteModules = list;
         this.isLoadingModules = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load institute modules:', err);
         this.isLoadingModules = false;
+        this.instituteModules = [];
         this.snackBar.open('Error loading module access settings.', '', { duration: 3000 });
+        this.cdr.detectChanges();
       }
     });
-     this.cdr.detectChanges();
   }
 
   saveInstituteModules() {
     if (!this.activeInstituteForModules) return;
     this.isSavingModules = true;
+    this.cdr.detectChanges();
 
     const enabledModuleIds = this.instituteModules
       .filter(m => m.isEnabled)
@@ -129,6 +140,7 @@ export class AdminInstitutesComponent implements OnInit {
           panelClass: ['success-snackbar']
         });
         this.closeModulesDrawer();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to save institute modules:', err);
@@ -137,28 +149,46 @@ export class AdminInstitutesComponent implements OnInit {
           duration: 3000,
           panelClass: ['error-snackbar']
         });
+        this.cdr.detectChanges();
       }
     });
   }
 
   loadInstitutes() {
     this.isLoading = true;
+    this.cdr.detectChanges();
+
     this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
       next: (res) => {
-        const data = res || [];
-        this.institutes = data.map((item: any) => ({
+        let list: any[] = [];
+        if (Array.isArray(res)) {
+          list = res;
+        } else if (res && typeof res === 'object') {
+          if (Array.isArray(res.data)) {
+            list = res.data;
+          } else if (Array.isArray(res.data?.data)) {
+            list = res.data.data;
+          } else if (res.id) {
+            list = [res];
+          }
+        }
+
+        this.institutes = list.map((item: any) => ({
           ...item,
           isActive: item.isActive ? 'true' : 'false'
         }));
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load institutes:', err);
         this.isLoading = false;
+        this.institutes = [];
         this.snackBar.open('Error loading coaching centers.', 'Dismiss', {
           duration: 3000,
           panelClass: ['error-snackbar']
         });
+        this.cdr.detectChanges();
       }
     });
   }
@@ -318,6 +348,7 @@ export class AdminInstitutesComponent implements OnInit {
   onSubmit() {
     if (this.instituteForm.valid) {
       this.isLoading = true;
+      this.cdr.detectChanges();
       
       const payload = {
         ...this.instituteForm.value,
@@ -344,6 +375,7 @@ export class AdminInstitutesComponent implements OnInit {
             duration: 4000,
             panelClass: ['error-snackbar']
           });
+          this.cdr.detectChanges();
         }
       });
     }
