@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
     STUDENTS_IMPORT: environment.apiUrl + '/api/admin/Students/import',
     STUDENTS_EXPORT: environment.apiUrl + '/api/admin/Students/export',
     SUBJECTS: environment.apiUrl + '/api/admin/Subjects',
+    BRANCHES: environment.apiUrl + '/api/admin/branches',
     VACANCIES: environment.apiUrl + '/api/admin/Vacancies',
     STAFF: environment.apiUrl + '/api/staff',
     TEACHERS: environment.apiUrl + '/api/teachers'

@@ -65,7 +65,7 @@
 
         <div class="form-actions">
           <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="branchForm.invalid || isLoading">
+          <button type="submit" class="btn btn-primary" [disabled]="branchForm.invalid || (isLoading$ | async)">
             {{ editingId ? 'Update Branch' : 'Create Branch' }}
           </button>
         </div>
@@ -75,16 +75,17 @@
 
   <!-- Branches Table List -->
   <div class="table-card card">
-    <div *ngIf="isLoading" class="loading-indicator">
+    <div *ngIf="isLoading$ | async" class="loading-indicator">
       <div class="spinner"></div>
       <p>Loading branches list...</p>
     </div>
     
     <app-data-table 
-      *ngIf="!isLoading"
+      *ngIf="!(isLoading$ | async)"
       [columns]="columns" 
-      [data]="branches"
+      [data]="(branches$ | async) || []"
       (actionClicked)="onActionClicked($event)">
     </app-data-table>
   </div>
 </div>
+

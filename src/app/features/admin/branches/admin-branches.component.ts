@@ -1,14 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
-import { environment } from '../../../core/constants/api-endpoints';
+import { BranchFacade } from '../../../core/facades/branch.facade';
 import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
@@ -28,13 +27,13 @@ import { DialogService } from '../../../core/services/dialog.service';
   styleUrl: './admin-branches.component.scss'
 })
 export class AdminBranchesComponent implements OnInit {
-  private http = inject(HttpClient);
+  private branchFacade = inject(BranchFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private dialogService = inject(DialogService);
 
-  branches: any[] = [];
-  isLoading = false;
+  branches$ = this.branchFacade.branches$;
+  isLoading$ = this.branchFacade.isLoading$;
   showForm = false;
   editingId: string | null = null;
   branchForm!: FormGroup;
@@ -49,7 +48,7 @@ export class AdminBranchesComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.loadBranches();
+    this.branchFacade.loadBranches();
     this.initForm();
   }
 
@@ -60,25 +59,6 @@ export class AdminBranchesComponent implements OnInit {
       address: [''],
       contactNumber: [''],
       isActive: [true]
-    });
-  }
-
-  loadBranches() {
-    this.isLoading = true;
-    this.http.get<any>(`${environment.apiUrl}/api/admin/branches`).subscribe({
-      next: (res) => {
-        // Response is unwrapped as a plain array by response.interceptor
-        const data = Array.isArray(res) ? res : (res?.data || []);
-        this.branches = data.map((b: any) => ({
-          ...b,
-          isActive: b.isActive ? 'Active' : 'Inactive'
-        }));
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load branches:', err);
-        this.isLoading = false;
-      }
     });
   }
 
@@ -102,20 +82,18 @@ export class AdminBranchesComponent implements OnInit {
       };
 
       if (this.editingId) {
-        this.http.put<any>(`${environment.apiUrl}/api/admin/branches/${this.editingId}`, payload).subscribe({
+        this.branchFacade.updateBranch(this.editingId, payload).subscribe({
           next: () => {
-            this.snackBar.open('Branch updated successfully!', 'Dismiss', { duration: 3000 });
+            this.dialogService.success('Branch updated successfully!');
             this.toggleForm();
-            this.loadBranches();
           },
           error: (err) => console.error('Failed to update branch:', err)
         });
       } else {
-        this.http.post<any>(`${environment.apiUrl}/api/admin/branches`, payload).subscribe({
+        this.branchFacade.createBranch(payload).subscribe({
           next: () => {
-            this.snackBar.open('Branch created successfully!', 'Dismiss', { duration: 3000 });
+            this.dialogService.success('Branch created successfully!');
             this.toggleForm();
-            this.loadBranches();
           },
           error: (err) => console.error('Failed to create branch:', err)
         });
@@ -131,20 +109,18 @@ export class AdminBranchesComponent implements OnInit {
         name: event.row.name,
         address: event.row.address,
         contactNumber: event.row.contactNumber,
-        isActive: event.row.isActive === 'Active'
+        isActive: event.row.isActive === 'Active' || event.row.isActive === true
       });
       this.showForm = true;
     } else if (event.action === 'delete') {
       this.dialogService.delete(event.row.name || 'Branch').subscribe(confirmed => {
         if (confirmed) {
-          this.http.delete<any>(`${environment.apiUrl}/api/admin/branches/${event.row.id}`).subscribe({
+          this.branchFacade.deleteBranch(event.row.id).subscribe({
             next: () => {
               this.dialogService.success('Branch deleted successfully!');
-              this.loadBranches();
             },
             error: () => {
               this.dialogService.success('Branch deleted successfully!');
-              this.loadBranches();
             }
           });
         }
