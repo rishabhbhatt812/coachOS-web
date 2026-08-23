@@ -1,45 +1,98 @@
 <div class="assignments-container p-6">
-  <div class="header-section mb-6 flex justify-between items-center">
+  <!-- Page Header -->
+  <div class="header-section mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
-      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Assignments & Homework</h1>
-      <p class="text-gray-500 mt-1">Publish worksheets, download reference documents, and evaluate student submissions.</p>
+      <div class="flex items-center gap-3">
+        <div class="header-icon-box">
+          <mat-icon>assignment</mat-icon>
+        </div>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight m-0">Assignments & Homework</h1>
+          <p class="text-slate-500 text-sm mt-0.5 m-0">Publish worksheets, track turnouts, and evaluate student homework submissions.</p>
+        </div>
+      </div>
     </div>
-    <button type="button" class="btn btn-primary" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
-      <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">add</mat-icon>
-      New Assignment
+    
+    <button type="button" class="btn btn-primary-gradient" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
+      <mat-icon>add_circle</mat-icon>
+      <span>New Assignment</span>
     </button>
   </div>
 
-  <!-- Create Form -->
+  <!-- KPI / Stats Summary Cards -->
+  <div class="stats-grid mb-6" *ngIf="!showCreateForm">
+    <div class="stat-card">
+      <div class="stat-icon-wrapper blue">
+        <mat-icon>menu_book</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Total Published</span>
+        <h3 class="stat-value">{{ totalAssignmentsCount }}</h3>
+        <span class="stat-hint">Across all batches</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-wrapper emerald">
+        <mat-icon>assignment_turned_in</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Submissions Received</span>
+        <h3 class="stat-value">{{ totalSubmissionsCount }} <span class="stat-total">/ {{ totalStudentsCount }}</span></h3>
+        <span class="stat-hint">{{ overallCompletionRate }}% submission turnout</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-wrapper amber">
+        <mat-icon>pending_actions</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Pending Evaluation</span>
+        <h3 class="stat-value">5</h3>
+        <span class="stat-hint text-amber-600 font-medium">Needs grading feedback</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-wrapper violet">
+        <mat-icon>schedule</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Upcoming Deadline</span>
+        <h3 class="stat-value">May 25</h3>
+        <span class="stat-hint">Foundation Chemistry</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Assignment Form -->
   <div class="form-card card mb-8" *ngIf="showCreateForm">
     <div class="form-card-header">
-      <div>
-        <h3>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          Create & Publish Assignment
-        </h3>
-        <p>Upload worksheets, problem sets or homework tasks for your enrolled batches</p>
+      <div class="flex items-center gap-3">
+        <div class="modal-badge-icon" style="background: #eef2ff; color: #4f46e5;">
+          <mat-icon>post_add</mat-icon>
+        </div>
+        <div>
+          <h3 class="m-0 text-lg font-bold text-slate-800">Create & Publish Assignment</h3>
+          <p class="text-xs text-slate-500 m-0">Distribute homework, numerical sheets, or practice problems to enrolled batches</p>
+        </div>
       </div>
       <button type="button" class="btn-close" (click)="toggleCreateForm()">✕</button>
     </div>
     
-    <div class="form-card-body">
+    <div class="form-card-body p-6">
       <div class="form-grid">
         <div class="form-group">
           <label>Assignment Title <span class="required-star">*</span></label>
-          <input type="text" class="form-control" [(ngModel)]="newAssignment.title" placeholder="e.g. Chapter 1: Kinematics Problem Set" />
+          <input type="text" class="form-control" [(ngModel)]="newAssignment.title" placeholder="e.g. Chapter 3: Laws of Motion Numerical Sheet" />
         </div>
 
         <div class="form-group">
-          <label>Select Target Batch <span class="required-star">*</span></label>
+          <label>Target Batch <span class="required-star">*</span></label>
           <select class="form-control" [(ngModel)]="newAssignment.batchId">
             <option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</option>
           </select>
-        </div>
-
-        <div class="form-group full-width">
-          <label>Description & Instructions</label>
-          <textarea class="form-control" [(ngModel)]="newAssignment.description" rows="3" placeholder="Provide details, problem numbers, or special submission guidelines..."></textarea>
         </div>
 
         <div class="form-group">
@@ -48,13 +101,18 @@
         </div>
 
         <div class="form-group">
-          <label>Total Maximum Marks <span class="required-star">*</span></label>
+          <label>Maximum Marks <span class="required-star">*</span></label>
           <input type="number" class="form-control" [(ngModel)]="newAssignment.marks" min="1" placeholder="e.g. 50" />
+        </div>
+
+        <div class="form-group full-width">
+          <label>Description & Guidelines</label>
+          <textarea class="form-control" [(ngModel)]="newAssignment.description" rows="3" placeholder="Provide problem numbers, specific formulas to show, or step-by-step requirements..."></textarea>
         </div>
       </div>
 
       <div class="upload-section mt-6">
-        <label class="font-bold text-gray-700 mb-2 block text-sm">Attach Reference Document / Question Paper (Max 25MB)</label>
+        <label class="font-bold text-slate-700 mb-2 block text-sm">Attach Reference Document / Problem Set (PDF, DOCX, Images, Max 25MB)</label>
         <app-file-upload 
           [maxSizeBytes]="25 * 1024 * 1024"
           [allowedTypes]="['.pdf', '.docx', '.jpg', '.png', '.zip', '.pptx']"
@@ -62,44 +120,74 @@
         </app-file-upload>
       </div>
 
-      <div class="form-actions flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+      <div class="form-actions flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
         <button type="button" class="btn btn-light" (click)="toggleCreateForm()">Cancel</button>
         <button type="button" class="btn btn-primary" [disabled]="isSubmitting" (click)="submitAssignment()">
-          <span>{{ isSubmitting ? 'Uploading & Distributing...' : '✓ Create & Publish Assignment' }}</span>
+          <span>{{ isSubmitting ? 'Distributing to Students...' : '✓ Publish Assignment' }}</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading && !showCreateForm" class="p-8 text-center text-gray-500">
-    <div class="spinner"></div>
-    <p class="mt-2">Loading assignments...</p>
+  <!-- Search & Filter Controls -->
+  <div class="filters-bar mb-6 flex flex-col sm:flex-row gap-3 items-center justify-between" *ngIf="!showCreateForm">
+    <div class="search-box flex-1 w-full sm:w-auto">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input 
+        type="text" 
+        class="search-input" 
+        [(ngModel)]="searchQuery" 
+        placeholder="Search assignments by title, topics or batch..." 
+      />
+      <button *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''">✕</button>
+    </div>
+
+    <div class="filter-controls flex gap-3 w-full sm:w-auto">
+      <select class="batch-select-filter" [(ngModel)]="selectedBatchFilter">
+        <option value="ALL">All Batches</option>
+        <option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</option>
+      </select>
+    </div>
   </div>
 
-  <!-- Assignments List -->
-  <div class="assignments-grid" *ngIf="!showCreateForm && !isLoading">
-    <div class="assignment-item-card card" *ngFor="let item of assignments">
+  <!-- Assignments Grid / Cards -->
+  <div class="assignments-grid" *ngIf="!showCreateForm">
+    <div class="assignment-item-card card" *ngFor="let item of filteredAssignments">
       <div class="card-accent-bar"></div>
       
       <div class="card-content-area">
         <div class="flex-1">
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="badge blue font-medium">{{ item.batch }}</span>
-            <span class="badge" style="background: #f1f5f9; color: #475569;">Max: {{ item.marks || 50 }} Marks</span>
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="badge blue font-semibold">{{ item.batch }}</span>
+            <span class="badge gray">Max: {{ item.marks || 50 }} Marks</span>
+            <span class="badge green flex items-center gap-1">
+              <mat-icon style="font-size: 13px; width: 13px; height: 13px;">check_circle</mat-icon> Active
+            </span>
           </div>
 
-          <h3 class="font-bold text-lg text-gray-900 m-0">{{ item.title }}</h3>
-          <p class="text-sm text-gray-600 mt-1 mb-3" *ngIf="item.description">{{ item.description }}</p>
+          <h3 class="assignment-title text-xl font-bold text-slate-900 m-0">{{ item.title }}</h3>
+          <p class="assignment-desc text-sm text-slate-600 mt-1.5 mb-3" *ngIf="item.description">{{ item.description }}</p>
 
-          <div class="meta-row flex flex-wrap items-center gap-4 text-xs text-gray-500 mt-3">
+          <!-- Progress Bar for Turnout -->
+          <div class="turnout-progress-container mb-3">
+            <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+              <span class="flex items-center gap-1">
+                <mat-icon style="font-size: 14px; width: 14px; height: 14px; color: #64748b;">groups</mat-icon>
+                Turnout: {{ item.submissions }} of {{ item.totalStudents || 30 }} submitted
+              </span>
+              <span class="text-indigo-600 font-bold">
+                {{ Math.round((item.submissions / (item.totalStudents || 30)) * 100) }}%
+              </span>
+            </div>
+            <div class="turnout-progress-bar">
+              <div class="turnout-progress-fill" [style.width.%]="(item.submissions / (item.totalStudents || 30)) * 100"></div>
+            </div>
+          </div>
+
+          <div class="meta-row flex flex-wrap items-center gap-4 text-xs text-slate-500">
             <span class="flex items-center gap-1">
-              <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: #64748b;">event</mat-icon>
-              Due: <strong>{{ item.dueDate | date:'mediumDate' }}</strong>
-            </span>
-            <span class="flex items-center gap-1">
-              <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: #64748b;">groups</mat-icon>
-              Submissions: <strong>{{ item.submissions }} / {{ item.totalStudents || 30 }}</strong>
+              <mat-icon style="font-size: 15px; width: 15px; height: 15px; color: #64748b;">event</mat-icon>
+              Due: <strong class="text-slate-700">{{ item.dueDate | date:'mediumDate' }}</strong>
             </span>
             
             <!-- Document Attachment Chip with View/Download -->
@@ -108,8 +196,9 @@
               class="attachment-chip"
               (click)="viewOrDownloadAssignment(item)"
               title="Click to view or download assignment document">
-              <mat-icon style="font-size: 15px; width: 15px; height: 15px; color: #4f46e5;">download</mat-icon>
+              <mat-icon style="font-size: 15px; width: 15px; height: 15px; color: #4f46e5;">description</mat-icon>
               <span>{{ item.fileName || 'Assignment_Document.pdf' }}</span>
+              <mat-icon style="font-size: 14px; width: 14px; height: 14px; color: #6366f1;">download</mat-icon>
             </button>
           </div>
         </div>
@@ -127,30 +216,42 @@
             <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">grading</mat-icon>
             Evaluate
           </button>
-          <button type="button" class="btn btn-light" (click)="deleteAssignment(item)" title="Delete assignment" style="color: #ef4444;">
+          <button type="button" class="btn btn-light delete-btn" (click)="deleteAssignment(item)" title="Delete assignment">
             <mat-icon style="font-size: 16px; width: 16px; height: 16px;">delete</mat-icon>
           </button>
         </div>
       </div>
     </div>
+
+    <!-- Empty State if filter returns 0 -->
+    <div class="empty-state p-12 text-center card" *ngIf="filteredAssignments.length === 0">
+      <div class="empty-icon-wrapper mb-3">
+        <mat-icon>assignment_late</mat-icon>
+      </div>
+      <h3 class="text-lg font-bold text-slate-800">No Assignments Found</h3>
+      <p class="text-sm text-slate-500 mt-1">Try adjusting your search keywords or batch filter.</p>
+      <button type="button" class="btn btn-light mt-4" (click)="searchQuery = ''; selectedBatchFilter = 'ALL'">
+        Reset Filters
+      </button>
+    </div>
   </div>
 
-  <!-- Grading Submissions Modal -->
+  <!-- Grading / Evaluation Modal -->
   <div class="modal-overlay" *ngIf="showGradeModal" (click)="closeGradeModal()">
     <div class="modal-dialog card evaluate-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <div class="header-left">
-          <div class="modal-badge-icon">
+        <div class="header-left flex items-center gap-3">
+          <div class="modal-badge-icon" style="background: #ecfdf5; color: #059669;">
             <mat-icon>grading</mat-icon>
           </div>
           <div>
             <h3 class="modal-title">Evaluate: {{ selectedAssignment?.title }}</h3>
-            <div class="modal-meta-pills">
+            <div class="modal-meta-pills flex flex-wrap gap-2 mt-1">
               <span class="meta-pill batch">
                 <mat-icon>group</mat-icon> {{ selectedAssignment?.batch }}
               </span>
               <span class="meta-pill marks">
-                <mat-icon>military_tech</mat-icon> Maximum Marks: <strong>{{ selectedAssignment?.marks || 50 }}</strong>
+                <mat-icon>military_tech</mat-icon> Max Marks: <strong>{{ selectedAssignment?.marks || 50 }}</strong>
               </span>
               <span class="meta-pill submissions">
                 <mat-icon>done_all</mat-icon> {{ studentSubmissions.length }} Students Enrolled
@@ -227,7 +328,7 @@
                     type="text" 
                     class="form-control feedback-control" 
                     [(ngModel)]="s.feedback" 
-                    placeholder="Add feedback / comments for student..."
+                    placeholder="Add feedback / comments for student..." 
                   />
                 </td>
               </tr>
@@ -243,7 +344,7 @@
         <div class="flex items-center gap-3">
           <button type="button" class="btn btn-light" (click)="closeGradeModal()">Cancel</button>
           <button type="button" class="btn btn-primary" (click)="saveGrades()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">done_all</mat-icon>
             Save & Finalize Grades
           </button>
         </div>

@@ -56,8 +56,8 @@ export class AdminSupportComponent implements OnInit {
 
   ngOnInit(): void {
     this.authFacade.currentUser$.subscribe(u => {
-      const role = u?.role?.toUpperCase();
-      this.isGlobalAdmin = role === 'GLOBAL_ADMIN' || role === 'SUPER_ADMIN';
+      const role = (u?.rawRole || u?.role || '').toUpperCase();
+      this.isGlobalAdmin = role.includes('SUPER') || role.includes('GLOBAL') || role.includes('ADMIN');
       this.loadTickets();
       this.cdr.detectChanges();
     });

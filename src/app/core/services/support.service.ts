@@ -78,13 +78,11 @@ export class SupportService {
   getMyTickets(): Observable<SupportTicket[]> {
     return this.http.get<any>(`${environment.apiUrl}/api/Support/my-tickets`).pipe(
       map(res => {
-        if (Array.isArray(res)) {
-          this.syncUnreadFromList(res);
-          return res;
-        }
-        if (res && res.data && Array.isArray(res.data)) {
-          this.syncUnreadFromList(res.data);
-          return res.data;
+        const rawList = Array.isArray(res) ? res : (res?.data && Array.isArray(res.data) ? res.data : []);
+        if (rawList.length > 0) {
+          this.syncUnreadFromList(rawList);
+          this.setLocalTickets(rawList);
+          return rawList;
         }
         const local = this.getLocalTickets();
         this.syncUnreadFromList(local);
@@ -101,13 +99,11 @@ export class SupportService {
   getAllTickets(): Observable<SupportTicket[]> {
     return this.http.get<any>(`${environment.apiUrl}/api/Support/all-tickets`).pipe(
       map(res => {
-        if (Array.isArray(res)) {
-          this.syncUnreadFromList(res);
-          return res;
-        }
-        if (res && res.data && Array.isArray(res.data)) {
-          this.syncUnreadFromList(res.data);
-          return res.data;
+        const rawList = Array.isArray(res) ? res : (res?.data && Array.isArray(res.data) ? res.data : []);
+        if (rawList.length > 0) {
+          this.syncUnreadFromList(rawList);
+          this.setLocalTickets(rawList);
+          return rawList;
         }
         const local = this.getLocalTickets();
         this.syncUnreadFromList(local);
@@ -264,9 +260,16 @@ export class SupportService {
     return seeded;
   }
 
+  private setLocalTickets(tickets: SupportTicket[]): void {
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(tickets));
+  }
+
   private saveLocalTicket(ticket: SupportTicket): void {
     const list = this.getLocalTickets();
-    list.unshift(ticket);
+    const exists = list.some(t => t.id === ticket.id || t.ticketNumber === ticket.ticketNumber);
+    if (!exists) {
+      list.unshift(ticket);
+    }
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
   }
 
@@ -275,7 +278,9 @@ export class SupportService {
     const idx = list.findIndex(t => t.id === ticket.id || t.ticketNumber === ticket.ticketNumber);
     if (idx !== -1) {
       list[idx] = ticket;
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+    } else {
+      list.unshift(ticket);
     }
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
   }
 }

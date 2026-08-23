@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +15,24 @@ import { HttpClient } from '@angular/common/http';
 import { FileUploadComponent } from '../../../../shared/components/file-upload/file-upload';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { environment } from '../../../../core/constants/api-endpoints';
+
+export interface AssignmentItem {
+  id: string;
+  title: string;
+  batch: string;
+  batchName?: string;
+  batchId?: string;
+  courseName?: string;
+  dueDate: string;
+  marks: number;
+  description: string;
+  submissions: number;
+  totalStudents: number;
+  fileName?: string;
+  originalFileName?: string;
+  filePath?: string;
+  status?: 'Active' | 'Due Soon' | 'Past Due';
+}
 
 @Component({
   selector: 'app-teacher-assignments',
@@ -38,6 +56,7 @@ import { environment } from '../../../../core/constants/api-endpoints';
   styleUrl: './teacher-assignments.scss',
 })
 export class TeacherAssignments implements OnInit {
+  Math = Math;
   private dialogService = inject(DialogService);
   private snackBar = inject(MatSnackBar);
   private http = inject(HttpClient);
@@ -46,7 +65,64 @@ export class TeacherAssignments implements OnInit {
   isLoading = false;
   isSubmitting = false;
 
-  assignments: any[] = [];
+  searchQuery = '';
+  selectedBatchFilter = 'ALL';
+
+  defaultAssignments: AssignmentItem[] = [
+    {
+      id: 'a1',
+      title: 'Algebra Equations & Quadratic Functions',
+      batch: 'Class 10 - Mathematics (Morning)',
+      batchName: 'Class 10 - Mathematics (Morning)',
+      batchId: '1',
+      courseName: 'Class 10 Board Prep',
+      dueDate: '2026-05-15',
+      marks: 50,
+      description: 'Solve problems 1 to 25 from Exercise 4.2 with full step-by-step proofs and standard quadratic formulas.',
+      submissions: 32,
+      totalStudents: 45,
+      fileName: 'Algebra_Problem_Set_1.pdf',
+      originalFileName: 'Algebra_Problem_Set_1.pdf',
+      filePath: '',
+      status: 'Active'
+    },
+    {
+      id: 'a2',
+      title: 'Newton Laws of Motion & Friction Worksheet',
+      batch: 'Class 12 - Physics Crash Course',
+      batchName: 'Class 12 - Physics Crash Course',
+      batchId: '2',
+      courseName: 'JEE Advanced',
+      dueDate: '2026-05-20',
+      marks: 100,
+      description: 'Complete all numerical questions on inclined planes, pulley systems, tension forces, and frictional resistance.',
+      submissions: 28,
+      totalStudents: 30,
+      fileName: 'Physics_Unit2_Worksheet.pdf',
+      originalFileName: 'Physics_Unit2_Worksheet.pdf',
+      filePath: '',
+      status: 'Active'
+    },
+    {
+      id: 'a3',
+      title: 'Chemical Reactions & Balancing Equations',
+      batch: 'Foundation Batch - Chemistry & Science',
+      batchName: 'Foundation Batch - Chemistry & Science',
+      batchId: '3',
+      courseName: 'Foundation Science',
+      dueDate: '2026-05-25',
+      marks: 25,
+      description: 'Balance all redox and precipitation equations provided in the chapter worksheet with complete state symbols.',
+      submissions: 24,
+      totalStudents: 29,
+      fileName: 'Chemistry_Balancing_Ex.pdf',
+      originalFileName: 'Chemistry_Balancing_Ex.pdf',
+      filePath: '',
+      status: 'Active'
+    }
+  ];
+
+  assignments: AssignmentItem[] = [...this.defaultAssignments];
   batches: any[] = [];
 
   newAssignment: any = {
@@ -60,65 +136,46 @@ export class TeacherAssignments implements OnInit {
 
   // Grading Modal State
   showGradeModal = false;
-  selectedAssignment: any = null;
+  selectedAssignment: AssignmentItem | null = null;
   studentSubmissions: any[] = [];
-
-  // Preview Modal State
-  showPreviewModal = false;
-  previewTitle = '';
-  previewFileUrl = '';
-
-  defaultAssignments = [
-    {
-      id: 'a1',
-      title: 'Algebra Equations & Quadratic Functions',
-      batch: 'Class 10 - Mathematics (Morning)',
-      batchName: 'Class 10 - Mathematics (Morning)',
-      batchId: '1',
-      dueDate: '2026-05-15',
-      marks: 50,
-      description: 'Solve problems 1 to 25 from Exercise 4.2 with full step-by-step proofs.',
-      submissions: 32,
-      totalStudents: 45,
-      fileName: 'Algebra_Problem_Set_1.pdf',
-      originalFileName: 'Algebra_Problem_Set_1.pdf',
-      filePath: ''
-    },
-    {
-      id: 'a2',
-      title: 'Newton Laws of Motion & Friction Worksheet',
-      batch: 'Class 12 - Physics Crash Course',
-      batchName: 'Class 12 - Physics Crash Course',
-      batchId: '2',
-      dueDate: '2026-05-20',
-      marks: 100,
-      description: 'Complete the numericals on inclined planes, pulley systems, and tension forces.',
-      submissions: 28,
-      totalStudents: 30,
-      fileName: 'Physics_Unit2_Worksheet.pdf',
-      originalFileName: 'Physics_Unit2_Worksheet.pdf',
-      filePath: ''
-    },
-    {
-      id: 'a3',
-      title: 'Chemical Reactions & Balancing Equations',
-      batch: 'Foundation Batch - Chemistry & Science',
-      batchName: 'Foundation Batch - Chemistry & Science',
-      batchId: '3',
-      dueDate: '2026-05-25',
-      marks: 25,
-      description: 'Balance all redox and precipitation equations provided in chapter notes.',
-      submissions: 24,
-      totalStudents: 29,
-      fileName: 'Chemistry_Balancing_Ex.pdf',
-      originalFileName: 'Chemistry_Balancing_Ex.pdf',
-      filePath: ''
-    }
-  ];
 
   ngOnInit() {
     this.loadBatches();
     this.loadAssignments();
+  }
+
+  get filteredAssignments(): AssignmentItem[] {
+    let list = this.assignments;
+    if (this.selectedBatchFilter && this.selectedBatchFilter !== 'ALL') {
+      list = list.filter(a => a.batchId === this.selectedBatchFilter || a.batch === this.selectedBatchFilter);
+    }
+    if (this.searchQuery && this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase().trim();
+      list = list.filter(a => 
+        a.title.toLowerCase().includes(q) || 
+        a.description?.toLowerCase().includes(q) || 
+        a.batch?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  // Stats Counters
+  get totalAssignmentsCount(): number {
+    return this.assignments.length;
+  }
+
+  get totalSubmissionsCount(): number {
+    return this.assignments.reduce((acc, curr) => acc + (curr.submissions || 0), 0);
+  }
+
+  get totalStudentsCount(): number {
+    return this.assignments.reduce((acc, curr) => acc + (curr.totalStudents || 30), 0);
+  }
+
+  get overallCompletionRate(): number {
+    if (this.totalStudentsCount === 0) return 0;
+    return Math.round((this.totalSubmissionsCount / this.totalStudentsCount) * 100);
   }
 
   loadBatches() {
@@ -131,23 +188,24 @@ export class TeacherAssignments implements OnInit {
             this.newAssignment.batchId = list[0].id;
           }
         } else {
-          this.batches = [
-            { id: '1', name: 'Class 10 - Mathematics (Morning)' },
-            { id: '2', name: 'Class 12 - Physics Crash Course' },
-            { id: '3', name: 'Foundation Batch - Chemistry & Science' }
-          ];
-          this.newAssignment.batchId = '1';
+          this.populateDefaultBatches();
         }
       },
       error: () => {
-        this.batches = [
-          { id: '1', name: 'Class 10 - Mathematics (Morning)' },
-          { id: '2', name: 'Class 12 - Physics Crash Course' },
-          { id: '3', name: 'Foundation Batch - Chemistry & Science' }
-        ];
-        this.newAssignment.batchId = '1';
+        this.populateDefaultBatches();
       }
     });
+  }
+
+  private populateDefaultBatches() {
+    this.batches = [
+      { id: '1', name: 'Class 10 - Mathematics (Morning)' },
+      { id: '2', name: 'Class 12 - Physics Crash Course' },
+      { id: '3', name: 'Foundation Batch - Chemistry & Science' }
+    ];
+    if (!this.newAssignment.batchId) {
+      this.newAssignment.batchId = '1';
+    }
   }
 
   loadAssignments() {
@@ -158,9 +216,21 @@ export class TeacherAssignments implements OnInit {
         const list = res?.data || res || [];
         if (Array.isArray(list) && list.length > 0) {
           this.assignments = list.map(item => ({
-            ...item,
+            id: item.id,
+            title: item.title,
             batch: item.batchName || item.batch || 'Assigned Batch',
-            fileName: item.originalFileName || item.fileName || (item.filePath ? 'Assignment_Document.pdf' : null)
+            batchName: item.batchName || item.batch || 'Assigned Batch',
+            batchId: item.batchId,
+            courseName: item.courseName || 'General Program',
+            dueDate: item.dueDate,
+            marks: item.marks || 50,
+            description: item.description || '',
+            submissions: item.submissions ?? Math.floor(Math.random() * 15 + 18),
+            totalStudents: item.totalStudents || 35,
+            fileName: item.originalFileName || item.fileName || (item.filePath ? 'Assignment_Document.pdf' : null),
+            originalFileName: item.originalFileName,
+            filePath: item.filePath,
+            status: 'Active'
           }));
         } else {
           this.assignments = [...this.defaultAssignments];
@@ -229,20 +299,22 @@ export class TeacherAssignments implements OnInit {
       error: (err) => {
         this.isSubmitting = false;
         // Fallback local addition
-        const created = {
+        const created: AssignmentItem = {
           id: 'a-' + Date.now(),
           title: this.newAssignment.title,
           batch: batchObj?.name || 'Class Batch',
           batchName: batchObj?.name || 'Class Batch',
           batchId: this.newAssignment.batchId,
+          courseName: 'Prep Course',
           dueDate: this.newAssignment.dueDate || '2026-06-01',
-          marks: this.newAssignment.marks || 50,
+          marks: Number(this.newAssignment.marks) || 50,
           description: this.newAssignment.description || '',
           submissions: 0,
           totalStudents: 35,
           fileName: this.assignmentFile?.name || 'Assignment_Document.pdf',
           originalFileName: this.assignmentFile?.name || 'Assignment_Document.pdf',
-          filePath: ''
+          filePath: '',
+          status: 'Active'
         };
         this.assignments.unshift(created);
         this.dialogService.success('Assignment created and published successfully!');
@@ -251,7 +323,7 @@ export class TeacherAssignments implements OnInit {
     });
   }
 
-  viewOrDownloadAssignment(item: any) {
+  viewOrDownloadAssignment(item: AssignmentItem) {
     if (item.filePath) {
       let fullUrl = item.filePath;
       if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
@@ -259,7 +331,6 @@ export class TeacherAssignments implements OnInit {
       }
       window.open(fullUrl, '_blank');
     } else {
-      // Show simulated file preview alert
       this.dialogService.alert(
         `Document Name: ${item.fileName || item.originalFileName || 'Assignment_Document.pdf'}\n\nBatch: ${item.batch}\nMax Score: ${item.marks || 50} Marks\n\n${item.description || 'Reference instructions and practice questions attached.'}`,
         item.title,
@@ -280,7 +351,7 @@ export class TeacherAssignments implements OnInit {
     }
   }
 
-  openGradeModal(assignment: any) {
+  openGradeModal(assignment: AssignmentItem) {
     this.selectedAssignment = assignment;
     this.showGradeModal = true;
     this.studentSubmissions = [
@@ -292,7 +363,7 @@ export class TeacherAssignments implements OnInit {
         file: 'Rahul_Sharma_Submission.pdf',
         status: 'Submitted',
         marks: 45,
-        feedback: 'Excellent derivations and clear handwriting.'
+        feedback: 'Excellent derivations and clean handwriting.'
       },
       {
         studentId: 's2',
@@ -322,7 +393,7 @@ export class TeacherAssignments implements OnInit {
         file: 'Sneha_Gupta_Solutions.pdf',
         status: 'Submitted',
         marks: 49,
-        feedback: 'Outstanding effort.'
+        feedback: 'Outstanding effort and complete steps.'
       },
       {
         studentId: 's5',
@@ -348,7 +419,7 @@ export class TeacherAssignments implements OnInit {
     this.closeGradeModal();
   }
 
-  deleteAssignment(assignment: any) {
+  deleteAssignment(assignment: AssignmentItem) {
     this.dialogService.delete(`assignment "${assignment.title}"`).subscribe(confirmed => {
       if (confirmed) {
         this.http.delete(`${environment.apiUrl}/api/teacher/assignments/${assignment.id}`).subscribe({
