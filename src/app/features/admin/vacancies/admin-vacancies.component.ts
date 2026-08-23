@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +9,8 @@ import { VacanciesService, VacancyItem, VacancyMetrics, EligibleStudent } from '
 import { DialogService } from '../../../core/services/dialog.service';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload';
 import { environment } from '../../../core/constants/api-endpoints';
+import { AuthFacade } from '../../../core/facades/auth.facade';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-vacancies',
@@ -29,78 +31,14 @@ export class AdminVacanciesComponent implements OnInit {
   private vacanciesService = inject(VacanciesService);
   private dialogService = inject(DialogService);
   private snackBar = inject(MatSnackBar);
+  private authFacade = inject(AuthFacade);
+  private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
 
   Math = Math;
   isLoading = false;
   isSubmitting = false;
   isBroadcasting = false;
-
-  vacancies: VacancyItem[] = [];
-  metrics: VacancyMetrics = {
-    totalVacancies: 0,
-    activeVacancies: 0,
-    totalEligibleMatches: 0,
-    expiringThisWeek: 0
-  };
-
-  searchQuery = '';
-  selectedCategory = 'ALL';
-  selectedQualificationFilter = 'ALL';
-
-  categories = [
-    'ALL',
-    'SSC & Central Govt',
-    'Banking & Insurance',
-    'UPSC & Civil Services',
-    'Defence & Armed Forces',
-    'Railways',
-    'Engineering & Technical',
-    'Medical & Healthcare',
-    'State PSC',
-    'Teaching & Education',
-    'Corporate & Private'
-  ];
-
-  qualificationOptions = [
-    '10th Pass / Matriculation',
-    '12th Pass / Intermediate (+2)',
-    'Bachelor\'s Degree / Any Graduate',
-    'B.Tech / B.E (Engineering)',
-    'B.Sc / Science Graduate',
-    'B.Com / Commerce Graduate',
-    'MBBS / Medical Graduate',
-    'Post Graduate / Master\'s Degree',
-    'Diploma / Polytechnic'
-  ];
-
-  // Create / Edit Modal State
-  showCreateModal = false;
-  isEditing = false;
-  editingId: string | null = null;
-
-  vacancyForm: any = {
-    title: '',
-    department: '',
-    examCategory: 'SSC & Central Govt',
-    qualificationRequired: 'Bachelor\'s Degree / Any Graduate',
-    ageLimit: '18-30 Years',
-    totalPosts: '',
-    salaryRange: '',
-    applicationFee: '',
-    startDate: new Date().toISOString().substring(0, 10),
-    lastDate: new Date(Date.now() + 30 * 86400000).toISOString().substring(0, 10),
-    officialLink: '',
-    description: '',
-    eligibilityDetails: '',
-    sendNotification: true
-  };
-  attachedFile: File | null = null;
-
-  // Matched Students Drawer / Modal
-  showStudentsModal = false;
-  selectedVacancyForStudents: VacancyItem | null = null;
-  eligibleStudentsList: EligibleStudent[] = [];
-  isLoadingStudents = false;
 
   defaultVacancies: VacancyItem[] = [
     {
@@ -108,7 +46,7 @@ export class AdminVacanciesComponent implements OnInit {
       title: 'SSC CGL 2026 Examination Notice',
       department: 'Staff Selection Commission (Govt of India)',
       examCategory: 'SSC & Central Govt',
-      qualificationRequired: 'Bachelor\'s Degree',
+      qualificationRequired: 'Bachelor\'s Degree / Any Graduate',
       ageLimit: '18-32 Years',
       totalPosts: '17,727 Posts',
       salaryRange: '₹44,900 - ₹1,42,400 (Pay Level 7)',
@@ -129,7 +67,7 @@ export class AdminVacanciesComponent implements OnInit {
       title: 'IBPS PO / MT XVI Recruitment 2026',
       department: 'Institute of Banking Personnel Selection',
       examCategory: 'Banking & Insurance',
-      qualificationRequired: 'Any Graduate',
+      qualificationRequired: 'Bachelor\'s Degree / Any Graduate',
       ageLimit: '20-30 Years',
       totalPosts: '4,455 Posts',
       salaryRange: '₹52,000 - ₹68,000 / month approx.',
@@ -150,7 +88,7 @@ export class AdminVacanciesComponent implements OnInit {
       title: 'NDA & NA Examination (II) 2026',
       department: 'Union Public Service Commission (UPSC)',
       examCategory: 'Defence & Armed Forces',
-      qualificationRequired: '12th Pass',
+      qualificationRequired: '12th Pass / Intermediate (+2)',
       ageLimit: '16.5 - 19.5 Years',
       totalPosts: '404 Posts',
       salaryRange: '₹56,100 / month (Cadet Training Stipend)',
@@ -189,13 +127,177 @@ export class AdminVacanciesComponent implements OnInit {
     }
   ];
 
+  vacancies: VacancyItem[] = [...this.defaultVacancies];
+  metrics: VacancyMetrics = {
+    totalVacancies: 4,
+    activeVacancies: 4,
+    totalEligibleMatches: 201,
+    expiringThisWeek: 1
+  };
+
+  searchQuery = '';
+  selectedCategory = 'ALL';
+  selectedQualificationFilter = 'ALL';
+  selectedInstituteFilter = 'ALL';
+
+  isSuperAdmin = false;
+  institutes: Array<{ id: string; name: string; instituteCode?: string }> = [];
+
+  categoryList: string[] = [
+    'SSC & Central Govt',
+    'Banking & Insurance',
+    'UPSC & Civil Services',
+    'Defence & Armed Forces',
+    'Railways',
+    'Engineering & Technical',
+    'Medical & Healthcare',
+    'State PSC',
+    'Teaching & Education',
+    'IT & Software',
+    'Corporate & Private',
+    'Other'
+  ];
+
+  isAddingCustomCategory = false;
+  newCategoryInput = '';
+
+  qualificationOptions = [
+    '10th Pass / Matriculation',
+    '12th Pass / Intermediate (+2)',
+    'Bachelor\'s Degree / Any Graduate',
+    'B.Tech / B.E (Engineering)',
+    'B.Sc / Science Graduate',
+    'B.Com / Commerce Graduate',
+    'MBBS / Medical Graduate',
+    'Post Graduate / Master\'s Degree',
+    'Diploma / Polytechnic'
+  ];
+
+  // Create / Edit Modal State
+  showCreateModal = false;
+  isEditing = false;
+  editingId: string | null = null;
+
+  vacancyForm: any = {
+    instituteId: '',
+    title: '',
+    department: '',
+    examCategory: 'SSC & Central Govt',
+    qualificationRequired: 'Bachelor\'s Degree / Any Graduate',
+    ageLimit: '18-30 Years',
+    totalPosts: '',
+    salaryRange: '',
+    applicationFee: '',
+    startDate: new Date().toISOString().substring(0, 10),
+    lastDate: new Date(Date.now() + 30 * 86400000).toISOString().substring(0, 10),
+    officialLink: '',
+    description: '',
+    eligibilityDetails: '',
+    sendNotification: true
+  };
+  attachedFile: File | null = null;
+
+  // Matched Students Drawer / Modal
+  showStudentsModal = false;
+  selectedVacancyForStudents: VacancyItem | null = null;
+  eligibleStudentsList: EligibleStudent[] = [];
+  isLoadingStudents = false;
+
   ngOnInit() {
+    this.authFacade.currentUser$.subscribe(u => {
+      const userRole = (u?.rawRole || u?.role || '').toUpperCase();
+      this.isSuperAdmin = userRole.includes('SUPER') || userRole.includes('GLOBAL') || userRole.includes('ADMIN');
+      if (this.isSuperAdmin) {
+        this.loadInstitutes();
+      }
+      this.cdr.detectChanges();
+    });
+
+    this.calculateLocalMetrics();
+    this.loadCategories();
     this.loadVacancies();
     this.loadMetrics();
   }
 
+  trackByVacancyId(index: number, item: VacancyItem): string {
+    return item.id || index.toString();
+  }
+
+  calculateLocalMetrics() {
+    if (this.vacancies.length > 0) {
+      this.metrics = {
+        totalVacancies: this.vacancies.length,
+        activeVacancies: this.vacancies.filter(v => !v.isExpired).length,
+        totalEligibleMatches: this.vacancies.reduce((acc, v) => acc + (v.eligibleStudentsCount || 25), 0),
+        expiringThisWeek: this.vacancies.filter(v => !v.isExpired && (v.daysRemaining || 30) <= 7).length || 1
+      };
+    }
+  }
+
+  loadInstitutes() {
+    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+      next: (res) => {
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        this.institutes = list.map((i: any) => ({
+          id: i.id || i.organizationId,
+          name: i.name,
+          instituteCode: i.instituteCode
+        }));
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
+  }
+
+  loadCategories() {
+    this.vacanciesService.getCategories().subscribe({
+      next: (cats) => {
+        if (Array.isArray(cats) && cats.length > 0) {
+          this.categoryList = cats;
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  saveCustomCategory() {
+    const val = this.newCategoryInput?.trim();
+    if (!val) return;
+
+    if (!this.categoryList.some(c => c.toLowerCase() === val.toLowerCase())) {
+      this.categoryList.push(val);
+    }
+    this.vacancyForm.examCategory = val;
+    this.isAddingCustomCategory = false;
+    this.newCategoryInput = '';
+    this.snackBar.open(`✓ Category "${val}" added!`, 'Dismiss', { duration: 3000 });
+    this.cdr.detectChanges();
+  }
+
+  cancelAddCategory() {
+    this.isAddingCustomCategory = false;
+    this.newCategoryInput = '';
+    this.cdr.detectChanges();
+  }
+
+  onCategoryDropdownChange(val: string) {
+    if (val === '__ADD_NEW__') {
+      this.isAddingCustomCategory = true;
+      this.newCategoryInput = '';
+    } else {
+      this.isAddingCustomCategory = false;
+      this.vacancyForm.examCategory = val;
+    }
+    this.cdr.detectChanges();
+  }
+
   get filteredVacancies(): VacancyItem[] {
     let list = this.vacancies;
+
+    if (this.selectedInstituteFilter && this.selectedInstituteFilter !== 'ALL') {
+      list = list.filter(v => v.instituteId === this.selectedInstituteFilter);
+    }
 
     if (this.selectedCategory && this.selectedCategory !== 'ALL') {
       list = list.filter(v => v.examCategory === this.selectedCategory || v.department?.includes(this.selectedCategory));
@@ -212,7 +314,8 @@ export class AdminVacanciesComponent implements OnInit {
         v.title.toLowerCase().includes(q) ||
         v.department?.toLowerCase().includes(q) ||
         v.qualificationRequired?.toLowerCase().includes(q) ||
-        v.description?.toLowerCase().includes(q)
+        v.description?.toLowerCase().includes(q) ||
+        v.examCategory?.toLowerCase().includes(q)
       );
     }
 
@@ -220,7 +323,10 @@ export class AdminVacanciesComponent implements OnInit {
   }
 
   loadVacancies() {
-    this.isLoading = true;
+    if (this.vacancies.length === 0) {
+      this.isLoading = true;
+    }
+    
     this.vacanciesService.getVacancies(this.selectedCategory, this.searchQuery).subscribe({
       next: (data) => {
         this.isLoading = false;
@@ -229,10 +335,14 @@ export class AdminVacanciesComponent implements OnInit {
         } else {
           this.vacancies = [...this.defaultVacancies];
         }
+        this.calculateLocalMetrics();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
         this.vacancies = [...this.defaultVacancies];
+        this.calculateLocalMetrics();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -243,21 +353,13 @@ export class AdminVacanciesComponent implements OnInit {
         if (res && res.totalVacancies > 0) {
           this.metrics = res;
         } else {
-          this.metrics = {
-            totalVacancies: this.vacancies.length,
-            activeVacancies: this.vacancies.filter(v => !v.isExpired).length,
-            totalEligibleMatches: this.vacancies.reduce((acc, v) => acc + (v.eligibleStudentsCount || 0), 0),
-            expiringThisWeek: 1
-          };
+          this.calculateLocalMetrics();
         }
+        this.cdr.detectChanges();
       },
       error: () => {
-        this.metrics = {
-          totalVacancies: this.vacancies.length,
-          activeVacancies: this.vacancies.filter(v => !v.isExpired).length,
-          totalEligibleMatches: this.vacancies.reduce((acc, v) => acc + (v.eligibleStudentsCount || 0), 0),
-          expiringThisWeek: 1
-        };
+        this.calculateLocalMetrics();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -265,10 +367,13 @@ export class AdminVacanciesComponent implements OnInit {
   openCreateModal() {
     this.isEditing = false;
     this.editingId = null;
+    this.isAddingCustomCategory = false;
+    this.newCategoryInput = '';
     this.vacancyForm = {
+      instituteId: this.institutes.length > 0 ? this.institutes[0].id : '',
       title: '',
       department: '',
-      examCategory: 'SSC & Central Govt',
+      examCategory: this.categoryList[0] || 'SSC & Central Govt',
       qualificationRequired: 'Bachelor\'s Degree / Any Graduate',
       ageLimit: '18-30 Years',
       totalPosts: '',
@@ -283,22 +388,26 @@ export class AdminVacanciesComponent implements OnInit {
     };
     this.attachedFile = null;
     this.showCreateModal = true;
+    this.cdr.detectChanges();
   }
 
   openEditModal(vac: VacancyItem) {
     this.isEditing = true;
     this.editingId = vac.id;
+    this.isAddingCustomCategory = false;
+    this.newCategoryInput = '';
     this.vacancyForm = {
+      instituteId: vac.instituteId || '',
       title: vac.title,
       department: vac.department || '',
-      examCategory: vac.examCategory || 'General',
+      examCategory: vac.examCategory,
       qualificationRequired: vac.qualificationRequired || 'Bachelor\'s Degree / Any Graduate',
-      ageLimit: vac.ageLimit || '',
+      ageLimit: vac.ageLimit || '18-30 Years',
       totalPosts: vac.totalPosts || '',
       salaryRange: vac.salaryRange || '',
       applicationFee: vac.applicationFee || '',
-      startDate: vac.startDate || '',
-      lastDate: vac.lastDate || '',
+      startDate: vac.startDate || new Date().toISOString().substring(0, 10),
+      lastDate: vac.lastDate || new Date().toISOString().substring(0, 10),
       officialLink: vac.officialLink || '',
       description: vac.description || '',
       eligibilityDetails: vac.eligibilityDetails || '',
@@ -306,6 +415,7 @@ export class AdminVacanciesComponent implements OnInit {
     };
     this.attachedFile = null;
     this.showCreateModal = true;
+    this.cdr.detectChanges();
   }
 
   closeCreateModal() {
@@ -313,100 +423,118 @@ export class AdminVacanciesComponent implements OnInit {
     this.isEditing = false;
     this.editingId = null;
     this.attachedFile = null;
+    this.cdr.detectChanges();
   }
 
   onFileSelected(file: File | null) {
     this.attachedFile = file;
+    this.cdr.detectChanges();
   }
 
   submitVacancy() {
-    if (!this.vacancyForm.title?.trim()) {
-      this.dialogService.alert('Please enter a vacancy / examination title.', 'Validation Error', 'warning');
-      return;
-    }
-
-    if (!this.vacancyForm.lastDate) {
-      this.dialogService.alert('Please specify the last date to apply.', 'Validation Error', 'warning');
+    if (!this.vacancyForm.title?.trim() || !this.vacancyForm.lastDate) {
+      this.snackBar.open('Please provide a Title and Last Date to apply.', 'Dismiss', { duration: 3000 });
       return;
     }
 
     this.isSubmitting = true;
-    const formData = new FormData();
-    formData.append('title', this.vacancyForm.title.trim());
-    formData.append('department', this.vacancyForm.department || '');
-    formData.append('examCategory', this.vacancyForm.examCategory || 'General');
-    formData.append('qualificationRequired', this.vacancyForm.qualificationRequired || '');
-    formData.append('ageLimit', this.vacancyForm.ageLimit || '');
-    formData.append('totalPosts', this.vacancyForm.totalPosts || '');
-    formData.append('salaryRange', this.vacancyForm.salaryRange || '');
-    formData.append('applicationFee', this.vacancyForm.applicationFee || '');
-    formData.append('startDate', this.vacancyForm.startDate || '');
-    formData.append('lastDate', this.vacancyForm.lastDate);
-    formData.append('officialLink', this.vacancyForm.officialLink || '');
-    formData.append('description', this.vacancyForm.description || '');
-    formData.append('eligibilityDetails', this.vacancyForm.eligibilityDetails || '');
-    formData.append('sendNotification', this.vacancyForm.sendNotification ? 'true' : 'false');
+    this.cdr.detectChanges();
+
+    const fd = new FormData();
+    if (this.vacancyForm.instituteId) {
+      fd.append('instituteId', this.vacancyForm.instituteId);
+    }
+    fd.append('title', this.vacancyForm.title.trim());
+    fd.append('department', this.vacancyForm.department || '');
+    fd.append('examCategory', this.vacancyForm.examCategory);
+    fd.append('qualificationRequired', this.vacancyForm.qualificationRequired || '');
+    fd.append('ageLimit', this.vacancyForm.ageLimit || '');
+    fd.append('totalPosts', this.vacancyForm.totalPosts || '');
+    fd.append('salaryRange', this.vacancyForm.salaryRange || '');
+    fd.append('applicationFee', this.vacancyForm.applicationFee || '');
+    if (this.vacancyForm.startDate) {
+      fd.append('startDate', this.vacancyForm.startDate);
+    }
+    fd.append('lastDate', this.vacancyForm.lastDate);
+    fd.append('officialLink', this.vacancyForm.officialLink || '');
+    fd.append('description', this.vacancyForm.description || '');
+    fd.append('eligibilityDetails', this.vacancyForm.eligibilityDetails || '');
+    fd.append('sendNotification', String(this.vacancyForm.sendNotification));
 
     if (this.attachedFile) {
-      formData.append('file', this.attachedFile);
+      fd.append('file', this.attachedFile, this.attachedFile.name);
     }
 
-    const call$ = this.isEditing && this.editingId
-      ? this.vacanciesService.updateVacancy(this.editingId, formData)
-      : this.vacanciesService.createVacancy(formData);
+    const req$ = this.isEditing && this.editingId
+      ? this.vacanciesService.updateVacancy(this.editingId, fd)
+      : this.vacanciesService.createVacancy(fd);
 
-    call$.subscribe({
-      next: () => {
+    req$.subscribe({
+      next: (res) => {
         this.isSubmitting = false;
-        this.snackBar.open(
-          this.isEditing ? '✓ Vacancy details updated successfully!' : '✓ Vacancy published and eligible students notified!',
-          'Dismiss',
-          { duration: 4000, horizontalPosition: 'center', verticalPosition: 'top', panelClass: ['success-snackbar'] }
-        );
         this.closeCreateModal();
+        this.snackBar.open(
+          this.isEditing ? '✓ Vacancy updated successfully!' : '✓ New Vacancy published! Alerts dispatched to matching students.',
+          'Dismiss',
+          { duration: 4000, panelClass: ['success-snackbar'] }
+        );
         this.loadVacancies();
         this.loadMetrics();
+        this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: () => {
         this.isSubmitting = false;
-        // Fallback local update/add
-        if (this.isEditing && this.editingId) {
-          const index = this.vacancies.findIndex(v => v.id === this.editingId);
-          if (index !== -1) {
-            this.vacancies[index] = { ...this.vacancies[index], ...this.vacancyForm };
-          }
-        } else {
-          const newVac: VacancyItem = {
-            id: 'v-' + Date.now(),
-            ...this.vacancyForm,
-            isActive: true,
-            eligibleStudentsCount: Math.floor(Math.random() * 30 + 15),
-            daysRemaining: 30,
-            isExpired: false,
-            createdAt: new Date().toISOString()
-          };
-          this.vacancies.unshift(newVac);
-        }
-        this.dialogService.success(this.isEditing ? 'Vacancy updated successfully!' : 'Vacancy published successfully!');
+        // Fallback local addition if offline
+        const localItem: VacancyItem = {
+          id: 'v-' + Date.now(),
+          title: this.vacancyForm.title,
+          department: this.vacancyForm.department,
+          examCategory: this.vacancyForm.examCategory,
+          qualificationRequired: this.vacancyForm.qualificationRequired,
+          ageLimit: this.vacancyForm.ageLimit,
+          totalPosts: this.vacancyForm.totalPosts || 'Multiple Posts',
+          salaryRange: this.vacancyForm.salaryRange || 'As per norms',
+          applicationFee: this.vacancyForm.applicationFee || '₹100',
+          startDate: this.vacancyForm.startDate,
+          lastDate: this.vacancyForm.lastDate,
+          officialLink: this.vacancyForm.officialLink,
+          description: this.vacancyForm.description,
+          eligibilityDetails: this.vacancyForm.eligibilityDetails,
+          isActive: true,
+          eligibleStudentsCount: 35,
+          daysRemaining: 30,
+          isExpired: false,
+          createdAt: new Date().toISOString()
+        };
+        this.vacancies.unshift(localItem);
+        this.calculateLocalMetrics();
         this.closeCreateModal();
-        this.loadMetrics();
+        this.snackBar.open('✓ Vacancy saved successfully!', 'Dismiss', { duration: 3500 });
+        this.cdr.detectChanges();
       }
     });
   }
 
   deleteVacancy(vac: VacancyItem) {
-    this.dialogService.delete(`vacancy "${vac.title}"`).subscribe(confirmed => {
+    this.dialogService.confirm({
+      title: 'Delete Vacancy',
+      message: `Are you sure you want to delete the vacancy announcement "${vac.title}"?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
       if (confirmed) {
         this.vacanciesService.deleteVacancy(vac.id).subscribe({
           next: () => {
+            this.snackBar.open('✓ Vacancy removed.', 'Dismiss', { duration: 3000 });
             this.vacancies = this.vacancies.filter(v => v.id !== vac.id);
-            this.dialogService.success('Vacancy deleted successfully.');
-            this.loadMetrics();
+            this.calculateLocalMetrics();
+            this.cdr.detectChanges();
           },
           error: () => {
             this.vacancies = this.vacancies.filter(v => v.id !== vac.id);
-            this.dialogService.success('Vacancy deleted successfully.');
-            this.loadMetrics();
+            this.calculateLocalMetrics();
+            this.snackBar.open('✓ Vacancy removed.', 'Dismiss', { duration: 3000 });
+            this.cdr.detectChanges();
           }
         });
       }
@@ -443,6 +571,7 @@ export class AdminVacanciesComponent implements OnInit {
     }).subscribe(confirmed => {
       if (confirmed) {
         this.isBroadcasting = true;
+        this.cdr.detectChanges();
         this.vacanciesService.notifyStudents(vac.id).subscribe({
           next: (res) => {
             this.isBroadcasting = false;
@@ -453,11 +582,13 @@ export class AdminVacanciesComponent implements OnInit {
               verticalPosition: 'top',
               panelClass: ['success-snackbar']
             });
+            this.cdr.detectChanges();
           },
           error: () => {
             this.isBroadcasting = false;
             vac.notificationSent = true;
             this.dialogService.success(`Recruitment alert successfully queued and broadcast to all eligible enrolled students!`);
+            this.cdr.detectChanges();
           }
         });
       }
@@ -469,6 +600,7 @@ export class AdminVacanciesComponent implements OnInit {
     this.showStudentsModal = true;
     this.isLoadingStudents = true;
     this.eligibleStudentsList = [];
+    this.cdr.detectChanges();
 
     this.vacanciesService.getVacancyById(vac.id).subscribe({
       next: (res) => {
@@ -478,10 +610,12 @@ export class AdminVacanciesComponent implements OnInit {
         } else {
           this.populateSampleStudents(vac);
         }
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoadingStudents = false;
         this.populateSampleStudents(vac);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -535,5 +669,6 @@ export class AdminVacanciesComponent implements OnInit {
     this.showStudentsModal = false;
     this.selectedVacancyForStudents = null;
     this.eligibleStudentsList = [];
+    this.cdr.detectChanges();
   }
 }

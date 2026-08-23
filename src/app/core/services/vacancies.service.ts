@@ -6,6 +6,8 @@ import { API_ENDPOINTS, environment } from '../constants/api-endpoints';
 
 export interface VacancyItem {
   id: string;
+  instituteId?: string;
+  instituteName?: string;
   title: string;
   department?: string;
   examCategory: string;
@@ -50,6 +52,12 @@ export interface EligibleStudent {
 export class VacanciesService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/api/admin/vacancies`;
+
+  getCategories(): Observable<string[]> {
+    return this.http.get<any>(`${this.baseUrl}/categories`).pipe(
+      map(res => res?.data || res || [])
+    );
+  }
 
   getVacancies(category?: string, search?: string): Observable<VacancyItem[]> {
     let params = new HttpParams();
