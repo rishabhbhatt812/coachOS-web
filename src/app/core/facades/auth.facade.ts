@@ -117,9 +117,10 @@ export class AuthFacade {
       this.loadMyInstitute(tenantId);
 
       // Fetch dynamic active modules from AuthController
-      this.http.get<any[]>(`${environment.apiUrl}/api/auth/my-enabled-modules`).subscribe({
-        next: (modules) => {
-          const activeModuleCodes = (modules || []).map(m => m.moduleCode.toUpperCase());
+      this.http.get<any>(`${environment.apiUrl}/api/auth/my-enabled-modules`).subscribe({
+        next: (res) => {
+          const rawModules = Array.isArray(res) ? res : (res?.data || []);
+          const activeModuleCodes = (rawModules || []).map((m: any) => (m.moduleCode || m.code || '').toUpperCase()).filter((c: string) => !!c);
           const tenant: Tenant = {
             id: tenantId,
             name: cachedBranding?.name || 'EduNex Academy',
@@ -128,13 +129,12 @@ export class AuthFacade {
             contact: cachedBranding?.contact,
             email: cachedBranding?.email,
             address: cachedBranding?.address,
-            activeModules: activeModuleCodes
+            activeModules: activeModuleCodes.length > 0 ? activeModuleCodes : ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL']
           };
           this.currentTenantSubject.next(tenant);
-          this.enabledModulesSubject.next(modules || []);
+          this.enabledModulesSubject.next(rawModules || []);
         },
-        error: (err) => {
-          console.error('Failed to fetch active modules', err);
+        error: () => {
           const fallbackCodes = ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION', 'STUDENT_PORTAL'];
           const tenant: Tenant = {
             id: tenantId,
@@ -201,7 +201,21 @@ export class AuthFacade {
   private checkInitialAuth() {
     const token = localStorage.getItem('auth_token');
     if (token) {
-      this.handleToken(token);
+      try {
+        const decoded: any = jwtDecode(token);
+        // If expired or invalid
+        if (decoded?.exp && decoded.exp * 1000 < Date.now()) {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('active_institute_id');
+          localStorage.removeItem('active_institute_branding');
+          return;
+        }
+        this.handleToken(token);
+      } catch (e) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('active_institute_id');
+        localStorage.removeItem('active_institute_branding');
+      }
     }
   }
 
