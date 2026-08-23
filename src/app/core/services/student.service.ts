@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 
 export interface StudentDashboardData {
@@ -45,8 +46,25 @@ export class StudentService {
     return this.http.get<any[]>(API_ENDPOINTS.STUDENT.RESULTS);
   }
 
-  getVacancies(): Observable<any[]> {
-    return this.http.get<any[]>(API_ENDPOINTS.STUDENT.VACANCIES);
+  getVacancies(): Observable<any> {
+    return this.http.get<any>(API_ENDPOINTS.STUDENT.VACANCIES).pipe(
+      map((res: any) => {
+        if (res?.data?.vacancies) {
+          return {
+            studentQualification: res.data.studentQualification,
+            vacancies: res.data.vacancies
+          };
+        }
+        if (res?.vacancies) {
+          return res;
+        }
+        const list = res?.data || res || [];
+        return {
+          studentQualification: 'High School / Graduate',
+          vacancies: Array.isArray(list) ? list : []
+        };
+      })
+    );
   }
 
   getProfile(): Observable<any> {

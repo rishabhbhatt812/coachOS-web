@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,6 +14,8 @@ import { Router } from '@angular/router';
 import { AdmissionsService } from '../../../../core/services/admissions.service';
 import { CourseFacade } from '../../../../core/facades/course.facade';
 import { BatchFacade } from '../../../../core/facades/batch.facade';
+import { AuthFacade } from '../../../../core/facades/auth.facade';
+import { environment } from '../../../../core/constants/api-endpoints';
 
 @Component({
   selector: 'app-admission-wizard',
@@ -36,12 +39,17 @@ export class AdmissionWizardComponent implements OnInit {
   private admissionsService = inject(AdmissionsService);
   private courseFacade = inject(CourseFacade);
   private batchFacade = inject(BatchFacade);
+  private authFacade = inject(AuthFacade);
+  private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   courses$ = this.courseFacade.courses$;
   batches$ = this.batchFacade.batches$;
+
+  isGlobalAdmin = false;
+  institutes: any[] = [];
 
   studentForm!: FormGroup;
   parentForm!: FormGroup;
@@ -53,6 +61,7 @@ export class AdmissionWizardComponent implements OnInit {
     this.batchFacade.loadBatches();
 
     this.studentForm = this.fb.group({
+      instituteId: [''],
       studentCode: ['', Validators.required],
       fullName: ['', Validators.required],
       mobile: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
@@ -61,6 +70,16 @@ export class AdmissionWizardComponent implements OnInit {
       admissionDate: [new Date(), Validators.required],
       admissionType: ['Permanent', Validators.required],
       demoDurationDays: [null]
+    });
+
+    this.authFacade.currentUser$.subscribe(user => {
+      if (user) {
+        const rawRole = user.rawRole || '';
+        this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
+        if (this.isGlobalAdmin) {
+          this.loadInstitutes();
+        }
+      }
     });
 
     // Fetch initial student code for Permanent Admission
@@ -100,6 +119,23 @@ export class AdmissionWizardComponent implements OnInit {
       initialPaymentAmount: [0, Validators.min(0)],
       paymentMode: ['Cash']
     });
+  }
+
+  loadInstitutes() {
+    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+      next: (res) => {
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+      },
+      error: (err) => console.error('Failed to load institutes:', err)
+    });
+  }
+
+  onInstituteChanged(instituteId: string) {
+    if (instituteId) {
+      // Reload courses & batches for this specific institute
+      this.courseFacade.loadCourses();
+      this.batchFacade.loadBatches();
+    }
   }
 
   private fetchNextStudentCode(prefix: string) {
@@ -143,6 +179,7 @@ export class AdmissionWizardComponent implements OnInit {
 
       const payload = {
         ...this.studentForm.value,
+        instituteId: this.studentForm.value.instituteId || undefined,
         ...this.parentForm.value,
         ...this.academicForm.value,
         dateOfBirth: formatDate(this.studentForm.value.dateOfBirth),

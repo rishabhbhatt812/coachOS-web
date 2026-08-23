@@ -3,6 +3,13 @@
 
 <div class="teachers-container">
   <div class="actions-header" *ngIf="!showWizard">
+    <div class="header-filters" *ngIf="isGlobalAdmin && institutes.length > 0">
+      <span class="filter-icon">🏢</span>
+      <select [(ngModel)]="selectedInstituteFilter" class="institute-select">
+        <option value="all">🌐 All Coaching Centers ({{ institutes.length }})</option>
+        <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }} ({{ inst.instituteCode }})</option>
+      </select>
+    </div>
     <button mat-flat-button color="primary" class="add-btn" (click)="toggleWizard()">
       <mat-icon>add</mat-icon> Register Teacher
     </button>
@@ -28,6 +35,14 @@
           <!-- TAB 1: Basic Info -->
           <mat-tab label="1. Basic Info">
             <div class="form-grid pt-4">
+              <div class="form-group" *ngIf="isGlobalAdmin" style="grid-column: 1 / -1;">
+                <label>Target Coaching Center / Institute <span class="required-star">*</span></label>
+                <select class="form-control" formControlName="instituteId" style="border: 2px solid #6366f1; background-color: #f8fafc; font-weight: 600;">
+                  <option value="">Default / Active Institute</option>
+                  <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }} ({{ inst.instituteCode }})</option>
+                </select>
+              </div>
+
               <div class="form-group">
                 <label>Full Name <span class="required-star">*</span></label>
                 <input type="text" class="form-control" formControlName="fullName" placeholder="e.g. Dr. H. C. Verma" />
@@ -360,7 +375,7 @@
     <app-data-table 
       [hidden]="isLoading"
       [columns]="columns" 
-      [data]="teachers">
+      [data]="getFilteredTeachers()">
     </app-data-table>
   </mat-card>
 </div>

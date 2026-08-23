@@ -1,7 +1,17 @@
 <app-page-header title="Students" subtitle="Manage and monitor enrolled students">
-  <button class="btn btn-primary" *ngIf="!showAddForm" (click)="navigateToAddStudent()">
-    + Add Student
-  </button>
+  <div class="header-actions">
+    <!-- Quick Institute Filter for Super Admin -->
+    <div class="institute-filter-box" *ngIf="isGlobalAdmin && institutes.length > 0">
+      <span class="filter-icon">🏢</span>
+      <select [(ngModel)]="selectedInstituteFilter" class="institute-select">
+        <option value="all">🌐 All Coaching Centers ({{ institutes.length }})</option>
+        <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }} ({{ inst.instituteCode }})</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" *ngIf="!showAddForm" (click)="navigateToAddStudent()">
+      + Add Student
+    </button>
+  </div>
 </app-page-header>
 
 <div class="students-container">
@@ -13,6 +23,14 @@
     
     <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" class="student-form">
       <div class="form-grid">
+        <mat-form-field appearance="outline" *ngIf="isGlobalAdmin && !editingId">
+          <mat-label>Coaching Center / Institute</mat-label>
+          <select matNativeControl formControlName="instituteId">
+            <option value="">Default / Active Institute</option>
+            <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }} ({{ inst.instituteCode }})</option>
+          </select>
+        </mat-form-field>
+
         <mat-form-field appearance="outline">
           <mat-label>Student Code</mat-label>
           <input matInput formControlName="studentCode" placeholder="e.g. STU001" />
@@ -71,7 +89,7 @@
     <app-data-table 
       *ngIf="!(isLoading$ | async)"
       [columns]="columns" 
-      [data]="(students$ | async) || []"
+      [data]="getFilteredStudents(students$ | async)"
       [isRowClickable]="true"
       (rowClicked)="openStudentProfile($event)"
       (actionClicked)="onActionClicked($event)">

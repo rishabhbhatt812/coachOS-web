@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +12,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
 import { StaffService } from '../../../core/services/staff.service';
+import { AuthFacade } from '../../../core/facades/auth.facade';
+import { environment } from '../../../core/constants/api-endpoints';
 import { ChangeDetectorRef } from '@angular/core';
 import { DialogService } from '../../../core/services/dialog.service';
 
@@ -19,6 +22,7 @@ import { DialogService } from '../../../core/services/dialog.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     PageHeaderComponent,
     DataTableComponent,
@@ -35,6 +39,8 @@ import { DialogService } from '../../../core/services/dialog.service';
 })
 export class AdminStaffComponent implements OnInit {
   private staffService = inject(StaffService);
+  private authFacade = inject(AuthFacade);
+  private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private cdr = inject(ChangeDetectorRef);
@@ -47,6 +53,10 @@ export class AdminStaffComponent implements OnInit {
   showForm = false;
   editingId: string | null = null;
   staffForm!: FormGroup;
+
+  isGlobalAdmin = false;
+  institutes: any[] = [];
+  selectedInstituteFilter = 'all';
 
   columns: TableColumn[] = [
     { key: 'fullName', header: 'Full Name' },
@@ -65,10 +75,40 @@ export class AdminStaffComponent implements OnInit {
     this.loadRoles();
     this.loadBranches();
     this.loadStaff();
+
+    this.authFacade.currentUser$.subscribe(user => {
+      if (user) {
+        const rawRole = user.rawRole || '';
+        this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
+        if (this.isGlobalAdmin) {
+          if (!this.columns.some(c => c.key === 'instituteName')) {
+            this.columns.splice(1, 0, { key: 'instituteName', header: 'Coaching Center' });
+          }
+          this.loadInstitutes();
+        }
+      }
+    });
+  }
+
+  loadInstitutes() {
+    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+      next: (res) => {
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+      },
+      error: (err) => console.error('Failed to load institutes:', err)
+    });
+  }
+
+  getFilteredStaff(): any[] {
+    if (!this.isGlobalAdmin || this.selectedInstituteFilter === 'all') {
+      return this.staff;
+    }
+    return this.staff.filter(s => s.instituteId === this.selectedInstituteFilter);
   }
 
   initForm() {
     this.staffForm = this.fb.group({
+      instituteId: [''],
       fullName: ['', [Validators.required]],
       email: ['', [Validators.email]],
       mobileNumber: ['', [Validators.pattern('^[0-9]{10}$')]],
@@ -99,30 +139,28 @@ export class AdminStaffComponent implements OnInit {
     });
   }
 
-  handleRoleValidators(roleId: string) {
-    const isTeacherRole = this.isTeacherRoleId(roleId);
-    const subExpCtrl = this.staffForm.get('subjectExpertise');
-    const teacherTypeCtrl = this.staffForm.get('teacherType');
-
-    if (isTeacherRole) {
-      subExpCtrl?.setValidators([Validators.required]);
-      teacherTypeCtrl?.setValidators([Validators.required]);
-    } else {
-      subExpCtrl?.clearValidators();
-      teacherTypeCtrl?.clearValidators();
-    }
-    subExpCtrl?.updateValueAndValidity();
-    teacherTypeCtrl?.updateValueAndValidity();
-  }
-
-  isTeacherRoleId(roleId: string): boolean {
-    const role = this.roles.find(r => r.id === roleId);
-    return role?.code === 'TEACHER';
-  }
-
   isTeacherSelected(): boolean {
-    const roleId = this.staffForm.get('roleId')?.value;
-    return this.isTeacherRoleId(roleId);
+    const selectedRole = this.roles.find(r => r.id === this.staffForm.get('roleId')?.value);
+    return selectedRole?.code === 'TEACHER';
+  }
+
+  handleRoleValidators(roleId: string) {
+    const selectedRole = this.roles.find(r => r.id === roleId);
+    const isTeacher = selectedRole?.code === 'TEACHER';
+
+    const subjectExpertiseControl = this.staffForm.get('subjectExpertise');
+    const teacherTypeControl = this.staffForm.get('teacherType');
+
+    if (isTeacher) {
+      subjectExpertiseControl?.setValidators([Validators.required]);
+      teacherTypeControl?.setValidators([Validators.required]);
+    } else {
+      subjectExpertiseControl?.clearValidators();
+      teacherTypeControl?.clearValidators();
+    }
+
+    subjectExpertiseControl?.updateValueAndValidity();
+    teacherTypeControl?.updateValueAndValidity();
   }
 
   loadRoles() {
@@ -160,7 +198,6 @@ export class AdminStaffComponent implements OnInit {
         this.isLoading = false;
       }
     });
-
   }
 
   toggleForm() {
@@ -183,8 +220,8 @@ export class AdminStaffComponent implements OnInit {
       this.isLoading = true;
       const formValue = this.staffForm.value;
 
-      // Map empty strings to null or keep appropriate value
       const payload = {
+        instituteId: formValue.instituteId || undefined,
         fullName: formValue.fullName,
         email: formValue.email || null,
         mobileNumber: formValue.mobileNumber || null,

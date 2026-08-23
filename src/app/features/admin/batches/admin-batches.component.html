@@ -1,9 +1,18 @@
 <app-page-header title="Batches" subtitle="Manage batches and assign teachers and courses">
-  <button class="btn btn-primary" (click)="toggleForm()">
-    <svg *ngIf="!showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-    <svg *ngIf="showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-    {{ showAddForm ? 'Close Form' : '+ Add Batch' }}
-  </button>
+  <div class="header-actions">
+    <div class="institute-filter-box" *ngIf="isGlobalAdmin && institutes.length > 0">
+      <span class="filter-icon">🏢</span>
+      <select [(ngModel)]="selectedInstituteFilter" class="institute-select">
+        <option value="all">🌐 All Coaching Centers ({{ institutes.length }})</option>
+        <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }} ({{ inst.instituteCode }})</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" (click)="toggleAddForm()">
+      <svg *ngIf="!showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <svg *ngIf="showAddForm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      {{ showAddForm ? 'Close Form' : '+ Add Batch' }}
+    </button>
+  </div>
 </app-page-header>
 
 <div class="batches-container">
@@ -17,12 +26,21 @@
         </h3>
         <p>Define batch timings, room, instructor assignment and student capacity</p>
       </div>
-      <button type="button" class="btn-close" (click)="toggleForm()">✕</button>
+      <button type="button" class="btn-close" (click)="toggleAddForm()">✕</button>
     </div>
     
     <div class="form-card-body">
       <form [formGroup]="batchForm" (ngSubmit)="onSubmit()" class="batch-form">
         <div class="form-grid">
+          <!-- Target Institute Selector for Super Admin -->
+          <div class="form-group" *ngIf="isGlobalAdmin && !editingId" style="grid-column: 1 / -1;">
+            <label>Target Coaching Center / Institute <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="instituteId" style="border: 2px solid #6366f1; background-color: #f8fafc; font-weight: 600;">
+              <option value="">Default / Active Institute</option>
+              <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }} ({{ inst.instituteCode }})</option>
+            </select>
+          </div>
+
           <!-- Batch Code -->
           <div class="form-group">
             <label>Batch Code <span class="required-star">*</span></label>
@@ -60,29 +78,15 @@
             <label>Select Branch <span class="required-star">*</span></label>
             <select class="form-control" formControlName="branchId">
               <option value="" disabled selected>Select branch</option>
-              <option *ngFor="let branch of branches" [value]="branch.id">
-                {{ branch.name }} ({{ branch.code }})
-              </option>
-            </select>
-            <span class="error-msg" *ngIf="batchForm.get('branchId')?.touched && batchForm.get('branchId')?.hasError('required')">
-              Branch selection is required
-            </span>
-          </div>
-
-          <!-- Teacher -->
-          <div class="form-group">
-            <label>Assign Teacher</label>
-            <select class="form-control" formControlName="teacherUserId">
-              <option value="" selected>Select teacher (Optional)</option>
-              <option *ngFor="let t of teachers" [value]="t.id">
-                {{ t.fullName }}
+              <option *ngFor="let b of branches" [value]="b.id">
+                {{ b.name }} ({{ b.code }})
               </option>
             </select>
           </div>
 
           <!-- Capacity -->
           <div class="form-group">
-            <label>Capacity (Students) <span class="required-star">*</span></label>
+            <label>Batch Capacity <span class="required-star">*</span></label>
             <input type="number" class="form-control" formControlName="capacity" min="1" placeholder="e.g. 40" />
             <span class="error-msg" *ngIf="batchForm.get('capacity')?.touched && batchForm.get('capacity')?.hasError('required')">
               Capacity is required
@@ -91,8 +95,35 @@
 
           <!-- Room Number -->
           <div class="form-group">
-            <label>Room Number</label>
-            <input type="text" class="form-control" formControlName="roomNumber" placeholder="e.g. Room 101 (Aryabhata Hall)" />
+            <label>Room / Class Number</label>
+            <input type="text" class="form-control" formControlName="roomNumber" placeholder="e.g. Room 204" />
+          </div>
+
+          <!-- Start Date -->
+          <div class="form-group">
+            <label>Start Date <span class="required-star">*</span></label>
+            <input type="date" class="form-control" formControlName="startDate" />
+            <span class="error-msg" *ngIf="batchForm.get('startDate')?.touched && batchForm.get('startDate')?.hasError('required')">
+              Start date is required
+            </span>
+          </div>
+
+          <!-- End Date -->
+          <div class="form-group">
+            <label>Expected End Date</label>
+            <input type="date" class="form-control" formControlName="endDate" />
+          </div>
+
+          <!-- Start Time -->
+          <div class="form-group">
+            <label>Start Time <span class="required-star">*</span></label>
+            <input type="time" class="form-control" formControlName="startTime" />
+          </div>
+
+          <!-- End Time -->
+          <div class="form-group">
+            <label>End Time <span class="required-star">*</span></label>
+            <input type="time" class="form-control" formControlName="endTime" />
           </div>
 
           <!-- Status -->
@@ -104,46 +135,41 @@
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-            <span class="error-msg" *ngIf="batchForm.get('batchStatus')?.touched && batchForm.get('batchStatus')?.hasError('required')">
-              Status is required
-            </span>
           </div>
 
-          <!-- Default Fee -->
-          <div class="form-group">
-            <label>Default Fee (INR) <span class="required-star">*</span></label>
-            <input type="number" class="form-control" formControlName="defaultFee" min="0" placeholder="e.g. 25000" />
-            <span class="error-msg" *ngIf="batchForm.get('defaultFee')?.touched && batchForm.get('defaultFee')?.hasError('required')">
-              Default fee is required
-            </span>
-          </div>
-
-          <!-- Schedule Grid (Dates & Times) -->
+          <!-- Multi-Subject Allocation -->
           <div class="form-group full-width">
-            <label>Batch Schedule & Timings</label>
-            <div class="time-grid">
-              <div class="form-group">
-                <label style="font-size: 12px; color: #64748b;">Start Date</label>
-                <input type="date" class="form-control" formControlName="startDate" />
+            <label>Subject Modules Taught in this Batch</label>
+            <div class="custom-multiselect-box">
+              <div class="checkbox-grid">
+                <label class="checkbox-label" *ngFor="let s of subjects">
+                  <input type="checkbox" 
+                    [checked]="batchForm.get('subjectIds')?.value?.includes(s.id)" 
+                    (change)="toggleSubject(s.id, $event)" />
+                  <span>{{ s.name }} ({{ s.code || 'Sub' }})</span>
+                </label>
               </div>
-              <div class="form-group">
-                <label style="font-size: 12px; color: #64748b;">End Date</label>
-                <input type="date" class="form-control" formControlName="endDate" />
-              </div>
-              <div class="form-group">
-                <label style="font-size: 12px; color: #64748b;">Start Time</label>
-                <input type="time" class="form-control" formControlName="startTime" />
-              </div>
-              <div class="form-group">
-                <label style="font-size: 12px; color: #64748b;">End Time</label>
-                <input type="time" class="form-control" formControlName="endTime" />
+            </div>
+          </div>
+
+          <!-- Multi-Teacher Allocation -->
+          <div class="form-group full-width">
+            <label>Assigned Instructors / Teachers</label>
+            <div class="custom-multiselect-box">
+              <div class="checkbox-grid">
+                <label class="checkbox-label" *ngFor="let t of teachers">
+                  <input type="checkbox" 
+                    [checked]="batchForm.get('teacherUserIds')?.value?.includes(t.userId || t.id)" 
+                    (change)="toggleTeacher(t.userId || t.id, $event)" />
+                  <span>{{ t.fullName || t.name }} ({{ t.teacherCode || t.email }})</span>
+                </label>
               </div>
             </div>
           </div>
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn-light" (click)="toggleForm()">Cancel</button>
+          <button type="button" class="btn btn-light" (click)="cancelEdit()">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="batchForm.invalid || (isLoading$ | async)">
             {{ editingId ? 'Update Batch' : 'Create Batch' }}
           </button>
@@ -162,7 +188,7 @@
     <app-data-table 
       *ngIf="!(isLoading$ | async)"
       [columns]="columns" 
-      [data]="(batches$ | async) || []"
+      [data]="getFilteredBatches(batches$ | async)"
       (actionClicked)="onActionClicked($event)">
     </app-data-table>
   </div>

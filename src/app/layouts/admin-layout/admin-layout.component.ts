@@ -57,6 +57,7 @@ export class AdminLayoutComponent implements OnInit {
     { title: 'Fee Management', description: 'Track fee plans, installments & payment collections', route: '/admin/fees', icon: '💳', category: 'Finance', module: 'FEES' },
     { title: 'CRM & Lead Management', description: 'Lead pipeline, follow-ups & demo scheduling', route: '/admin/crm', icon: '💼', category: 'CRM', module: 'CRM' },
     { title: 'Notices & Announcements', description: 'Send broadcasts, updates & announcements', route: '/admin/notices', icon: '📢', category: 'Communication', module: 'COMMUNICATION' },
+    { title: 'Vacancies & Recruitment', description: 'Publish jobs & competitive exams with qualification matching', route: '/admin/vacancies', icon: '💼', category: 'Communication', module: 'COMMUNICATION' },
     { title: 'Coaching Centers / Institutes', description: 'Manage registered coaching center tenancies', route: '/admin/institutes', icon: '🏢', category: 'Super Admin', globalOnly: true },
     { title: 'Subscription Plans', description: 'Manage pricing tiers and platform subscriptions', route: '/admin/plans', icon: '💎', category: 'Super Admin', globalOnly: true },
     { title: 'Module Access & RBAC', description: 'Configure enabled modules for each coaching center', route: '/super-admin/organization-modules', icon: '⚙️', category: 'Super Admin', globalOnly: true },
@@ -105,9 +106,6 @@ export class AdminLayoutComponent implements OnInit {
         this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
         if (this.isGlobalAdmin) {
           this.selectedInstituteId = localStorage.getItem('active_institute_id') || 'system_global';
-          if (!localStorage.getItem('active_institute_id')) {
-            localStorage.setItem('active_institute_id', 'system_global');
-          }
           this.loadInstitutes();
         }
       }
@@ -117,7 +115,8 @@ export class AdminLayoutComponent implements OnInit {
   loadInstitutes() {
     this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
       next: (res) => {
-        this.institutes = res || [];
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+        this.syncSelectedInstituteBranding();
       },
       error: (err) => {
         console.error('Failed to load system institutes:', err);
@@ -125,13 +124,112 @@ export class AdminLayoutComponent implements OnInit {
     });
   }
 
+  private syncSelectedInstituteBranding() {
+    if (!this.isGlobalAdmin) return;
+    
+    if (this.selectedInstituteId && this.selectedInstituteId !== 'system_global') {
+      const selectedInst = this.institutes.find(i => i.id === this.selectedInstituteId);
+      if (selectedInst) {
+        const branding = {
+          name: selectedInst.name,
+          logo: selectedInst.logoPath || '/logo.png',
+          code: selectedInst.instituteCode,
+          contact: selectedInst.mobileNumber,
+          email: selectedInst.emailAddress,
+          address: selectedInst.addressLine1
+        };
+        localStorage.setItem('active_institute_branding', JSON.stringify(branding));
+        this.authFacade.updateTenantBranding({
+          id: selectedInst.id,
+          name: selectedInst.name,
+          logoUrl: selectedInst.logoPath || '/logo.png',
+          code: selectedInst.instituteCode,
+          contact: selectedInst.mobileNumber,
+          email: selectedInst.emailAddress,
+          address: selectedInst.addressLine1
+        });
+      }
+    } else if (this.selectedInstituteId === 'system_global') {
+      const globalBranding = {
+        name: 'EduNex Global Platform',
+        logo: '/logo.png',
+        code: 'GLOBAL',
+        contact: '',
+        email: '',
+        address: 'Global Multi-Tenant Administration'
+      };
+      localStorage.setItem('active_institute_branding', JSON.stringify(globalBranding));
+      this.authFacade.updateTenantBranding({
+        id: 'system_global',
+        name: 'EduNex Global Platform',
+        logoUrl: '/logo.png',
+        code: 'GLOBAL',
+        contact: '',
+        email: '',
+        address: 'Global Multi-Tenant Administration'
+      });
+    }
+  }
+
   onInstituteChange(event: Event) {
     const selectEl = event.target as HTMLSelectElement;
-    const newId = selectEl.value;
-    if (newId) {
-      localStorage.setItem('active_institute_id', newId);
-      window.location.reload();
+    this.switchActiveInstitute(selectEl.value);
+  }
+
+  switchActiveInstitute(newId: string) {
+    if (!newId) return;
+    this.selectedInstituteId = newId;
+    localStorage.setItem('active_institute_id', newId);
+
+    if (newId === 'system_global') {
+      const globalBranding = {
+        name: 'EduNex Global Platform',
+        logo: '/logo.png',
+        code: 'GLOBAL',
+        contact: '',
+        email: '',
+        address: 'Global Multi-Tenant Administration'
+      };
+      localStorage.setItem('active_institute_branding', JSON.stringify(globalBranding));
+      this.authFacade.updateTenantBranding({
+        id: 'system_global',
+        name: 'EduNex Global Platform',
+        logoUrl: '/logo.png',
+        code: 'GLOBAL'
+      });
+    } else {
+      const selectedInst = this.institutes.find(i => i.id === newId);
+      if (selectedInst) {
+        const branding = {
+          name: selectedInst.name,
+          logo: selectedInst.logoPath || '/logo.png',
+          code: selectedInst.instituteCode,
+          contact: selectedInst.mobileNumber,
+          email: selectedInst.emailAddress,
+          address: selectedInst.addressLine1
+        };
+        localStorage.setItem('active_institute_branding', JSON.stringify(branding));
+        this.authFacade.updateTenantBranding({
+          id: selectedInst.id,
+          name: selectedInst.name,
+          logoUrl: selectedInst.logoPath || '/logo.png',
+          code: selectedInst.instituteCode,
+          contact: selectedInst.mobileNumber,
+          email: selectedInst.emailAddress,
+          address: selectedInst.addressLine1
+        });
+      }
     }
+
+    window.location.reload();
+  }
+
+  get selectedInstituteDisplayName(): string {
+    if (!this.selectedInstituteId || this.selectedInstituteId === 'system_global') {
+      return 'Global System Overview';
+    }
+    const inst = this.institutes.find(i => i.id === this.selectedInstituteId);
+    return inst ? `${inst.name} (${inst.instituteCode})` : 'Selected Institute';
   }
 
   openQuickSearch() {

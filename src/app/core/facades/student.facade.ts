@@ -25,7 +25,7 @@ export class StudentFacade {
   private resultsSubject = new BehaviorSubject<any[]>([]);
   public results$ = this.resultsSubject.asObservable();
 
-  private vacanciesSubject = new BehaviorSubject<any[]>([]);
+  private vacanciesSubject = new BehaviorSubject<any>([]);
   public vacancies$ = this.vacanciesSubject.asObservable();
 
   private isLoadingSubject = new BehaviorSubject<boolean>(false);

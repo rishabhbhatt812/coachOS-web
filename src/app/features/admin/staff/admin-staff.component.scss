@@ -1,3 +1,35 @@
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.institute-filter-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 4px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  .filter-icon {
+    font-size: 16px;
+    margin-right: 8px;
+  }
+
+  .institute-select {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    padding: 6px 0;
+  }
+}
+
 .staff-container {
   display: flex;
   flex-direction: column;

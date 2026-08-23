@@ -160,7 +160,7 @@ export class AuthFacade {
         if (data && data.name) {
           const branding = {
             name: data.name,
-            logo: data.logo || '/logo.png',
+            logo: data.logo || data.logoPath || '/logo.png',
             code: data.instituteCode,
             contact: data.mobileNumber,
             email: data.emailAddress,
@@ -170,10 +170,10 @@ export class AuthFacade {
 
           const currentTenant = this.currentTenantSubject.value;
           this.currentTenantSubject.next({
-            id: tenantId || currentTenant?.id || 'tenant',
+            id: data.id || tenantId || currentTenant?.id || 'tenant',
             name: data.name,
             code: data.instituteCode,
-            logoUrl: data.logo || '/logo.png',
+            logoUrl: data.logo || data.logoPath || '/logo.png',
             contact: data.mobileNumber,
             email: data.emailAddress,
             address: data.address,
@@ -185,7 +185,7 @@ export class AuthFacade {
             this.currentUserSubject.next({
               ...currentUser,
               instituteName: data.name,
-              instituteLogo: data.logo || '/logo.png',
+              instituteLogo: data.logo || data.logoPath || '/logo.png',
               instituteCode: data.instituteCode,
               instituteContact: data.mobileNumber,
               instituteEmail: data.emailAddress,
@@ -196,6 +196,30 @@ export class AuthFacade {
       },
       error: () => {}
     });
+  }
+
+  public updateTenantBranding(tenantInfo: Partial<Tenant>) {
+    const currentTenant = this.currentTenantSubject.value;
+    this.currentTenantSubject.next({
+      id: tenantInfo.id || currentTenant?.id || 'tenant',
+      name: tenantInfo.name || 'EduNex Academy',
+      code: tenantInfo.code || currentTenant?.code || 'EDUNEX',
+      logoUrl: tenantInfo.logoUrl || '/logo.png',
+      contact: tenantInfo.contact,
+      email: tenantInfo.email,
+      address: tenantInfo.address,
+      activeModules: currentTenant?.activeModules || ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION']
+    });
+
+    const currentUser = this.currentUserSubject.value;
+    if (currentUser) {
+      this.currentUserSubject.next({
+        ...currentUser,
+        instituteName: tenantInfo.name,
+        instituteLogo: tenantInfo.logoUrl,
+        instituteCode: tenantInfo.code
+      });
+    }
   }
 
   private checkInitialAuth() {

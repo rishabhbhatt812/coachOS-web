@@ -14,6 +14,7 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 import { DataTableComponent } from '../../../../shared/components/data-table/data-table.component';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../core/constants/api-endpoints';
+import { AuthFacade } from '../../../../core/facades/auth.facade';
 import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
@@ -40,15 +41,21 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class AdminTeachersComponent implements OnInit {
   private http = inject(HttpClient);
+  private authFacade = inject(AuthFacade);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
+
   showWizard = false;
   isLoading = false;
   teachers: any[] = [];
   subjects: any[] = [];
   activeTab = 0;
   photoPreviewUrl: string | null = null;
+
+  isGlobalAdmin = false;
+  institutes: any[] = [];
+  selectedInstituteFilter = 'all';
 
   onPhotoSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -107,10 +114,40 @@ export class AdminTeachersComponent implements OnInit {
     this.loadTeachers();
     this.loadSubjects();
     this.initForm();
+
+    this.authFacade.currentUser$.subscribe(user => {
+      if (user) {
+        const rawRole = user.rawRole || '';
+        this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
+        if (this.isGlobalAdmin) {
+          if (!this.columns.some(c => c.key === 'instituteName')) {
+            this.columns.splice(1, 0, { key: 'instituteName', header: 'Coaching Center' });
+          }
+          this.loadInstitutes();
+        }
+      }
+    });
+  }
+
+  loadInstitutes() {
+    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+      next: (res) => {
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+      },
+      error: (err) => console.error('Failed to load institutes:', err)
+    });
+  }
+
+  getFilteredTeachers(): any[] {
+    if (!this.isGlobalAdmin || this.selectedInstituteFilter === 'all') {
+      return this.teachers;
+    }
+    return this.teachers.filter(t => t.instituteId === this.selectedInstituteFilter);
   }
 
   initForm() {
     this.teacherForm = this.fb.group({
+      instituteId: [''],
       // Basic Info
       fullName: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
@@ -180,7 +217,6 @@ export class AdminTeachersComponent implements OnInit {
   }
 
   loadTeachers() {
-    debugger;
     this.isLoading = true;
     this.http.get<any>(`${environment.apiUrl}/api/admin/teachers`).subscribe({
       next: (res) => {
@@ -210,7 +246,6 @@ export class AdminTeachersComponent implements OnInit {
         } catch (e) {
           console.error('Error mapping teachers list:', e);
         } finally {
-
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -218,17 +253,18 @@ export class AdminTeachersComponent implements OnInit {
       error: (err) => {
         console.error('Error fetching teachers:', err);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   loadSubjects() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/subjects`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/api/admin/Subjects`).subscribe({
       next: (res) => {
-        try {
-          this.subjects = Array.isArray(res) ? res : (res?.data?.data || res?.data || []);
-        } catch (e) {
-          console.error('Error mapping subjects list:', e);
+        if (res.success && res.data) {
+          this.subjects = res.data.data || res.data;
+        } else if (Array.isArray(res)) {
+          this.subjects = res;
         }
       },
       error: (err) => {
@@ -278,7 +314,6 @@ export class AdminTeachersComponent implements OnInit {
   submitTeacher() {
     if (this.teacherForm.invalid) {
       this.snackBar.open('Please fill all required fields correctly.', 'Close', { duration: 3000 });
-      // Touch all controls to show validation
       Object.keys(this.teacherForm.controls).forEach(key => {
         this.teacherForm.get(key)?.markAsTouched();
       });
@@ -287,6 +322,7 @@ export class AdminTeachersComponent implements OnInit {
 
     const payload = {
       ...this.teacherForm.value,
+      instituteId: this.teacherForm.value.instituteId || undefined,
       qualifications: this.qualificationsList,
       documents: this.documentsList
     };

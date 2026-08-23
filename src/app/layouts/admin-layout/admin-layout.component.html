@@ -7,8 +7,8 @@
           <img [src]="tenant.logoUrl || '/logo.png'" [alt]="tenant.name" class="brand-img" />
         </div>
         <div class="brand-text">
-          <h2 class="truncate" [title]="tenant.name">{{ tenant.name || 'EduNex' }}</h2>
-          <p>{{ tenant.code ? (tenant.code + ' • Admin') : 'Admin Portal' }}</p>
+          <h2 class="truncate" [title]="isGlobalAdmin && selectedInstituteId === 'system_global' ? 'EduNex Global' : tenant.name">{{ isGlobalAdmin && selectedInstituteId === 'system_global' ? 'EduNex Global' : (tenant.name || 'EduNex') }}</h2>
+          <p>{{ isGlobalAdmin && selectedInstituteId === 'system_global' ? 'Super Admin Portal' : (tenant.code ? (tenant.code + ' • Admin') : 'Admin Portal') }}</p>
         </div>
       </div>
       <div class="brand" *ngIf="!(currentTenant$ | async)">
@@ -72,6 +72,10 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <span>Notices</span>
         </a>
+        <a routerLink="/admin/vacancies" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="showModule('COMMUNICATION')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span>Vacancies & Jobs</span>
+        </a>
         <a routerLink="/admin/institutes" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="isGlobalAdmin">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7M4 21V10m16 11V10M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg>
           <span>Coaching Centers</span>
@@ -105,6 +109,10 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <span>Notices</span>
         </a>
+        <a routerLink="/admin/vacancies" routerLinkActive="active" (click)="closeSidebarOnMobile()" *ngIf="hasModuleAccess('COMMUNICATION')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span>Vacancies</span>
+        </a>
         <a routerLink="/receptionist/support" routerLinkActive="active" (click)="closeSidebarOnMobile()" class="support-nav-item">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           <span>Support & Help Desk</span>
@@ -128,7 +136,7 @@
         </button>
         <div class="topbar-brand" *ngIf="currentTenant$ | async as tenant">
           <img [src]="tenant.logoUrl || '/logo.png'" [alt]="tenant.name" class="brand-icon-mini" />
-          <span class="brand-title">{{ tenant.name || 'EduNex' }}</span>
+          <span class="brand-title">{{ isGlobalAdmin && selectedInstituteId === 'system_global' ? 'EduNex Global' : (tenant.name || 'EduNex') }}</span>
         </div>
         <div class="topbar-brand" *ngIf="!(currentTenant$ | async)">
           <img src="/logo.png" alt="EduNex Logo" class="brand-icon-mini" />
@@ -177,12 +185,18 @@
 
       <!-- Right side: Tenant Switcher, Profile & Actions -->
       <div class="topbar-right">
-        <!-- Tenant Switcher (only for Global/Super Admins) -->
-        <div class="tenant-switcher" *ngIf="isGlobalAdmin">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="switcher-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-          <select [value]="selectedInstituteId" (change)="onInstituteChange($event)" class="switcher-dropdown">
-            <option value="system_global">🌐 Global System Overview</option>
-            <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }}</option>
+        <!-- Coaching Center / Institute Switcher (for Global/Super Admins) -->
+        <div class="tenant-switcher" *ngIf="isGlobalAdmin" title="Active Coaching Center Context">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="switcher-icon"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7M4 21V10m16 11V10M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/></svg>
+          <span class="switcher-label">Center:</span>
+          <select 
+            [ngModel]="selectedInstituteId" 
+            (ngModelChange)="switchActiveInstitute($event)" 
+            class="switcher-dropdown">
+            <option value="system_global">🌐 Global Overview (All Institutes)</option>
+            <option *ngFor="let inst of institutes" [value]="inst.id">
+              {{ inst.name }} ({{ inst.instituteCode }})
+            </option>
           </select>
         </div>
 

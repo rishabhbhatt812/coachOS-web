@@ -71,6 +71,7 @@ export const routes: Routes = [
       { path: 'crm', canActivate: [moduleAccessGuard], data: { module: 'CRM' }, loadComponent: () => import('./features/admin/crm/admin-crm.component').then(m => m.AdminCrmComponent) },
       { path: 'attendance', canActivate: [moduleAccessGuard], data: { module: 'ATTENDANCE' }, loadComponent: () => import('./features/admin/attendance/admin-attendance.component').then(m => m.AdminAttendanceComponent) },
       { path: 'notices', canActivate: [moduleAccessGuard], data: { module: 'COMMUNICATION' }, loadComponent: () => import('./features/admin/notices/admin-notices.component').then(m => m.AdminNoticesComponent) },
+      { path: 'vacancies', canActivate: [moduleAccessGuard], data: { module: 'COMMUNICATION' }, loadComponent: () => import('./features/admin/vacancies/admin-vacancies.component').then(m => m.AdminVacanciesComponent) },
       { path: 'institutes', canActivate: [roleGuard], data: { roles: ['ADMIN'], requiresGlobalAdmin: true }, loadComponent: () => import('./features/admin/institutes/admin-institutes.component').then(m => m.AdminInstitutesComponent) },
       { path: 'plans', canActivate: [roleGuard], data: { roles: ['ADMIN'], requiresGlobalAdmin: true }, loadComponent: () => import('./features/admin/plans/admin-plans.component').then(m => m.AdminPlansComponent) },
       { path: 'support', loadComponent: () => import('./features/admin/support/admin-support.component').then(m => m.AdminSupportComponent) }

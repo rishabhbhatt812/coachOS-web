@@ -1,10 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
 import { StudentAdminFacade } from '../../../core/facades/student-admin.facade';
+import { AuthFacade } from '../../../core/facades/auth.facade';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,13 +14,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CreateStudentRequest, UpdateStudentRequest } from '../../../core/models/api-schemas';
 import { DialogService } from '../../../core/services/dialog.service';
 import { AdmissionsService } from '../../../core/services/admissions.service';
-import { ChangeDetectorRef } from '@angular/core';
+import { environment } from '../../../core/constants/api-endpoints';
 
 @Component({
   selector: 'app-admin-students',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     PageHeaderComponent,
     DataTableComponent,
@@ -32,7 +35,9 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class AdminStudentsComponent implements OnInit {
   private studentFacade = inject(StudentAdminFacade);
+  private authFacade = inject(AuthFacade);
   private admissionsService = inject(AdmissionsService);
+  private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
@@ -44,6 +49,10 @@ export class AdminStudentsComponent implements OnInit {
   showAddForm = false;
   editingId: string | null = null;
   studentForm!: FormGroup;
+
+  isGlobalAdmin = false;
+  institutes: any[] = [];
+  selectedInstituteFilter = 'all';
 
   columns: TableColumn[] = [
     { key: 'studentCode', header: 'Student Code', clickable: true },
@@ -57,11 +66,43 @@ export class AdminStudentsComponent implements OnInit {
   ngOnInit() {
     this.studentFacade.loadStudents();
     this.initForm();
+
+    this.authFacade.currentUser$.subscribe(user => {
+      if (user) {
+        const rawRole = user.rawRole || '';
+        this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
+        if (this.isGlobalAdmin) {
+          // Add Institute column for Super Admin
+          if (!this.columns.some(c => c.key === 'instituteName')) {
+            this.columns.splice(2, 0, { key: 'instituteName', header: 'Coaching Center' });
+          }
+          this.loadInstitutes();
+        }
+      }
+    });
+  }
+
+  loadInstitutes() {
+    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+      next: (res) => {
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+      },
+      error: (err) => console.error('Failed to load institutes:', err)
+    });
+  }
+
+  getFilteredStudents(students: any[] | null): any[] {
+    if (!students) return [];
+    if (!this.isGlobalAdmin || this.selectedInstituteFilter === 'all') {
+      return students;
+    }
+    return students.filter(s => s.instituteId === this.selectedInstituteFilter);
   }
 
   initForm() {
     const today = new Date().toISOString().split('T')[0];
     this.studentForm = this.fb.group({
+      instituteId: [''],
       studentCode: ['', [Validators.required]],
       fullName: ['', [Validators.required]],
       mobile: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
@@ -125,7 +166,8 @@ export class AdminStudentsComponent implements OnInit {
           error: (err) => console.error('Failed to update student:', err)
         });
       } else {
-        const req: CreateStudentRequest = {
+        const req: any = {
+          instituteId: val.instituteId || undefined,
           studentCode: val.studentCode,
           fullName: val.fullName,
           mobile: val.mobile,

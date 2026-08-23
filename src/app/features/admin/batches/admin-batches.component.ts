@@ -1,16 +1,16 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
 import { BatchFacade } from '../../../core/facades/batch.facade';
 import { CourseFacade } from '../../../core/facades/course.facade';
+import { AuthFacade } from '../../../core/facades/auth.facade';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { CreateBatchRequest, UpdateBatchRequest } from '../../../core/models/api-schemas';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../core/constants/api-endpoints';
 import { DialogService } from '../../../core/services/dialog.service';
@@ -21,6 +21,7 @@ import { DialogService } from '../../../core/services/dialog.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     PageHeaderComponent,
     DataTableComponent,
     MatFormFieldModule,
@@ -35,6 +36,7 @@ import { DialogService } from '../../../core/services/dialog.service';
 export class AdminBatchesComponent implements OnInit {
   private batchFacade = inject(BatchFacade);
   private courseFacade = inject(CourseFacade);
+  private authFacade = inject(AuthFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private http = inject(HttpClient);
@@ -50,6 +52,10 @@ export class AdminBatchesComponent implements OnInit {
   teachers: any[] = [];
   subjects: any[] = [];
   branches: any[] = [];
+
+  isGlobalAdmin = false;
+  institutes: any[] = [];
+  selectedInstituteFilter = 'all';
 
   columns: TableColumn[] = [
     { key: 'batchCode', header: 'Code' },
@@ -70,6 +76,36 @@ export class AdminBatchesComponent implements OnInit {
     this.loadTeachers();
     this.loadSubjects();
     this.loadBranches();
+
+    this.authFacade.currentUser$.subscribe(user => {
+      if (user) {
+        const rawRole = user.rawRole || '';
+        this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
+        if (this.isGlobalAdmin) {
+          if (!this.columns.some(c => c.key === 'instituteName')) {
+            this.columns.splice(2, 0, { key: 'instituteName', header: 'Coaching Center' });
+          }
+          this.loadInstitutes();
+        }
+      }
+    });
+  }
+
+  loadInstitutes() {
+    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+      next: (res) => {
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+      },
+      error: (err) => console.error('Failed to load institutes:', err)
+    });
+  }
+
+  getFilteredBatches(batches: any[] | null): any[] {
+    if (!batches) return [];
+    if (!this.isGlobalAdmin || this.selectedInstituteFilter === 'all') {
+      return batches;
+    }
+    return batches.filter(b => b.instituteId === this.selectedInstituteFilter);
   }
 
   loadTeachers() {
@@ -98,83 +134,130 @@ export class AdminBatchesComponent implements OnInit {
   }
 
   loadSubjects() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/subjects`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/api/admin/Subjects`).subscribe({
       next: (res) => {
-        this.subjects = Array.isArray(res) ? res : (res?.data?.data || res?.data || []);
+        if (res.success && res.data) {
+          this.subjects = res.data.data || res.data;
+        } else if (Array.isArray(res)) {
+          this.subjects = res;
+        }
       },
       error: (err) => console.error('Failed to load subjects:', err)
     });
   }
 
   loadBranches() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/branches`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/api/admin/Branches`).subscribe({
       next: (res) => {
-        this.branches = Array.isArray(res) ? res : (res?.data || []);
+        if (res.success && res.data) {
+          this.branches = res.data.data || res.data;
+        } else if (Array.isArray(res)) {
+          this.branches = res;
+        }
       },
       error: (err) => console.error('Failed to load branches:', err)
     });
   }
 
   initForm() {
+    const today = new Date().toISOString().split('T')[0];
     this.batchForm = this.fb.group({
-      batchCode: ['', [Validators.required]],
-      name: ['', [Validators.required]],
+      instituteId: [''],
       courseId: ['', [Validators.required]],
-      branchId: ['', [Validators.required]],
-      subjectIds: [[]],
-      teacherUserId: [''],
-      defaultFee: [0, [Validators.required, Validators.min(0)]],
-      startTime: [''],
-      endTime: [''],
-      startDate: [''],
+      name: ['', [Validators.required]],
+      batchCode: ['', [Validators.required]],
+      startDate: [today, [Validators.required]],
       endDate: [''],
-      capacity: [40, [Validators.required, Validators.min(1)]],
-      roomNumber: [''],
-      batchStatus: ['Upcoming', [Validators.required]]
+      startTime: ['09:00', [Validators.required]],
+      endTime: ['11:00', [Validators.required]],
+      capacity: [30, [Validators.required, Validators.min(1)]],
+      roomNumber: ['Room 101'],
+      batchStatus: ['Upcoming', [Validators.required]],
+      branchId: [''],
+      subjectIds: [[]],
+      teacherUserIds: [[]]
     });
   }
 
-  toggleForm() {
+  toggleSubject(subjectId: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const current: string[] = this.batchForm.get('subjectIds')?.value || [];
+    if (input.checked) {
+      this.batchForm.get('subjectIds')?.setValue([...current, subjectId]);
+    } else {
+      this.batchForm.get('subjectIds')?.setValue(current.filter(id => id !== subjectId));
+    }
+  }
+
+  toggleTeacher(teacherId: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const current: string[] = this.batchForm.get('teacherUserIds')?.value || [];
+    if (input.checked) {
+      this.batchForm.get('teacherUserIds')?.setValue([...current, teacherId]);
+    } else {
+      this.batchForm.get('teacherUserIds')?.setValue(current.filter(id => id !== teacherId));
+    }
+  }
+
+  toggleAddForm() {
     this.showAddForm = !this.showAddForm;
     if (!this.showAddForm) {
-      this.editingId = null;
-      this.batchForm.reset({ defaultFee: 0, courseId: '', branchId: '', batchStatus: 'Upcoming', capacity: 40 });
+      this.cancelEdit();
     }
+  }
+
+  cancelEdit() {
+    this.showAddForm = false;
+    this.editingId = null;
+    this.initForm();
   }
 
   onSubmit() {
     if (this.batchForm.valid) {
       const val = this.batchForm.value;
-      const req: any = {
-        batchCode: val.batchCode,
-        name: val.name,
-        courseId: val.courseId,
-        branchId: val.branchId,
-        subjectIds: val.subjectIds || [],
-        teacherUserId: val.teacherUserId || undefined,
-        defaultFee: val.defaultFee,
-        startTime: val.startTime || undefined,
-        endTime: val.endTime || undefined,
-        startDate: val.startDate || undefined,
-        endDate: val.endDate || undefined,
-        capacity: val.capacity,
-        roomNumber: val.roomNumber || undefined,
-        batchStatus: val.batchStatus
-      };
-
       if (this.editingId) {
+        const req: any = {
+          name: val.name,
+          batchCode: val.batchCode,
+          startDate: val.startDate,
+          endDate: val.endDate,
+          startTime: val.startTime,
+          endTime: val.endTime,
+          capacity: val.capacity,
+          roomNumber: val.roomNumber,
+          batchStatus: val.batchStatus,
+          branchId: val.branchId || null,
+          subjectIds: val.subjectIds || [],
+          teacherUserIds: val.teacherUserIds || []
+        };
         this.batchFacade.updateBatch(this.editingId, req).subscribe({
           next: () => {
             this.snackBar.open('Batch updated successfully!', 'Dismiss', { duration: 3000 });
-            this.toggleForm();
+            this.cancelEdit();
           },
           error: (err) => console.error('Failed to update batch:', err)
         });
       } else {
+        const req: any = {
+          instituteId: val.instituteId || undefined,
+          courseId: val.courseId,
+          name: val.name,
+          batchCode: val.batchCode,
+          startDate: val.startDate,
+          endDate: val.endDate,
+          startTime: val.startTime,
+          endTime: val.endTime,
+          capacity: val.capacity,
+          roomNumber: val.roomNumber,
+          batchStatus: val.batchStatus,
+          branchId: val.branchId || null,
+          subjectIds: val.subjectIds || [],
+          teacherUserIds: val.teacherUserIds || []
+        };
         this.batchFacade.createBatch(req).subscribe({
           next: () => {
             this.snackBar.open('Batch created successfully!', 'Dismiss', { duration: 3000 });
-            this.toggleForm();
+            this.cancelEdit();
           },
           error: (err) => console.error('Failed to create batch:', err)
         });
@@ -186,24 +269,23 @@ export class AdminBatchesComponent implements OnInit {
     if (event.action === 'edit') {
       this.editingId = event.row.id;
       this.batchForm.patchValue({
-        batchCode: event.row.batchCode,
-        name: event.row.name,
         courseId: event.row.courseId,
-        branchId: event.row.branchId,
-        subjectIds: event.row.subjectIds && event.row.subjectIds.length ? event.row.subjectIds : (event.row.subjectId ? [event.row.subjectId] : []),
-        teacherUserId: event.row.teacherUserId,
-        defaultFee: event.row.defaultFee,
+        name: event.row.name,
+        batchCode: event.row.batchCode,
+        startDate: event.row.startDate ? event.row.startDate.split('T')[0] : '',
+        endDate: event.row.endDate ? event.row.endDate.split('T')[0] : '',
         startTime: event.row.startTime,
         endTime: event.row.endTime,
-        startDate: event.row.startDate,
-        endDate: event.row.endDate,
         capacity: event.row.capacity,
         roomNumber: event.row.roomNumber,
-        batchStatus: event.row.batchStatus
+        batchStatus: event.row.batchStatus,
+        branchId: event.row.branchId,
+        subjectIds: event.row.subjectIds || [],
+        teacherUserIds: event.row.teacherUserIds || []
       });
       this.showAddForm = true;
     } else if (event.action === 'delete') {
-      this.dialogService.delete(event.row.name || 'Batch').subscribe(confirmed => {
+      this.dialogService.delete(event.row.name ? `batch: ${event.row.name}` : 'Batch').subscribe(confirmed => {
         if (confirmed) {
           this.batchFacade.deleteBatch(event.row.id).subscribe({
             next: () => {

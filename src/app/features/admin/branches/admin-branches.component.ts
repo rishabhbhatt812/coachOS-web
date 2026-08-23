@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +9,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent, TableColumn } from '../../../shared/components/data-table/data-table.component';
 import { BranchFacade } from '../../../core/facades/branch.facade';
+import { AuthFacade } from '../../../core/facades/auth.facade';
+import { environment } from '../../../core/constants/api-endpoints';
 import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
@@ -15,6 +18,7 @@ import { DialogService } from '../../../core/services/dialog.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     PageHeaderComponent,
     DataTableComponent,
@@ -28,6 +32,8 @@ import { DialogService } from '../../../core/services/dialog.service';
 })
 export class AdminBranchesComponent implements OnInit {
   private branchFacade = inject(BranchFacade);
+  private authFacade = inject(AuthFacade);
+  private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private dialogService = inject(DialogService);
@@ -37,6 +43,10 @@ export class AdminBranchesComponent implements OnInit {
   showForm = false;
   editingId: string | null = null;
   branchForm!: FormGroup;
+
+  isGlobalAdmin = false;
+  institutes: any[] = [];
+  selectedInstituteFilter = 'all';
 
   columns: TableColumn[] = [
     { key: 'code', header: 'Branch Code' },
@@ -50,10 +60,41 @@ export class AdminBranchesComponent implements OnInit {
   ngOnInit() {
     this.branchFacade.loadBranches();
     this.initForm();
+
+    this.authFacade.currentUser$.subscribe(user => {
+      if (user) {
+        const rawRole = user.rawRole || '';
+        this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
+        if (this.isGlobalAdmin) {
+          if (!this.columns.some(c => c.key === 'instituteName')) {
+            this.columns.splice(1, 0, { key: 'instituteName', header: 'Coaching Center' });
+          }
+          this.loadInstitutes();
+        }
+      }
+    });
+  }
+
+  loadInstitutes() {
+    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+      next: (res) => {
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+      },
+      error: (err) => console.error('Failed to load institutes:', err)
+    });
+  }
+
+  getFilteredBranches(branches: any[] | null): any[] {
+    if (!branches) return [];
+    if (!this.isGlobalAdmin || this.selectedInstituteFilter === 'all') {
+      return branches;
+    }
+    return branches.filter(b => b.instituteId === this.selectedInstituteFilter);
   }
 
   initForm() {
     this.branchForm = this.fb.group({
+      instituteId: [''],
       code: ['', [Validators.required]],
       name: ['', [Validators.required]],
       address: [''],
@@ -73,7 +114,8 @@ export class AdminBranchesComponent implements OnInit {
   onSubmit() {
     if (this.branchForm.valid) {
       const val = this.branchForm.value;
-      const payload = {
+      const payload: any = {
+        instituteId: val.instituteId || undefined,
         code: val.code,
         name: val.name,
         address: val.address,
@@ -109,18 +151,19 @@ export class AdminBranchesComponent implements OnInit {
         name: event.row.name,
         address: event.row.address,
         contactNumber: event.row.contactNumber,
-        isActive: event.row.isActive === 'Active' || event.row.isActive === true
+        isActive: event.row.isActive
       });
       this.showForm = true;
     } else if (event.action === 'delete') {
-      this.dialogService.delete(event.row.name || 'Branch').subscribe(confirmed => {
+      this.dialogService.delete(event.row.name ? `branch: ${event.row.name}` : 'Branch').subscribe(confirmed => {
         if (confirmed) {
           this.branchFacade.deleteBranch(event.row.id).subscribe({
             next: () => {
               this.dialogService.success('Branch deleted successfully!');
             },
-            error: () => {
-              this.dialogService.success('Branch deleted successfully!');
+            error: (err) => {
+              console.error('Failed to delete branch:', err);
+              this.dialogService.error('Failed to delete branch.');
             }
           });
         }

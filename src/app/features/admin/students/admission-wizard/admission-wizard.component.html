@@ -13,6 +13,15 @@
         <ng-template matStepLabel>1. Student Details</ng-template>
         
         <div class="form-grid">
+          <!-- Institute Selector for Super Admin -->
+          <div class="form-group" *ngIf="isGlobalAdmin" style="grid-column: 1 / -1;">
+            <label>Coaching Center / Institute <span class="required-star">*</span></label>
+            <select class="form-control" formControlName="instituteId" (change)="onInstituteChanged(studentForm.value.instituteId)" style="border: 2px solid #6366f1; background-color: #f8fafc; font-weight: 600;">
+              <option value="">-- Select Target Coaching Center / Institute --</option>
+              <option *ngFor="let inst of institutes" [value]="inst.id">{{ inst.name }} ({{ inst.instituteCode }})</option>
+            </select>
+          </div>
+
           <!-- Student Code -->
           <div class="form-group">
             <label>Student Code <span class="required-star">*</span></label>
