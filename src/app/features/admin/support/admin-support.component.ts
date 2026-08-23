@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subscription } from 'rxjs';
 import { SupportService } from '../../../core/services/support.service';
 import { SupportTicket } from '../../../core/models/support.model';
 import { AuthFacade } from '../../../core/facades/auth.facade';
@@ -15,7 +16,7 @@ import { AuthFacade } from '../../../core/facades/auth.facade';
   templateUrl: './admin-support.component.html',
   styleUrls: ['./admin-support.component.scss']
 })
-export class AdminSupportComponent implements OnInit {
+export class AdminSupportComponent implements OnInit, OnDestroy {
   private supportService = inject(SupportService);
   private authFacade = inject(AuthFacade);
   private fb = inject(FormBuilder);
@@ -43,6 +44,8 @@ export class AdminSupportComponent implements OnInit {
   replyStatus = 'Resolved';
   isSendingReply = false;
 
+  private authSub?: Subscription;
+
   categories = [
     'General Inquiry',
     'Technical Bug / Error',
@@ -55,14 +58,26 @@ export class AdminSupportComponent implements OnInit {
   priorities = ['Low', 'Medium', 'High', 'Critical'];
 
   ngOnInit(): void {
-    this.authFacade.currentUser$.subscribe(u => {
-      const role = (u?.rawRole || u?.role || '').toUpperCase();
-      this.isGlobalAdmin = role.includes('SUPER') || role.includes('GLOBAL') || role.includes('ADMIN');
-      this.loadTickets();
-      this.cdr.detectChanges();
-    });
-
     this.initNewTicketForm();
+
+    this.authSub = this.authFacade.currentUser$.subscribe(u => {
+      const role = (u?.rawRole || u?.role || '').toUpperCase();
+      const nextIsGlobal = role.includes('SUPER') || role.includes('GLOBAL') || role.includes('ADMIN');
+      const roleChanged = this.isGlobalAdmin !== nextIsGlobal;
+      this.isGlobalAdmin = nextIsGlobal;
+
+      if (this.tickets.length === 0 || roleChanged) {
+        this.loadTickets(this.tickets.length === 0);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.authSub?.unsubscribe();
+  }
+
+  trackByTicketId(index: number, item: SupportTicket): string {
+    return item.id || item.ticketNumber || index.toString();
   }
 
   initNewTicketForm(): void {
@@ -74,9 +89,10 @@ export class AdminSupportComponent implements OnInit {
     });
   }
 
-  loadTickets(): void {
-    this.isLoading = true;
-    this.cdr.detectChanges();
+  loadTickets(showLoader: boolean = true): void {
+    if (showLoader && this.tickets.length === 0) {
+      this.isLoading = true;
+    }
 
     const req = this.isGlobalAdmin 
       ? this.supportService.getAllTickets() 
@@ -87,7 +103,7 @@ export class AdminSupportComponent implements OnInit {
         this.tickets = Array.isArray(data) ? data : [];
         this.applyFilter();
         if (this.selectedTicket) {
-          this.selectedTicket = this.tickets.find(t => t.id === this.selectedTicket?.id || t.ticketNumber === this.selectedTicket?.ticketNumber) || null;
+          this.selectedTicket = this.tickets.find(t => t.id === this.selectedTicket?.id || t.ticketNumber === this.selectedTicket?.ticketNumber) || this.tickets[0] || null;
         } else if (this.filteredTickets.length > 0) {
           this.selectTicket(this.filteredTickets[0]);
         }
@@ -107,7 +123,6 @@ export class AdminSupportComponent implements OnInit {
     if (this.filteredTickets.length > 0 && (!this.selectedTicket || !this.filteredTickets.some(t => t.id === this.selectedTicket?.id))) {
       this.selectTicket(this.filteredTickets[0]);
     }
-    this.cdr.detectChanges();
   }
 
   applyFilter(): void {
@@ -180,9 +195,8 @@ export class AdminSupportComponent implements OnInit {
           duration: 4500,
           panelClass: ['success-snackbar']
         });
-        this.loadTickets();
+        this.loadTickets(false);
         this.selectTicket(res.ticket);
-        this.cdr.detectChanges();
       },
       error: () => {
         this.isSubmittingTicket = false;
@@ -215,8 +229,7 @@ export class AdminSupportComponent implements OnInit {
           duration: 3500,
           panelClass: ['success-snackbar']
         });
-        this.loadTickets();
-        this.cdr.detectChanges();
+        this.loadTickets(false);
       },
       error: () => {
         this.isSendingReply = false;
@@ -238,8 +251,7 @@ export class AdminSupportComponent implements OnInit {
           this.selectedTicket.status = 'Closed';
         }
         this.snackBar.open(`✓ Ticket #${ticketNum} marked as Closed.`, 'Dismiss', { duration: 3000 });
-        this.loadTickets();
-        this.cdr.detectChanges();
+        this.loadTickets(false);
       }
     });
   }
@@ -253,8 +265,7 @@ export class AdminSupportComponent implements OnInit {
           this.selectedTicket.status = 'Resolved';
         }
         this.snackBar.open(`✓ Ticket #${ticketNum} marked as Resolved.`, 'Dismiss', { duration: 3000 });
-        this.loadTickets();
-        this.cdr.detectChanges();
+        this.loadTickets(false);
       }
     });
   }
@@ -268,8 +279,7 @@ export class AdminSupportComponent implements OnInit {
           this.selectedTicket.status = 'Open';
         }
         this.snackBar.open(`✓ Ticket #${ticketNum} reopened.`, 'Dismiss', { duration: 3000 });
-        this.loadTickets();
-        this.cdr.detectChanges();
+        this.loadTickets(false);
       }
     });
   }

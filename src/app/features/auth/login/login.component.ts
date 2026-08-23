@@ -35,6 +35,14 @@ export class LoginComponent {
     password: ['', Validators.required]
   });
 
+  fillCredentials(email: string, pass: string = 'Password123') {
+    this.loginForm.patchValue({
+      email,
+      password: pass
+    });
+    this.loginForm.markAsDirty();
+  }
+
   onSubmit() {
     if (this.loginForm.valid) {
       const formValue = this.loginForm.value;
@@ -67,6 +75,13 @@ export class LoginComponent {
         },
         error: (err) => {
           console.error('Login failed', err);
+          const errorMsg = err?.error?.message || err?.message || 'Invalid email or password. Please check your credentials.';
+          this.snackBar.open(`⚠️ ${errorMsg}`, 'Dismiss', {
+            duration: 4000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
         }
       });
     }

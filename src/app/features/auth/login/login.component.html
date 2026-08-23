@@ -175,6 +175,58 @@
             Authenticating...
           </span>
         </button>
+
+        <!-- Quick Fill Demo Accounts -->
+        <div class="demo-accounts-card">
+          <div class="demo-card-header">
+            <span class="demo-badge">⚡ Quick One-Click Sign In</span>
+            <span class="demo-hint">Click role to auto-fill credentials</span>
+          </div>
+          <div class="demo-chips-grid">
+            <button type="button" class="demo-chip" (click)="fillCredentials('rishabhbhatt437@gmail.com', 'Password123')" title="Sign in as Global Admin">
+              <span class="chip-icon">👑</span>
+              <div class="chip-text">
+                <strong>Global Admin</strong>
+                <small>rishabhbhatt437@gmail.com</small>
+              </div>
+            </button>
+            <button type="button" class="demo-chip" (click)="fillCredentials('superadmin@apex.com', 'Password123')" title="Sign in as Super Admin">
+              <span class="chip-icon">🏢</span>
+              <div class="chip-text">
+                <strong>Super Admin</strong>
+                <small>superadmin@apex.com</small>
+              </div>
+            </button>
+            <button type="button" class="demo-chip" (click)="fillCredentials('admin@apex.com', 'Password123')" title="Sign in as Institute Admin">
+              <span class="chip-icon">🏫</span>
+              <div class="chip-text">
+                <strong>Institute Admin</strong>
+                <small>admin@apex.com</small>
+              </div>
+            </button>
+            <button type="button" class="demo-chip" (click)="fillCredentials('teacher@apex.com', 'Password123')" title="Sign in as Teacher">
+              <span class="chip-icon">👨‍🏫</span>
+              <div class="chip-text">
+                <strong>Teacher Faculty</strong>
+                <small>teacher@apex.com</small>
+              </div>
+            </button>
+            <button type="button" class="demo-chip" (click)="fillCredentials('student@apex.com', 'Password123')" title="Sign in as Student">
+              <span class="chip-icon">👨‍🎓</span>
+              <div class="chip-text">
+                <strong>Student Portal</strong>
+                <small>student@apex.com</small>
+              </div>
+            </button>
+            <button type="button" class="demo-chip" (click)="fillCredentials('receptionist@apex.com', 'Password123')" title="Sign in as Receptionist">
+              <span class="chip-icon">👩‍💼</span>
+              <div class="chip-text">
+                <strong>Receptionist</strong>
+                <small>receptionist@apex.com</small>
+              </div>
+            </button>
+          </div>
+        </div>
       </form>
 
       <!-- Security / Footer -->
