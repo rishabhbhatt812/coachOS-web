@@ -90,13 +90,13 @@
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="p-8 text-center text-slate-500">
+  <div *ngIf="isLoading && vacancies.length === 0" class="p-8 text-center text-slate-500">
     <div class="spinner"></div>
     <p class="mt-2">Loading vacancy announcements...</p>
   </div>
 
   <!-- Vacancies Grid -->
-  <div class="vacancies-grid" *ngIf="!isLoading">
+  <div class="vacancies-grid" *ngIf="!isLoading || vacancies.length > 0">
     <div class="vacancy-card card" *ngFor="let vac of filteredVacancies">
       <div class="card-accent-bar" [class.expired]="vac.isExpired"></div>
 
