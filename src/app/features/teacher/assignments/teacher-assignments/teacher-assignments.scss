@@ -333,6 +333,62 @@
   }
 }
 
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: #4338ca;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e0e7ff;
+    border-color: #a5b4fc;
+    color: #3730a3;
+  }
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+  }
+}
+
+.file-download-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    span {
+      text-decoration: underline;
+    }
+  }
+}
+
 @keyframes modalEnter {
   from {
     opacity: 0;
@@ -343,5 +399,6 @@
     transform: scale(1) translateY(0);
   }
 }
+
 
 
