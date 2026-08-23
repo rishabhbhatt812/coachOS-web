@@ -136,6 +136,38 @@
         color: white;
       }
     }
+
+    &.support-nav-item {
+      position: relative;
+    }
+
+    .nav-notify-badge {
+      margin-left: auto;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+      animation: pulseBadge 1.5s infinite ease-in-out;
+    }
+  }
+}
+
+@keyframes pulseBadge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
   }
 }
 

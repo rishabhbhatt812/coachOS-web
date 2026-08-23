@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthFacade } from '../../core/facades/auth.facade';
+import { SupportService } from '../../core/services/support.service';
 import { environment } from '../../core/constants/api-endpoints';
 
 interface SearchItem {
@@ -25,12 +26,14 @@ interface SearchItem {
 })
 export class AdminLayoutComponent implements OnInit {
   private authFacade = inject(AuthFacade);
+  private supportService = inject(SupportService);
   private http = inject(HttpClient);
   private router = inject(Router);
   private elementRef = inject(ElementRef);
   
   user$ = this.authFacade.currentUser$;
   currentTenant$ = this.authFacade.currentTenant$;
+  unreadSupportCount$ = this.supportService.unreadCount$;
   sidebarOpen = false;
   
   // Tenant switcher state

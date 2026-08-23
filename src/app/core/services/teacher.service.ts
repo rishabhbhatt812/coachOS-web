@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 import { CreateAttendanceSessionRequest, CreateNoteRequest, CreateTestRequest } from '../models/api-schemas';
 
@@ -11,6 +12,9 @@ export interface TeacherNote {
   courseName: string;
   batchName: string;
   subjectName: string;
+  filePath?: string;
+  originalFileName?: string;
+  fileType?: string;
   createdAt: string;
 }
 
@@ -30,16 +34,22 @@ export class TeacherService {
 
   // Batches
   getMyBatches(): Observable<any> {
-    return this.http.get<any>(API_ENDPOINTS.TEACHER.BATCHES);
+    return this.http.get<any>(API_ENDPOINTS.TEACHER.BATCHES).pipe(
+      map(res => res?.data || res || [])
+    );
   }
 
   getBatchStudents(batchId: string): Observable<any> {
-    return this.http.get<any>(`${API_ENDPOINTS.TEACHER.BATCHES}/${batchId}/students`);
+    return this.http.get<any>(`${API_ENDPOINTS.TEACHER.BATCHES}/${batchId}/students`).pipe(
+      map(res => res?.data || res || [])
+    );
   }
 
   // Attendance
   getAttendanceSessions(): Observable<any[]> {
-    return this.http.get<any[]>(API_ENDPOINTS.TEACHER.ATTENDANCE);
+    return this.http.get<any>(API_ENDPOINTS.TEACHER.ATTENDANCE).pipe(
+      map(res => res?.data || res || [])
+    );
   }
 
   createAttendanceSession(data: any): Observable<any> {
@@ -52,7 +62,9 @@ export class TeacherService {
 
   // Notes
   getNotes(): Observable<TeacherNote[]> {
-    return this.http.get<TeacherNote[]>(API_ENDPOINTS.TEACHER.NOTES);
+    return this.http.get<any>(API_ENDPOINTS.TEACHER.NOTES).pipe(
+      map(res => res?.data || res || [])
+    );
   }
 
   createNote(data: FormData): Observable<any> {
@@ -65,7 +77,9 @@ export class TeacherService {
 
   // Tests
   getTests(): Observable<TeacherTest[]> {
-    return this.http.get<TeacherTest[]>(API_ENDPOINTS.TEACHER.TESTS);
+    return this.http.get<any>(API_ENDPOINTS.TEACHER.TESTS).pipe(
+      map(res => res?.data || res || [])
+    );
   }
 
   createTest(data: CreateTestRequest): Observable<TeacherTest> {

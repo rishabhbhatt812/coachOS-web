@@ -3,6 +3,10 @@
   <!-- Header Bar -->
   <div class="support-header">
     <div>
+      <div class="badge-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span>24/7 Technical Desk</span>
+      </div>
       <h1 class="page-title">Client Support & Help Desk</h1>
       <p class="page-subtitle">
         {{ isGlobalAdmin ? 'Manage client inquiries, technical tickets, and system feature requests with automated email notifications.' : 'Raise technical inquiries, feature suggestions, or billing questions to EduNex Support.' }}
@@ -10,7 +14,8 @@
     </div>
     <div class="header-actions">
       <button type="button" class="btn btn-primary" (click)="openNewTicketModal()">
-        <mat-icon>add</mat-icon> Raise New Ticket
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>Raise New Ticket</span>
       </button>
     </div>
   </div>
@@ -21,12 +26,15 @@
     <!-- LEFT COLUMN: Tickets List & Filter -->
     <div class="card tickets-list-card">
       <div class="list-search-row">
-        <input 
-          type="text" 
-          class="search-input" 
-          placeholder="Search by ticket #, subject, client..." 
-          [(ngModel)]="searchQuery" 
-          (input)="applyFilter()" />
+        <div class="search-input-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="Search tickets, subject, category..." 
+            [(ngModel)]="searchQuery" 
+            (input)="applyFilter()" />
+        </div>
       </div>
 
       <!-- Status Filters -->
@@ -47,13 +55,25 @@
 
       <!-- Tickets Scroll List -->
       <div class="tickets-scroll-area">
-        <div *ngIf="isLoading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Loading support tickets...</p>
+        
+        <!-- Professional Shimmer Skeleton Loader -->
+        <div *ngIf="isLoading" class="skeleton-loader-container">
+          <div class="skeleton-ticket-card" *ngFor="let i of [1,2,3]">
+            <div class="skeleton-header">
+              <div class="skeleton-pill shimmer"></div>
+              <div class="skeleton-badge shimmer"></div>
+            </div>
+            <div class="skeleton-line shimmer full"></div>
+            <div class="skeleton-line shimmer medium"></div>
+            <div class="skeleton-footer">
+              <div class="skeleton-small shimmer"></div>
+              <div class="skeleton-small shimmer"></div>
+            </div>
+          </div>
         </div>
 
         <div *ngIf="!isLoading && filteredTickets.length === 0" class="empty-state">
-          <mat-icon class="empty-icon">support_agent</mat-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           <h4>No support tickets found</h4>
           <p>Click "Raise New Ticket" to create a support inquiry.</p>
         </div>
@@ -62,10 +82,16 @@
           *ngFor="let t of filteredTickets" 
           class="ticket-item" 
           [class.selected]="selectedTicket?.id === t.id"
+          [class.has-unread]="t.hasUnreadReply"
           (click)="selectTicket(t)">
           
           <div class="ticket-header-row">
-            <span class="ticket-num font-mono">{{ t.ticketNumber }}</span>
+            <div class="ticket-token-wrap">
+              <span class="ticket-num font-mono">{{ t.ticketNumber }}</span>
+              <span *ngIf="t.hasUnreadReply" class="unread-reply-badge">
+                <span class="pulse-dot"></span> New Reply
+              </span>
+            </div>
             <span class="status-pill" [ngClass]="{
               'open': t.status === 'Open',
               'in-progress': t.status === 'In Progress',
@@ -90,22 +116,54 @@
     <!-- RIGHT COLUMN: Selected Ticket Details & Conversation -->
     <div class="card ticket-detail-card" *ngIf="selectedTicket">
       <div class="detail-header">
-        <div>
-          <div class="flex items-center gap-2 mb-1">
+        <div class="detail-header-info">
+          <div class="detail-top-row">
             <span class="detail-token font-mono">{{ selectedTicket.ticketNumber }}</span>
             <span class="category-tag">{{ selectedTicket.category }}</span>
             <span class="status-pill" [ngClass]="{
               'open': selectedTicket.status === 'Open',
               'in-progress': selectedTicket.status === 'In Progress',
-              'resolved': selectedTicket.status === 'Resolved' || selectedTicket.status === 'Closed'
+              'resolved': selectedTicket.status === 'Resolved',
+              'closed': selectedTicket.status === 'Closed'
             }">
               {{ selectedTicket.status }}
             </span>
+            <span class="ticket-priority" [ngClass]="selectedTicket.priority.toLowerCase()">{{ selectedTicket.priority }}</span>
           </div>
           <h2 class="detail-title">{{ selectedTicket.subject }}</h2>
           <p class="detail-author">
             Submitted by <strong>{{ selectedTicket.userName }}</strong> ({{ selectedTicket.userRole }}) • {{ selectedTicket.instituteName }} • {{ selectedTicket.createdAt | date:'medium' }}
           </p>
+        </div>
+
+        <div class="detail-header-actions">
+          <button 
+            type="button" 
+            class="btn btn-header-action btn-resolve" 
+            *ngIf="selectedTicket.status !== 'Resolved' && selectedTicket.status !== 'Closed'"
+            (click)="markSelectedAsResolved()" 
+            title="Mark this inquiry as Resolved">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Resolve</span>
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-header-action btn-close-tkt" 
+            *ngIf="selectedTicket.status !== 'Closed'"
+            (click)="closeSelectedTicket()" 
+            title="Close this ticket">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>Close Ticket</span>
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-header-action btn-reopen" 
+            *ngIf="selectedTicket.status === 'Closed' || selectedTicket.status === 'Resolved'"
+            (click)="reopenSelectedTicket()" 
+            title="Reopen this ticket">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Reopen Ticket</span>
+          </button>
         </div>
       </div>
 
@@ -115,7 +173,10 @@
         <!-- Original Inquiry -->
         <div class="message-bubble client-bubble">
           <div class="bubble-header">
-            <strong>{{ selectedTicket.userName }}</strong>
+            <div class="bubble-user">
+              <span class="avatar-circle user-avatar">👤</span>
+              <strong>{{ selectedTicket.userName }} (Client)</strong>
+            </div>
             <span>{{ selectedTicket.createdAt | date:'short' }}</span>
           </div>
           <div class="bubble-body">
@@ -126,7 +187,10 @@
         <!-- Replies -->
         <div *ngFor="let rep of selectedTicket.replies" class="message-bubble support-bubble">
           <div class="bubble-header">
-            <strong>{{ rep.repliedBy }} ({{ rep.repliedByRole }})</strong>
+            <div class="bubble-user">
+              <span class="avatar-circle support-avatar">🛡️</span>
+              <strong>{{ rep.repliedBy }} ({{ rep.repliedByRole }})</strong>
+            </div>
             <span>{{ rep.createdAt | date:'short' }}</span>
           </div>
           <div class="bubble-body">
@@ -138,7 +202,14 @@
 
       <!-- Reply Box (for Global Admin or Client) -->
       <div class="reply-section">
-        <h4 class="reply-heading">Post Response & Dispatch Email</h4>
+        <div class="reply-header-info">
+          <h4 class="reply-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Post Response & Dispatch Email
+          </h4>
+          <span class="email-dispatch-hint">📧 Client receives direct email notification</span>
+        </div>
+        
         <textarea 
           class="reply-textarea" 
           rows="4" 
@@ -146,8 +217,8 @@
           [(ngModel)]="replyMessage"></textarea>
         
         <div class="reply-actions">
-          <div class="flex items-center gap-2" *ngIf="isGlobalAdmin">
-            <label class="text-xs font-semibold text-slate-500">Update Status:</label>
+          <div class="status-selector-wrap" *ngIf="isGlobalAdmin">
+            <label>Update Status:</label>
             <select class="status-select" [(ngModel)]="replyStatus">
               <option value="In Progress">In Progress</option>
               <option value="Resolved">Resolved</option>
@@ -156,11 +227,12 @@
           </div>
           <button 
             type="button" 
-            class="btn btn-primary" 
+            class="btn btn-primary btn-send-reply" 
             [disabled]="!replyMessage.trim() || isSendingReply" 
             (click)="sendReply()">
-            <mat-icon *ngIf="!isSendingReply">send</mat-icon>
-            <span>{{ isSendingReply ? 'Sending Email...' : 'Send Reply & Email Alert' }}</span>
+            <svg *ngIf="!isSendingReply" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <span *ngIf="isSendingReply" class="spinner-inline"></span>
+            <span>{{ isSendingReply ? 'Sending Email Alert...' : 'Send Reply & Email Alert' }}</span>
           </button>
         </div>
       </div>
@@ -168,7 +240,7 @@
 
     <!-- Empty Detail Placeholder -->
     <div class="card ticket-detail-card empty-detail" *ngIf="!selectedTicket">
-      <mat-icon class="empty-icon">chat_bubble_outline</mat-icon>
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
       <h3>No Ticket Selected</h3>
       <p>Select a support inquiry from the left list to view conversation history and send responses.</p>
     </div>
@@ -179,7 +251,7 @@
   <!-- MODAL: RAISE NEW SUPPORT TICKET                                          -->
   <!-- ========================================================================= -->
   <div class="modal-backdrop" *ngIf="showNewTicketModal" (click)="closeNewTicketModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-card card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <span class="modal-badge">🎫 New Support Inquiry</span>
@@ -218,8 +290,8 @@
           </div>
 
           <div class="notice-box mt-4">
-            <mat-icon>mail</mat-icon>
-            <span>An immediate notification email will be dispatched to the EduNex engineering desk (rishabhbhatt437@gmail.com) upon submission.</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <span>An immediate confirmation email will be dispatched to your registered address and to the EduNex engineering desk.</span>
           </div>
 
         </div>
@@ -227,7 +299,8 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="closeNewTicketModal()">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="newTicketForm.invalid || isSubmittingTicket">
-            <span>{{ isSubmittingTicket ? 'Submitting & Dispatching...' : 'Submit Support Ticket' }}</span>
+            <span *ngIf="isSubmittingTicket" class="spinner-inline"></span>
+            <span>{{ isSubmittingTicket ? 'Submitting & Dispatching Email...' : 'Submit Support Ticket' }}</span>
           </button>
         </div>
       </form>

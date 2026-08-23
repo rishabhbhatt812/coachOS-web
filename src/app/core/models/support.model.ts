@@ -12,6 +12,10 @@ export interface SupportTicket {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
   createdAt: string;
+  hasUnreadReply?: boolean;
+  unreadRepliesCount?: number;
+  lastRepliedAt?: string;
+  lastRepliedBy?: string;
   replies?: SupportTicketReply[];
 }
 

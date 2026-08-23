@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,6 +20,7 @@ export class AdminSupportComponent implements OnInit {
   private authFacade = inject(AuthFacade);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
 
   currentUser$ = this.authFacade.currentUser$;
   isGlobalAdmin = false;
@@ -58,6 +59,7 @@ export class AdminSupportComponent implements OnInit {
       const role = u?.role?.toUpperCase();
       this.isGlobalAdmin = role === 'GLOBAL_ADMIN' || role === 'SUPER_ADMIN';
       this.loadTickets();
+      this.cdr.detectChanges();
     });
 
     this.initNewTicketForm();
@@ -74,21 +76,27 @@ export class AdminSupportComponent implements OnInit {
 
   loadTickets(): void {
     this.isLoading = true;
+    this.cdr.detectChanges();
+
     const req = this.isGlobalAdmin 
       ? this.supportService.getAllTickets() 
       : this.supportService.getMyTickets();
 
     req.subscribe({
       next: (data) => {
-        this.tickets = data;
+        this.tickets = Array.isArray(data) ? data : [];
         this.applyFilter();
         if (this.selectedTicket) {
-          this.selectedTicket = this.tickets.find(t => t.id === this.selectedTicket?.id) || null;
+          this.selectedTicket = this.tickets.find(t => t.id === this.selectedTicket?.id || t.ticketNumber === this.selectedTicket?.ticketNumber) || null;
+        } else if (this.filteredTickets.length > 0) {
+          this.selectTicket(this.filteredTickets[0]);
         }
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -96,6 +104,10 @@ export class AdminSupportComponent implements OnInit {
   setFilter(filter: 'ALL' | 'OPEN' | 'IN_PROGRESS' | 'RESOLVED'): void {
     this.activeFilter = filter;
     this.applyFilter();
+    if (this.filteredTickets.length > 0 && (!this.selectedTicket || !this.filteredTickets.some(t => t.id === this.selectedTicket?.id))) {
+      this.selectTicket(this.filteredTickets[0]);
+    }
+    this.cdr.detectChanges();
   }
 
   applyFilter(): void {
@@ -112,20 +124,29 @@ export class AdminSupportComponent implements OnInit {
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
       list = list.filter(t => 
-        t.ticketNumber.toLowerCase().includes(q) ||
-        t.subject.toLowerCase().includes(q) ||
-        t.userName.toLowerCase().includes(q) ||
-        t.instituteName.toLowerCase().includes(q)
+        t.ticketNumber?.toLowerCase().includes(q) ||
+        t.subject?.toLowerCase().includes(q) ||
+        t.userName?.toLowerCase().includes(q) ||
+        t.instituteName?.toLowerCase().includes(q)
       );
     }
 
     this.filteredTickets = list;
+    this.cdr.detectChanges();
   }
 
   selectTicket(ticket: SupportTicket): void {
     this.selectedTicket = ticket;
     this.replyMessage = '';
     this.replyStatus = ticket.status === 'Open' ? 'In Progress' : 'Resolved';
+
+    // If ticket has unread reply, mark as read
+    if (ticket.hasUnreadReply) {
+      ticket.hasUnreadReply = false;
+      ticket.unreadRepliesCount = 0;
+      this.supportService.markTicketAsRead(ticket.id).subscribe();
+    }
+    this.cdr.detectChanges();
   }
 
   openNewTicketModal(): void {
@@ -134,10 +155,12 @@ export class AdminSupportComponent implements OnInit {
       priority: 'Medium'
     });
     this.showNewTicketModal = true;
+    this.cdr.detectChanges();
   }
 
   closeNewTicketModal(): void {
     this.showNewTicketModal = false;
+    this.cdr.detectChanges();
   }
 
   submitNewTicket(): void {
@@ -147,16 +170,19 @@ export class AdminSupportComponent implements OnInit {
     }
 
     this.isSubmittingTicket = true;
+    this.cdr.detectChanges();
+
     this.supportService.createTicket(this.newTicketForm.value).subscribe({
       next: (res) => {
         this.isSubmittingTicket = false;
         this.closeNewTicketModal();
-        this.snackBar.open(`✓ Support Ticket #${res.ticket.ticketNumber} created! Email alert dispatched.`, 'Dismiss', {
-          duration: 4000,
+        this.snackBar.open(`✓ Support Ticket #${res.ticket.ticketNumber} created! Email confirmation dispatched.`, 'Dismiss', {
+          duration: 4500,
           panelClass: ['success-snackbar']
         });
         this.loadTickets();
         this.selectTicket(res.ticket);
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isSubmittingTicket = false;
@@ -164,6 +190,7 @@ export class AdminSupportComponent implements OnInit {
           duration: 3000,
           panelClass: ['error-snackbar']
         });
+        this.cdr.detectChanges();
       }
     });
   }
@@ -174,6 +201,8 @@ export class AdminSupportComponent implements OnInit {
     }
 
     this.isSendingReply = true;
+    this.cdr.detectChanges();
+
     this.supportService.replyToTicket({
       ticketId: this.selectedTicket.id,
       replyMessage: this.replyMessage.trim(),
@@ -187,6 +216,7 @@ export class AdminSupportComponent implements OnInit {
           panelClass: ['success-snackbar']
         });
         this.loadTickets();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isSendingReply = false;
@@ -194,6 +224,52 @@ export class AdminSupportComponent implements OnInit {
           duration: 3000,
           panelClass: ['error-snackbar']
         });
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  closeSelectedTicket(): void {
+    if (!this.selectedTicket) return;
+    const ticketNum = this.selectedTicket.ticketNumber;
+    this.supportService.closeTicket(this.selectedTicket.id).subscribe({
+      next: () => {
+        if (this.selectedTicket) {
+          this.selectedTicket.status = 'Closed';
+        }
+        this.snackBar.open(`✓ Ticket #${ticketNum} marked as Closed.`, 'Dismiss', { duration: 3000 });
+        this.loadTickets();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  markSelectedAsResolved(): void {
+    if (!this.selectedTicket) return;
+    const ticketNum = this.selectedTicket.ticketNumber;
+    this.supportService.updateTicketStatus(this.selectedTicket.id, 'Resolved').subscribe({
+      next: () => {
+        if (this.selectedTicket) {
+          this.selectedTicket.status = 'Resolved';
+        }
+        this.snackBar.open(`✓ Ticket #${ticketNum} marked as Resolved.`, 'Dismiss', { duration: 3000 });
+        this.loadTickets();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  reopenSelectedTicket(): void {
+    if (!this.selectedTicket) return;
+    const ticketNum = this.selectedTicket.ticketNumber;
+    this.supportService.reopenTicket(this.selectedTicket.id).subscribe({
+      next: () => {
+        if (this.selectedTicket) {
+          this.selectedTicket.status = 'Open';
+        }
+        this.snackBar.open(`✓ Ticket #${ticketNum} reopened.`, 'Dismiss', { duration: 3000 });
+        this.loadTickets();
+        this.cdr.detectChanges();
       }
     });
   }
