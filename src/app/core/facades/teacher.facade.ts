@@ -48,6 +48,22 @@ export class TeacherFacade {
     );
   }
 
+  createTest(data: any): Observable<any> {
+    this.isLoadingSubject.next(true);
+    return this.teacherService.createTest(data).pipe(
+      tap(() => this.loadTests()),
+      finalize(() => this.isLoadingSubject.next(false))
+    );
+  }
+
+  updateTest(id: string, data: any): Observable<any> {
+    this.isLoadingSubject.next(true);
+    return this.teacherService.updateTest(id, data).pipe(
+      tap(() => this.loadTests()),
+      finalize(() => this.isLoadingSubject.next(false))
+    );
+  }
+
   deleteTest(id: string): Observable<void> {
     this.isLoadingSubject.next(true);
     return this.teacherService.deleteTest(id).pipe(

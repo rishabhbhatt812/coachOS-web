@@ -10,22 +10,23 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      const urlLower = req.url.toLowerCase();
+      const isLoginRequest = urlLower.includes('/api/auth/login');
+
       // 1. Handle 401 Unauthorized
       if (error.status === 401) {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('active_institute_id');
         localStorage.removeItem('active_institute_branding');
 
-        const isLoginRequest = req.url.toLowerCase().includes('/api/auth/login');
         if (isLoginRequest) {
           snackBar.open('Invalid email or password. Please verify your credentials.', 'Close', {
-            duration: 4000,
+            duration: 4500,
             horizontalPosition: 'center',
             verticalPosition: 'top',
             panelClass: ['error-snackbar']
           });
         } else {
-          // Silent redirect on expired token for background queries
           router.navigate(['/auth/login']);
         }
         return throwError(() => error);
@@ -44,7 +45,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
       // 3. Handle Server Offline (status 0)
       if (error.status === 0) {
-        snackBar.open('Unable to connect to the backend server. Please ensure the API is running.', 'Close', {
+        snackBar.open('Unable to connect to the backend server. Please verify the API is running on https://localhost:7046.', 'Close', {
           duration: 5000,
           horizontalPosition: 'center',
           verticalPosition: 'top',
@@ -54,12 +55,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // 4. Clean error message extraction for other statuses
-      let errorMessage = 'An error occurred while processing your request.';
+      let errorMessage = '';
 
       if (error.error) {
         if (typeof error.error === 'string' && !error.error.startsWith('<!doctype')) {
           errorMessage = error.error;
-        } else if (error.error.message) {
+        } else if (error.error.message && error.error.message !== 'Internal Server Error') {
           errorMessage = error.error.message;
         } else if (Array.isArray(error.error.errors) && error.error.errors.length > 0) {
           errorMessage = error.error.errors.join(', ');
@@ -71,22 +72,26 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      // Filter out technical Angular/HTTP framework strings
-      if (errorMessage.includes('Http failure response') || errorMessage.includes('status code')) {
-        if (error.status === 404) {
+      if (!errorMessage) {
+        if (isLoginRequest) {
+          errorMessage = 'Invalid email or password. Please check your credentials.';
+        } else if (error.status === 404) {
           errorMessage = 'The requested resource could not be found.';
         } else if (error.status >= 500) {
-          errorMessage = 'Internal server error. Please try again shortly.';
+          errorMessage = 'Server encountered an issue. Please retry in a moment.';
         } else {
-          errorMessage = 'Request could not be completed.';
+          errorMessage = 'An error occurred while processing your request.';
         }
       }
 
       // Suppress toast for background polling / optional requests
-      const isBackgroundReq = req.url.includes('/my-enabled-modules') || req.url.includes('/my-institute');
+      const isBackgroundReq = urlLower.includes('/my-enabled-modules') || 
+                             urlLower.includes('/my-institute') || 
+                             urlLower.includes('/unread-count');
+
       if (!isBackgroundReq) {
         snackBar.open(errorMessage, 'Close', {
-          duration: 5000,
+          duration: 4500,
           horizontalPosition: 'center',
           verticalPosition: 'top',
           panelClass: ['error-snackbar']

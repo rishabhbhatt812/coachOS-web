@@ -2,7 +2,7 @@
   <div class="header-section mb-8 flex justify-between items-center">
     <div>
       <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Tests & Assessments</h1>
-      <p class="text-gray-500 mt-1">Manage class tests and grade submissions.</p>
+      <p class="text-gray-500 mt-1">Manage class tests, enter scores, and publish student assessments.</p>
     </div>
     <button mat-flat-button color="primary" class="create-btn" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
       <mat-icon>add</mat-icon> Schedule Test
@@ -49,23 +49,24 @@
 
         <div class="form-group full-width">
           <label>Syllabus Topics & Instructions</label>
-          <textarea class="form-control" [(ngModel)]="newTest.syllabus" rows="3" placeholder="Specify covered chapters, test format (MCQ/Subjective) and calculators permitted..."></textarea>
+          <textarea class="form-control" [(ngModel)]="newTest.syllabus" rows="3" placeholder="Specify covered chapters, test format (MCQ/Subjective) and guidelines..."></textarea>
         </div>
       </div>
 
       <div class="form-actions flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
         <button type="button" class="btn btn-light" (click)="toggleCreateForm()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="submitTest()">
-          ✓ Schedule Assessment
+        <button type="button" class="btn btn-primary" [disabled]="isSubmitting" (click)="submitTest()">
+          <span>{{ isSubmitting ? 'Scheduling...' : '✓ Schedule Assessment' }}</span>
         </button>
       </div>
     </div>
   </div>
 
+  <!-- Data Table Card -->
   <div class="table-card card shadow-sm rounded-xl border border-gray-100 overflow-hidden" *ngIf="!showCreateForm">
     <div *ngIf="isLoading$ | async" class="loading-indicator p-8 text-center text-gray-500">
       <div class="spinner"></div>
-      <p>Loading assessment records...</p>
+      <p class="mt-2">Loading assessment records...</p>
     </div>
     
     <app-data-table 
@@ -74,5 +75,143 @@
       [data]="(tests$ | async) || []"
       (actionClicked)="onActionClicked($event)">
     </app-data-table>
+  </div>
+
+  <!-- Edit Test Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal-dialog card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-left flex items-center gap-3">
+          <div class="modal-badge-icon">
+            <mat-icon>edit_calendar</mat-icon>
+          </div>
+          <div>
+            <h3 class="modal-title">Edit Assessment</h3>
+            <p class="text-xs text-gray-500 m-0">Update title, scheduled date, or max marks</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeEditModal()">✕</button>
+      </div>
+
+      <div class="modal-body p-6">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Test Title / Name <span class="required-star">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="editingTest.testName" />
+          </div>
+
+          <div class="form-group">
+            <label>Target Batch <span class="required-star">*</span></label>
+            <select class="form-control" [(ngModel)]="editingTest.batchId">
+              <option *ngFor="let batch of batches" [value]="batch.id">{{ batch.name }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Test Date <span class="required-star">*</span></label>
+            <input type="date" class="form-control" [(ngModel)]="editingTest.testDate" />
+          </div>
+
+          <div class="form-group">
+            <label>Maximum Marks <span class="required-star">*</span></label>
+            <input type="number" class="form-control" [(ngModel)]="editingTest.maxMarks" min="1" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer flex justify-end gap-3 p-4 border-t border-gray-100 bg-slate-50">
+        <button type="button" class="btn btn-light" (click)="closeEditModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="saveEditTest()">
+          ✓ Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grade Test / Enter Marks Modal -->
+  <div class="modal-overlay" *ngIf="showGradeModal" (click)="closeGradeModal()">
+    <div class="modal-dialog card evaluate-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-left flex items-center gap-3">
+          <div class="modal-badge-icon" style="background: #ecfdf5; color: #059669;">
+            <mat-icon>assignment_turned_in</mat-icon>
+          </div>
+          <div>
+            <h3 class="modal-title">Enter Marks: {{ selectedTestForGrading?.testName }}</h3>
+            <div class="modal-meta-pills flex gap-2 mt-1">
+              <span class="meta-pill marks" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                Max Marks: {{ selectedTestForGrading?.maxMarks || 100 }}
+              </span>
+              <span class="meta-pill date" style="background: #f1f5f9; color: #334155; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                Date: {{ selectedTestForGrading?.testDate | date:'mediumDate' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeGradeModal()">✕</button>
+      </div>
+
+      <div class="modal-body p-0">
+        <div *ngIf="isLoadingResults" class="p-8 text-center text-gray-500">
+          <div class="spinner"></div>
+          <p class="mt-2">Loading student records...</p>
+        </div>
+
+        <div class="table-responsive" *ngIf="!isLoadingResults">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase">
+                <th class="p-3 pl-6">Roll / ID</th>
+                <th class="p-3">Student Name</th>
+                <th class="p-3" style="width: 180px;">Marks Obtained</th>
+                <th class="p-3 pr-6">Teacher Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of testStudentResults" class="border-b border-gray-100 hover:bg-slate-50">
+                <td class="p-3 pl-6 font-mono text-xs font-semibold text-gray-600">{{ s.studentCode || 'STU-00' }}</td>
+                <td class="p-3 font-semibold text-gray-800">{{ s.studentName }}</td>
+                <td class="p-3">
+                  <div class="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      style="width: 80px; text-align: center; font-weight: bold;" 
+                      [(ngModel)]="s.marksObtained" 
+                      [max]="selectedTestForGrading?.maxMarks || 100" 
+                      min="0"
+                    />
+                    <span class="text-xs text-gray-500 font-bold">/ {{ selectedTestForGrading?.maxMarks || 100 }}</span>
+                  </div>
+                </td>
+                <td class="p-3 pr-6">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="s.remarks" 
+                    placeholder="e.g. Well done / Needs review in section 2" 
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer flex justify-between items-center p-4 border-t border-gray-100 bg-slate-50">
+        <div class="text-xs text-gray-500">
+          Published scores are instantly viewable in Student portal results.
+        </div>
+        <div class="flex items-center gap-3">
+          <button type="button" class="btn btn-light" (click)="closeGradeModal()">Cancel</button>
+          <button type="button" class="btn btn-outline" [disabled]="isSavingResults" (click)="saveTestScores(false)">
+            Save Draft
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="isSavingResults" (click)="saveTestScores(true)">
+            ✓ Publish Results
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

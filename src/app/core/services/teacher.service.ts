@@ -23,8 +23,11 @@ export interface TeacherTest {
   testName: string;
   testDate: string;
   maxMarks: number;
+  courseId?: string;
   courseName: string;
+  batchId?: string;
   batchName: string;
+  subjectId?: string;
   subjectName: string;
 }
 
@@ -82,11 +85,30 @@ export class TeacherService {
     );
   }
 
-  createTest(data: CreateTestRequest): Observable<TeacherTest> {
-    return this.http.post<TeacherTest>(API_ENDPOINTS.TEACHER.TESTS, data);
+  createTest(data: any): Observable<any> {
+    return this.http.post<any>(API_ENDPOINTS.TEACHER.TESTS, data);
+  }
+
+  updateTest(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${API_ENDPOINTS.TEACHER.TESTS}/${id}`, data);
   }
 
   deleteTest(id: string): Observable<void> {
-    return this.http.delete<void>(API_ENDPOINTS.TEACHER.TESTS + '/' + id);
+    return this.http.delete<void>(`${API_ENDPOINTS.TEACHER.TESTS}/${id}`);
+  }
+
+  // Results
+  getTestResults(testId: string): Observable<any> {
+    return this.http.get<any>(`${API_ENDPOINTS.TEACHER.RESULTS}/${testId}`).pipe(
+      map(res => res?.data || res || null)
+    );
+  }
+
+  saveDraftResults(data: any): Observable<any> {
+    return this.http.post<any>(`${API_ENDPOINTS.TEACHER.RESULTS}/save-draft`, data);
+  }
+
+  publishResults(data: any): Observable<any> {
+    return this.http.post<any>(`${API_ENDPOINTS.TEACHER.RESULTS}/publish`, data);
   }
 }
