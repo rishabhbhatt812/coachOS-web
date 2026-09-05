@@ -54,7 +54,7 @@ export class OrganizationModulesComponent implements OnInit {
     this.isLoadingInstitutes = true;
     this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
       next: (res) => {
-        this.institutes = res || [];
+        this.institutes = Array.isArray(res) ? res : (res?.data || []);
         this.isLoadingInstitutes = false;
         if (this.institutes.length > 0) {
           const activeInstitute = localStorage.getItem('active_institute_id');

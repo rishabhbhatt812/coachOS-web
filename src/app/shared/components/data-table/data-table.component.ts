@@ -54,8 +54,8 @@ export interface TableColumn {
                     <!-- Modules button shown only on Coaching Centers (institutes) list -->
                     <button class="btn-icon" *ngIf="row.organizationId || (row.instituteCode && !row.studentCode && !row.email)" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'modules', row: row })" title="Manage Modules">⚙️</button>
                     
-                    <!-- View button for students -->
-                    <button class="btn-icon view" *ngIf="row.studentCode" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'view', row: row })" title="View Full Profile">👁️</button>
+                    <!-- View button for students and teachers -->
+                    <button class="btn-icon view" *ngIf="row.studentCode || row.subjectsList !== undefined || row.staffCode" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'view', row: row })" title="View Details">👁️</button>
 
                     <!-- Standard edit/delete buttons shown for all standard entities -->
                     <button class="btn-icon" *ngIf="!row.organizationId" (click)="$event.stopPropagation(); actionClicked.emit({ action: 'edit', row: row })" title="Edit">✏️</button>

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,11 +11,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
-import { DataTableComponent } from '../../../../shared/components/data-table/data-table.component';
+import { DataTableComponent, TableColumn } from '../../../../shared/components/data-table/data-table.component';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../core/constants/api-endpoints';
 import { AuthFacade } from '../../../../core/facades/auth.facade';
-import { ChangeDetectorRef } from '@angular/core';
+import { DialogService } from '../../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-admin-teachers',
@@ -45,6 +45,7 @@ export class AdminTeachersComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
+  private dialogService = inject(DialogService);
 
   showWizard = false;
   isLoading = false;
@@ -52,6 +53,15 @@ export class AdminTeachersComponent implements OnInit {
   subjects: any[] = [];
   activeTab = 0;
   photoPreviewUrl: string | null = null;
+  showPassword = false;
+
+  // Subjects multi-select search
+  subjectSearchText = '';
+
+  // Interactive View Modal
+  showViewModal = false;
+  selectedTeacherForView: any = null;
+  isLoadingTeacherDetails = false;
 
   isGlobalAdmin = false;
   institutes: any[] = [];
@@ -98,11 +108,15 @@ export class AdminTeachersComponent implements OnInit {
     filePath: ''
   };
 
-  columns = [
-    { key: 'fullName', header: 'Name' },
+  columns: TableColumn[] = [
+    { key: 'fullName', header: 'Teacher Name', clickable: true },
+    { key: 'staffCode', header: 'Staff Code' },
     { key: 'email', header: 'Email' },
     { key: 'mobile', header: 'Mobile' },
-    { key: 'subjectsList', header: 'Subjects' }
+    { key: 'subjectsList', header: 'Assigned Subjects' },
+    { key: 'teacherType', header: 'Type' },
+    { key: 'statusBadge', header: 'Status', type: 'badge', badgeColorMap: { 'Active': 'green', 'Inactive': 'red' } },
+    { key: 'actions', header: 'Actions', type: 'action' }
   ];
 
   genders = ['Male', 'Female', 'Other'];
@@ -121,18 +135,20 @@ export class AdminTeachersComponent implements OnInit {
         this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
         if (this.isGlobalAdmin) {
           if (!this.columns.some(c => c.key === 'instituteName')) {
-            this.columns.splice(1, 0, { key: 'instituteName', header: 'Coaching Center' });
+            this.columns.splice(2, 0, { key: 'instituteName', header: 'Coaching Center' });
           }
-          this.loadInstitutes();
+          if (this.institutes.length === 0) {
+            this.loadInstitutes();
+          }
         }
       }
     });
   }
 
   loadInstitutes() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+    this.authFacade.getGlobalInstitutes().subscribe({
       next: (res) => {
-        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+        this.institutes = Array.isArray(res) ? res : [];
       },
       error: (err) => console.error('Failed to load institutes:', err)
     });
@@ -180,6 +196,128 @@ export class AdminTeachersComponent implements OnInit {
     });
   }
 
+  // --- Assigned Subjects Multi-Select Helpers ---
+  isSubjectSelected(id: string): boolean {
+    const selected: string[] = this.teacherForm.get('subjectIds')?.value || [];
+    return selected.includes(id);
+  }
+
+  toggleSubject(id: string) {
+    const current: string[] = this.teacherForm.get('subjectIds')?.value || [];
+    let updated: string[];
+    if (current.includes(id)) {
+      updated = current.filter(x => x !== id);
+    } else {
+      updated = [...current, id];
+    }
+    this.teacherForm.get('subjectIds')?.setValue(updated);
+    this.teacherForm.get('subjectIds')?.markAsDirty();
+    this.teacherForm.get('subjectIds')?.markAsTouched();
+    this.teacherForm.get('subjectIds')?.updateValueAndValidity();
+    this.cdr.detectChanges();
+  }
+
+  selectAllSubjects() {
+    const filtered = this.getFilteredSubjects();
+    const current: string[] = this.teacherForm.get('subjectIds')?.value || [];
+    const set = new Set([...current, ...filtered.map(s => s.id)]);
+    this.teacherForm.get('subjectIds')?.setValue(Array.from(set));
+    this.teacherForm.get('subjectIds')?.markAsDirty();
+    this.teacherForm.get('subjectIds')?.markAsTouched();
+    this.teacherForm.get('subjectIds')?.updateValueAndValidity();
+    this.cdr.detectChanges();
+  }
+
+  clearAllSubjects() {
+    this.teacherForm.get('subjectIds')?.setValue([]);
+    this.teacherForm.get('subjectIds')?.markAsDirty();
+    this.teacherForm.get('subjectIds')?.markAsTouched();
+    this.teacherForm.get('subjectIds')?.updateValueAndValidity();
+    this.cdr.detectChanges();
+  }
+
+  getFilteredSubjects(): any[] {
+    if (!this.subjectSearchText || !this.subjectSearchText.trim()) return this.subjects;
+    const term = this.subjectSearchText.toLowerCase().trim();
+    return this.subjects.filter(s =>
+      (s.name && s.name.toLowerCase().includes(term)) ||
+      (s.code && s.code.toLowerCase().includes(term))
+    );
+  }
+
+  getSelectedSubjects(): any[] {
+    const ids: string[] = this.teacherForm.get('subjectIds')?.value || [];
+    return this.subjects.filter(s => ids.includes(s.id));
+  }
+
+  // --- View Details Modal ---
+  openTeacherDetails(teacher: any) {
+    this.selectedTeacherForView = { ...teacher };
+    this.showViewModal = true;
+    this.isLoadingTeacherDetails = true;
+    this.cdr.detectChanges();
+
+    this.http.get<any>(`${environment.apiUrl}/api/admin/teachers/${teacher.id}`).subscribe({
+      next: (res) => {
+        this.isLoadingTeacherDetails = false;
+        if (res && res.data) {
+          this.selectedTeacherForView = res.data;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoadingTeacherDetails = false;
+        console.warn('Using cached teacher details due to API error:', err);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  closeViewModal() {
+    this.showViewModal = false;
+    this.selectedTeacherForView = null;
+    this.cdr.detectChanges();
+  }
+
+  // --- Delete Teacher ---
+  deleteTeacher(teacher: any) {
+    const teacherName = teacher.fullName || 'this teacher';
+    this.dialogService.delete(teacherName, `Are you sure you want to delete teacher "${teacherName}"? This will deactivate their login and unlink assigned subjects.`).subscribe(confirmed => {
+      if (confirmed) {
+        this.isLoading = true;
+        this.http.delete<any>(`${environment.apiUrl}/api/admin/teachers/${teacher.id}`).subscribe({
+          next: () => {
+            this.isLoading = false;
+            this.dialogService.success(`Teacher "${teacherName}" has been successfully deleted.`);
+            if (this.showViewModal) {
+              this.closeViewModal();
+            }
+            this.loadTeachers();
+          },
+          error: (err) => {
+            this.isLoading = false;
+            console.error('Failed to delete teacher:', err);
+            this.dialogService.error(err.error?.message || 'Failed to delete teacher.');
+          }
+        });
+      }
+    });
+  }
+
+  onActionClicked(event: any) {
+    if (event.action === 'view') {
+      this.openTeacherDetails(event.row);
+    } else if (event.action === 'delete') {
+      this.deleteTeacher(event.row);
+    } else if (event.action === 'edit') {
+      this.openTeacherDetails(event.row);
+    }
+  }
+
+  onRowClicked(row: any) {
+    this.openTeacherDetails(row);
+  }
+
   toggleWizard() {
     this.showWizard = !this.showWizard;
 
@@ -192,6 +330,8 @@ export class AdminTeachersComponent implements OnInit {
     this.activeTab = 0;
     this.qualificationsList = [];
     this.documentsList = [];
+    this.showPassword = false;
+    this.subjectSearchText = '';
     this.initForm();
     this.resetTempQual();
     this.resetTempDoc();
@@ -240,9 +380,14 @@ export class AdminTeachersComponent implements OnInit {
 
           this.teachers = list.map((t: any) => ({
             ...t,
-            subjectsList: t.subjects ? t.subjects.map((s: any) => s.subjectName || s.name || '').filter((name: any) => !!name).join(', ') : ''
+            staffCode: t.staffCode || 'STF-NA',
+            teacherType: t.teacherType || 'Full Time',
+            statusBadge: t.isActive ? 'Active' : 'Inactive',
+            subjectsList: t.subjects && t.subjects.length > 0
+              ? t.subjects.map((s: any) => s.subjectName || s.name || '').filter((name: any) => !!name).join(', ')
+              : 'None assigned'
           }));
-          
+
         } catch (e) {
           console.error('Error mapping teachers list:', e);
         } finally {

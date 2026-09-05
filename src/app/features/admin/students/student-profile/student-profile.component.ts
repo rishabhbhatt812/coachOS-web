@@ -100,7 +100,10 @@ export class StudentProfileComponent implements OnInit {
 
   getProfileUrl(): string {
     if (this.profileData?.profileImagePath) {
-      return `${environment.apiUrl}/${this.profileData.profileImagePath}`;
+      if (this.profileData.profileImagePath.startsWith('http://') || this.profileData.profileImagePath.startsWith('https://')) {
+        return this.profileData.profileImagePath;
+      }
+      return `${environment.apiUrl}/api/files/view?id=${encodeURIComponent(this.profileData.profileImagePath)}`;
     }
     return 'https://www.w3schools.com/howto/img_avatar.png';
   }

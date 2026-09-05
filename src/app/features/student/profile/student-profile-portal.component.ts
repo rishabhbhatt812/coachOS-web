@@ -124,7 +124,10 @@ export class StudentProfilePortalComponent implements OnInit {
 
   getProfileUrl(): string {
     if (this.profileData?.profileImagePath) {
-      return `${environment.apiUrl}/${this.profileData.profileImagePath}`;
+      if (this.profileData.profileImagePath.startsWith('http://') || this.profileData.profileImagePath.startsWith('https://')) {
+        return this.profileData.profileImagePath;
+      }
+      return `${environment.apiUrl}/api/files/view?id=${encodeURIComponent(this.profileData.profileImagePath)}`;
     }
     return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80';
   }

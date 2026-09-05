@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "EduNex - Coaching & Academy Management",
   "short_name": "EduNex",
   "description": "Next-Gen Enterprise Coaching & Academy Management System",
@@ -11,52 +12,64 @@
   "categories": ["education", "productivity", "management"],
   "icons": [
     {
-      "src": "icons/icon-72x72.png",
+      "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-96x96.png",
+      "src": "/icons/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-128x128.png",
+      "src": "/icons/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-144x144.png",
+      "src": "/icons/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-152x152.png",
+      "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-192x192.png",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-384x384.png",
+      "src": "/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -65,28 +78,28 @@
       "short_name": "Dashboard",
       "description": "View coaching operations dashboard",
       "url": "/admin/dashboard",
-      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
       "name": "New Student Admission",
       "short_name": "Admissions",
       "description": "Register a new student",
       "url": "/admin/students/admission",
-      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
       "name": "Fee Management",
       "short_name": "Fees",
       "description": "Track payments and dues",
       "url": "/admin/fees",
-      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
       "name": "Pricing & Plans",
       "short_name": "Pricing",
       "description": "View subscription tiers and charges",
       "url": "/pricing",
-      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }
   ]
 }

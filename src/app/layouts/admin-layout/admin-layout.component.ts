@@ -99,12 +99,15 @@ export class AdminLayoutComponent implements OnInit {
     }
   }
 
+  private institutesLoaded = false;
+  private isLoadingInstitutes = false;
+
   ngOnInit() {
     this.user$.subscribe(user => {
       if (user) {
         const rawRole = user.rawRole || '';
         this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
-        if (this.isGlobalAdmin) {
+        if (this.isGlobalAdmin && !this.institutesLoaded && !this.isLoadingInstitutes) {
           this.selectedInstituteId = localStorage.getItem('active_institute_id') || 'system_global';
           this.loadInstitutes();
         }
@@ -113,12 +116,17 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   loadInstitutes() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+    if (this.isLoadingInstitutes) return;
+    this.isLoadingInstitutes = true;
+    this.authFacade.getGlobalInstitutes().subscribe({
       next: (res) => {
-        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+        this.isLoadingInstitutes = false;
+        this.institutesLoaded = true;
+        this.institutes = Array.isArray(res) ? res : [];
         this.syncSelectedInstituteBranding();
       },
       error: (err) => {
+        this.isLoadingInstitutes = false;
         console.error('Failed to load system institutes:', err);
       }
     });
@@ -130,6 +138,10 @@ export class AdminLayoutComponent implements OnInit {
     if (this.selectedInstituteId && this.selectedInstituteId !== 'system_global') {
       const selectedInst = this.institutes.find(i => i.id === this.selectedInstituteId);
       if (selectedInst) {
+        const currentTenant = this.authFacade.currentTenantValue;
+        if (currentTenant?.id === selectedInst.id && currentTenant?.name === selectedInst.name) {
+          return;
+        }
         const branding = {
           name: selectedInst.name,
           logo: selectedInst.logoPath || '/logo.png',
@@ -150,6 +162,10 @@ export class AdminLayoutComponent implements OnInit {
         });
       }
     } else if (this.selectedInstituteId === 'system_global') {
+      const currentTenant = this.authFacade.currentTenantValue;
+      if (currentTenant?.id === 'system_global') {
+        return;
+      }
       const globalBranding = {
         name: 'EduNex Global Platform',
         logo: '/logo.png',

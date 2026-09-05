@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, computed, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -32,6 +32,19 @@ export interface AssignmentItem {
   originalFileName?: string;
   filePath?: string;
   status?: 'Active' | 'Due Soon' | 'Past Due';
+}
+
+export interface StudentSubmissionItem {
+  studentId: string;
+  submissionId?: string | null;
+  rollNo: string;
+  name: string;
+  submittedAt?: string | null;
+  file?: string | null;
+  fileUrl?: string | null;
+  status: string;
+  marks?: number | null;
+  feedback?: string | null;
 }
 
 @Component({
@@ -68,61 +81,7 @@ export class TeacherAssignments implements OnInit {
   searchQuery = '';
   selectedBatchFilter = 'ALL';
 
-  defaultAssignments: AssignmentItem[] = [
-    {
-      id: 'a1',
-      title: 'Algebra Equations & Quadratic Functions',
-      batch: 'Class 10 - Mathematics (Morning)',
-      batchName: 'Class 10 - Mathematics (Morning)',
-      batchId: '1',
-      courseName: 'Class 10 Board Prep',
-      dueDate: '2026-05-15',
-      marks: 50,
-      description: 'Solve problems 1 to 25 from Exercise 4.2 with full step-by-step proofs and standard quadratic formulas.',
-      submissions: 32,
-      totalStudents: 45,
-      fileName: 'Algebra_Problem_Set_1.pdf',
-      originalFileName: 'Algebra_Problem_Set_1.pdf',
-      filePath: '',
-      status: 'Active'
-    },
-    {
-      id: 'a2',
-      title: 'Newton Laws of Motion & Friction Worksheet',
-      batch: 'Class 12 - Physics Crash Course',
-      batchName: 'Class 12 - Physics Crash Course',
-      batchId: '2',
-      courseName: 'JEE Advanced',
-      dueDate: '2026-05-20',
-      marks: 100,
-      description: 'Complete all numerical questions on inclined planes, pulley systems, tension forces, and frictional resistance.',
-      submissions: 28,
-      totalStudents: 30,
-      fileName: 'Physics_Unit2_Worksheet.pdf',
-      originalFileName: 'Physics_Unit2_Worksheet.pdf',
-      filePath: '',
-      status: 'Active'
-    },
-    {
-      id: 'a3',
-      title: 'Chemical Reactions & Balancing Equations',
-      batch: 'Foundation Batch - Chemistry & Science',
-      batchName: 'Foundation Batch - Chemistry & Science',
-      batchId: '3',
-      courseName: 'Foundation Science',
-      dueDate: '2026-05-25',
-      marks: 25,
-      description: 'Balance all redox and precipitation equations provided in the chapter worksheet with complete state symbols.',
-      submissions: 24,
-      totalStudents: 29,
-      fileName: 'Chemistry_Balancing_Ex.pdf',
-      originalFileName: 'Chemistry_Balancing_Ex.pdf',
-      filePath: '',
-      status: 'Active'
-    }
-  ];
-
-  assignments: AssignmentItem[] = [...this.defaultAssignments];
+  assignments: AssignmentItem[] = [];
   batches: any[] = [];
 
   newAssignment: any = {
@@ -136,8 +95,10 @@ export class TeacherAssignments implements OnInit {
 
   // Grading Modal State
   showGradeModal = false;
+  isLoadingSubmissions = false;
+  isSavingGrades = false;
   selectedAssignment: AssignmentItem | null = null;
-  studentSubmissions: any[] = [];
+  studentSubmissions: StudentSubmissionItem[] = [];
 
   ngOnInit() {
     this.loadBatches();
@@ -160,7 +121,7 @@ export class TeacherAssignments implements OnInit {
     return list;
   }
 
-  // Stats Counters
+  // Stats Counters - 100% dynamic
   get totalAssignmentsCount(): number {
     return this.assignments.length;
   }
@@ -170,12 +131,30 @@ export class TeacherAssignments implements OnInit {
   }
 
   get totalStudentsCount(): number {
-    return this.assignments.reduce((acc, curr) => acc + (curr.totalStudents || 30), 0);
+    return this.assignments.reduce((acc, curr) => acc + (curr.totalStudents || 0), 0);
   }
 
   get overallCompletionRate(): number {
     if (this.totalStudentsCount === 0) return 0;
     return Math.round((this.totalSubmissionsCount / this.totalStudentsCount) * 100);
+  }
+
+  get pendingEvaluationCount(): number {
+    return this.assignments.reduce((sum, a) => sum + (a.submissions || 0), 0);
+  }
+
+  get upcomingDeadline(): { dateStr: string; title: string } {
+    const now = new Date();
+    const upcoming = this.assignments
+      .filter(a => a.dueDate && new Date(a.dueDate) >= now)
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
+    if (upcoming.length > 0) {
+      const d = new Date(upcoming[0].dueDate);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return { dateStr, title: upcoming[0].batch || upcoming[0].title };
+    }
+    return { dateStr: 'None', title: 'No pending deadlines' };
   }
 
   loadBatches() {
@@ -188,24 +167,13 @@ export class TeacherAssignments implements OnInit {
             this.newAssignment.batchId = list[0].id;
           }
         } else {
-          this.populateDefaultBatches();
+          this.batches = [];
         }
       },
       error: () => {
-        this.populateDefaultBatches();
+        this.batches = [];
       }
     });
-  }
-
-  private populateDefaultBatches() {
-    this.batches = [
-      { id: '1', name: 'Class 10 - Mathematics (Morning)' },
-      { id: '2', name: 'Class 12 - Physics Crash Course' },
-      { id: '3', name: 'Foundation Batch - Chemistry & Science' }
-    ];
-    if (!this.newAssignment.batchId) {
-      this.newAssignment.batchId = '1';
-    }
   }
 
   loadAssignments() {
@@ -214,31 +182,32 @@ export class TeacherAssignments implements OnInit {
       next: (res) => {
         this.isLoading = false;
         const list = res?.data || res || [];
-        if (Array.isArray(list) && list.length > 0) {
+        if (Array.isArray(list)) {
           this.assignments = list.map(item => ({
             id: item.id,
             title: item.title,
             batch: item.batchName || item.batch || 'Assigned Batch',
             batchName: item.batchName || item.batch || 'Assigned Batch',
             batchId: item.batchId,
-            courseName: item.courseName || 'General Program',
+            courseName: item.courseName || '',
             dueDate: item.dueDate,
             marks: item.marks || 50,
             description: item.description || '',
-            submissions: item.submissions ?? Math.floor(Math.random() * 15 + 18),
-            totalStudents: item.totalStudents || 35,
-            fileName: item.originalFileName || item.fileName || (item.filePath ? 'Assignment_Document.pdf' : null),
+            submissions: item.submissions ?? 0,
+            totalStudents: item.totalStudents ?? 0,
+            fileName: item.originalFileName || item.fileName || 'Assignment_Brief.pdf',
             originalFileName: item.originalFileName,
             filePath: item.filePath,
             status: 'Active'
           }));
         } else {
-          this.assignments = [...this.defaultAssignments];
+          this.assignments = [];
         }
       },
-      error: () => {
+      error: (err) => {
         this.isLoading = false;
-        this.assignments = [...this.defaultAssignments];
+        console.error('Failed to load assignments', err);
+        this.assignments = [];
       }
     });
   }
@@ -279,6 +248,7 @@ export class TeacherAssignments implements OnInit {
     formData.append('batchId', this.newAssignment.batchId);
     formData.append('description', this.newAssignment.description || '');
     formData.append('dueDate', this.newAssignment.dueDate || new Date().toISOString());
+    formData.append('maxMarks', (this.newAssignment.marks || 50).toString());
     if (this.assignmentFile) {
       formData.append('file', this.assignmentFile);
     }
@@ -298,125 +268,170 @@ export class TeacherAssignments implements OnInit {
       },
       error: (err) => {
         this.isSubmitting = false;
-        // Fallback local addition
-        const created: AssignmentItem = {
-          id: 'a-' + Date.now(),
-          title: this.newAssignment.title,
-          batch: batchObj?.name || 'Class Batch',
-          batchName: batchObj?.name || 'Class Batch',
-          batchId: this.newAssignment.batchId,
-          courseName: 'Prep Course',
-          dueDate: this.newAssignment.dueDate || '2026-06-01',
-          marks: Number(this.newAssignment.marks) || 50,
-          description: this.newAssignment.description || '',
-          submissions: 0,
-          totalStudents: 35,
-          fileName: this.assignmentFile?.name || 'Assignment_Document.pdf',
-          originalFileName: this.assignmentFile?.name || 'Assignment_Document.pdf',
-          filePath: '',
-          status: 'Active'
-        };
-        this.assignments.unshift(created);
-        this.dialogService.success('Assignment created and published successfully!');
-        this.toggleCreateForm();
+        const msg = err?.error?.message || 'Failed to publish assignment. Please try again.';
+        this.dialogService.alert(msg, 'Creation Error', 'danger');
       }
     });
   }
 
+  /**
+   * Real browser document download for teacher & student assignment brief
+   */
   viewOrDownloadAssignment(item: AssignmentItem) {
-    if (item.filePath) {
-      let fullUrl = item.filePath;
-      if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
-        fullUrl = `${environment.apiUrl}${fullUrl.startsWith('/') ? '' : '/'}${fullUrl}`;
+    if (!item.id) return;
+    this.snackBar.open(`Downloading "${item.title}"...`, undefined, { duration: 2000 });
+
+    const downloadUrl = `${environment.apiUrl}/api/teacher/assignments/download/${item.id}`;
+    this.http.get(downloadUrl, { responseType: 'blob', observe: 'response' }).subscribe({
+      next: (response) => {
+        const blob = response.body;
+        if (!blob) return;
+
+        let filename = item.fileName || item.originalFileName || `${item.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+        const contentDisposition = response.headers.get('content-disposition');
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '').trim();
+          }
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Download error', err);
+        this.snackBar.open('Unable to download assignment document.', 'Dismiss', { duration: 3000 });
       }
-      window.open(fullUrl, '_blank');
-    } else {
-      this.dialogService.alert(
-        `Document Name: ${item.fileName || item.originalFileName || 'Assignment_Document.pdf'}\n\nBatch: ${item.batch}\nMax Score: ${item.marks || 50} Marks\n\n${item.description || 'Reference instructions and practice questions attached.'}`,
-        item.title,
-        'info'
-      );
-    }
+    });
   }
 
-  downloadSubmissionFile(submission: any) {
-    if (submission.fileUrl) {
+  /**
+   * Real browser document download for student submission files
+   */
+  downloadSubmissionFile(submission: StudentSubmissionItem) {
+    if (!submission) return;
+
+    if (submission.submissionId) {
+      const downloadUrl = `${environment.apiUrl}/api/teacher/assignments/submissions/${submission.submissionId}/download`;
+      this.http.get(downloadUrl, { responseType: 'blob', observe: 'response' }).subscribe({
+        next: (response) => {
+          const blob = response.body;
+          if (!blob) return;
+
+          let filename = submission.file || `${submission.name.replace(/\s+/g, '_')}_Submission.pdf`;
+          const contentDisposition = response.headers.get('content-disposition');
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '').trim();
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        },
+        error: (err) => {
+          console.error('Submission download failed', err);
+          this.snackBar.open('Could not download submission document.', 'Dismiss', { duration: 2500 });
+        }
+      });
+    } else if (submission.fileUrl) {
       let fullUrl = submission.fileUrl;
       if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
         fullUrl = `${environment.apiUrl}${fullUrl.startsWith('/') ? '' : '/'}${fullUrl}`;
       }
       window.open(fullUrl, '_blank');
-    } else if (submission.file) {
-      this.snackBar.open(`Downloading "${submission.file}" for ${submission.name}...`, 'Dismiss', { duration: 2500 });
+    } else {
+      this.snackBar.open('No file attached for this student submission.', 'Dismiss', { duration: 2500 });
     }
   }
 
+  /**
+   * Open evaluation modal and dynamically fetch real enrolled students for the assignment's batch
+   */
   openGradeModal(assignment: AssignmentItem) {
     this.selectedAssignment = assignment;
     this.showGradeModal = true;
-    this.studentSubmissions = [
-      {
-        studentId: 's1',
-        rollNo: 'ROLL-101',
-        name: 'Rahul Sharma',
-        submittedAt: 'May 12, 2026 10:45 AM',
-        file: 'Rahul_Sharma_Submission.pdf',
-        status: 'Submitted',
-        marks: 45,
-        feedback: 'Excellent derivations and clean handwriting.'
+    this.isLoadingSubmissions = true;
+    this.studentSubmissions = [];
+
+    this.http.get<any>(`${environment.apiUrl}/api/teacher/assignments/${assignment.id}/submissions`).subscribe({
+      next: (res) => {
+        this.isLoadingSubmissions = false;
+        const payload = res?.data || res;
+        const list = Array.isArray(payload?.students) ? payload.students : (Array.isArray(payload) ? payload : []);
+        if (payload?.maxMarks && this.selectedAssignment) {
+          this.selectedAssignment.marks = payload.maxMarks;
+        }
+        this.studentSubmissions = list.map((s: any) => ({
+          studentId: s.studentId,
+          submissionId: s.submissionId,
+          rollNo: s.rollNo || 'N/A',
+          name: s.name || 'Student',
+          submittedAt: s.submittedAt,
+          file: s.file,
+          fileUrl: s.fileUrl,
+          status: s.status || (s.marks != null ? 'Submitted' : 'Pending'),
+          marks: s.marks,
+          feedback: s.feedback || ''
+        }));
       },
-      {
-        studentId: 's2',
-        rollNo: 'ROLL-102',
-        name: 'Priya Patel',
-        submittedAt: 'May 13, 2026 02:15 PM',
-        file: 'Priya_Patel_Assignment.pdf',
-        status: 'Submitted',
-        marks: 48,
-        feedback: 'Perfect solutions!'
-      },
-      {
-        studentId: 's3',
-        rollNo: 'ROLL-103',
-        name: 'Amit Verma',
-        submittedAt: 'May 14, 2026 11:30 AM',
-        file: 'Amit_Verma_Work.pdf',
-        status: 'Submitted',
-        marks: 38,
-        feedback: 'Check calculation on Question 14.'
-      },
-      {
-        studentId: 's4',
-        rollNo: 'ROLL-104',
-        name: 'Sneha Gupta',
-        submittedAt: 'May 14, 2026 04:00 PM',
-        file: 'Sneha_Gupta_Solutions.pdf',
-        status: 'Submitted',
-        marks: 49,
-        feedback: 'Outstanding effort and complete steps.'
-      },
-      {
-        studentId: 's5',
-        rollNo: 'ROLL-105',
-        name: 'Vikram Singh',
-        submittedAt: '-',
-        file: null,
-        status: 'Pending',
-        marks: null,
-        feedback: 'Submission overdue.'
+      error: (err) => {
+        this.isLoadingSubmissions = false;
+        console.error('Error fetching submissions for assignment', err);
+        this.snackBar.open('Failed to load batch student submissions.', 'Dismiss', { duration: 3000 });
       }
-    ];
+    });
   }
 
   closeGradeModal() {
     this.showGradeModal = false;
     this.selectedAssignment = null;
     this.studentSubmissions = [];
+    this.isLoadingSubmissions = false;
   }
 
+  /**
+   * Persist teacher grades and remarks to the database
+   */
   saveGrades() {
-    this.dialogService.success('Student grades and teacher feedback have been saved successfully!');
-    this.closeGradeModal();
+    if (!this.selectedAssignment) return;
+
+    this.isSavingGrades = true;
+    const payload = {
+      grades: this.studentSubmissions.map(s => ({
+        studentId: s.studentId,
+        marks: s.marks !== null && s.marks !== undefined && s.marks !== '' ? Number(s.marks) : null,
+        feedback: s.feedback || ''
+      }))
+    };
+
+    this.http.post<any>(`${environment.apiUrl}/api/teacher/assignments/${this.selectedAssignment.id}/evaluate`, payload).subscribe({
+      next: (res) => {
+        this.isSavingGrades = false;
+        this.dialogService.success('Student evaluation and grades saved successfully!');
+        this.closeGradeModal();
+        this.loadAssignments(); // Refresh turnout counts dynamically from DB
+      },
+      error: (err) => {
+        this.isSavingGrades = false;
+        const msg = err?.error?.message || 'Failed to save evaluation grades. Please try again.';
+        this.dialogService.alert(msg, 'Evaluation Error', 'danger');
+      }
+    });
   }
 
   deleteAssignment(assignment: AssignmentItem) {
@@ -427,9 +442,9 @@ export class TeacherAssignments implements OnInit {
             this.assignments = this.assignments.filter(a => a.id !== assignment.id);
             this.dialogService.success('Assignment deleted successfully!');
           },
-          error: () => {
-            this.assignments = this.assignments.filter(a => a.id !== assignment.id);
-            this.dialogService.success('Assignment deleted successfully!');
+          error: (err) => {
+            const msg = err?.error?.message || 'Failed to delete assignment.';
+            this.dialogService.alert(msg, 'Delete Error', 'danger');
           }
         });
       }

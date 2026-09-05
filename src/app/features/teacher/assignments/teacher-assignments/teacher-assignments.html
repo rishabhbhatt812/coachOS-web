@@ -49,7 +49,7 @@
       </div>
       <div class="stat-info">
         <span class="stat-label">Pending Evaluation</span>
-        <h3 class="stat-value">5</h3>
+        <h3 class="stat-value">{{ pendingEvaluationCount }}</h3>
         <span class="stat-hint text-amber-600 font-medium">Needs grading feedback</span>
       </div>
     </div>
@@ -60,8 +60,8 @@
       </div>
       <div class="stat-info">
         <span class="stat-label">Upcoming Deadline</span>
-        <h3 class="stat-value">May 25</h3>
-        <span class="stat-hint">Foundation Chemistry</span>
+        <h3 class="stat-value">{{ upcomingDeadline.dateStr }}</h3>
+        <span class="stat-hint truncate" style="max-width: 140px;" [title]="upcomingDeadline.title">{{ upcomingDeadline.title }}</span>
       </div>
     </div>
   </div>
@@ -263,7 +263,24 @@
       </div>
 
       <div class="modal-body p-0">
-        <div class="table-responsive">
+        <!-- Submissions Loading State -->
+        <div *ngIf="isLoadingSubmissions" class="p-12 text-center text-slate-500">
+          <div class="inline-block animate-spin mb-3">
+            <mat-icon style="font-size: 32px; width: 32px; height: 32px; color: #4f46e5;">sync</mat-icon>
+          </div>
+          <h4 class="text-base font-bold text-slate-800 m-0">Loading Enrolled Students...</h4>
+          <p class="text-xs text-slate-400 mt-1 m-0">Fetching batch students, submissions and current evaluation records</p>
+        </div>
+
+        <!-- Empty State if no students enrolled in batch -->
+        <div *ngIf="!isLoadingSubmissions && studentSubmissions.length === 0" class="p-12 text-center text-slate-500">
+          <mat-icon style="font-size: 40px; width: 40px; height: 40px; color: #94a3b8;" class="mb-2">group_off</mat-icon>
+          <h4 class="text-base font-bold text-slate-800 m-0">No Students Enrolled</h4>
+          <p class="text-xs text-slate-400 mt-1 m-0">There are no students enrolled in this assignment's batch.</p>
+        </div>
+
+        <!-- Student Submissions Table -->
+        <div class="table-responsive" *ngIf="!isLoadingSubmissions && studentSubmissions.length > 0">
           <table class="sub-table w-full">
             <thead>
               <tr>
@@ -295,16 +312,16 @@
                 </td>
                 <td>
                   <button 
-                    *ngIf="s.file" 
+                    *ngIf="s.file || s.fileUrl" 
                     type="button"
                     class="file-download-btn flex items-center gap-1.5 text-blue-600 text-sm font-medium hover:underline"
                     (click)="downloadSubmissionFile(s)"
                     title="Download student submission file">
                     <mat-icon style="font-size: 16px; width: 16px; height: 16px; color: #2563eb;">picture_as_pdf</mat-icon>
-                    <span>{{ s.file }}</span>
+                    <span>{{ s.file || 'Submission_Document.pdf' }}</span>
                     <mat-icon style="font-size: 14px; width: 14px; height: 14px; color: #64748b;">file_download</mat-icon>
                   </button>
-                  <span *ngIf="!s.file" class="text-xs text-gray-400 italic flex items-center gap-1">
+                  <span *ngIf="!s.file && !s.fileUrl" class="text-xs text-gray-400 italic flex items-center gap-1">
                     <mat-icon style="font-size: 14px; width: 14px; height: 14px;">cloud_off</mat-icon>
                     No file submitted
                   </span>
@@ -339,13 +356,17 @@
 
       <div class="modal-footer flex justify-between items-center p-4 border-t border-gray-100 bg-slate-50">
         <div class="text-xs text-gray-500 font-medium">
-          Graded values are saved directly to student gradebooks.
+          Graded values are saved directly to student gradebooks in the database.
         </div>
         <div class="flex items-center gap-3">
           <button type="button" class="btn btn-light" (click)="closeGradeModal()">Cancel</button>
-          <button type="button" class="btn btn-primary" (click)="saveGrades()">
-            <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">done_all</mat-icon>
-            Save & Finalize Grades
+          <button 
+            type="button" 
+            class="btn btn-primary" 
+            [disabled]="isLoadingSubmissions || isSavingGrades || studentSubmissions.length === 0" 
+            (click)="saveGrades()">
+            <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">{{ isSavingGrades ? 'sync' : 'done_all' }}</mat-icon>
+            {{ isSavingGrades ? 'Saving Grades...' : 'Save & Finalize Grades' }}
           </button>
         </div>
       </div>

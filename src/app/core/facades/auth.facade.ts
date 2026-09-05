@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { tap, finalize } from 'rxjs/operators';
+import { tap, finalize, map, shareReplay } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { User, Tenant, Role } from '../models/user.model';
 import { Router } from '@angular/router';
@@ -198,27 +198,63 @@ export class AuthFacade {
     });
   }
 
+  private institutesCache$: Observable<any[]> | null = null;
+
+  getGlobalInstitutes(refresh = false): Observable<any[]> {
+    if (!this.institutesCache$ || refresh) {
+      this.institutesCache$ = this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).pipe(
+        map(res => Array.isArray(res) ? res : (res?.data || [])),
+        shareReplay(1)
+      );
+    }
+    return this.institutesCache$;
+  }
+
+  clearInstitutesCache(): void {
+    this.institutesCache$ = null;
+  }
+
   public updateTenantBranding(tenantInfo: Partial<Tenant>) {
     const currentTenant = this.currentTenantSubject.value;
-    this.currentTenantSubject.next({
-      id: tenantInfo.id || currentTenant?.id || 'tenant',
-      name: tenantInfo.name || 'EduNex Academy',
-      code: tenantInfo.code || currentTenant?.code || 'EDUNEX',
-      logoUrl: tenantInfo.logoUrl || '/logo.png',
-      contact: tenantInfo.contact,
-      email: tenantInfo.email,
-      address: tenantInfo.address,
-      activeModules: currentTenant?.activeModules || ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION']
-    });
+    const nextTenantId = tenantInfo.id || currentTenant?.id || 'tenant';
+    const nextTenantName = tenantInfo.name || 'EduNex Academy';
+    const nextTenantCode = tenantInfo.code || currentTenant?.code || 'EDUNEX';
+    const nextLogoUrl = tenantInfo.logoUrl || '/logo.png';
+
+    const tenantChanged = !currentTenant ||
+      currentTenant.id !== nextTenantId ||
+      currentTenant.name !== nextTenantName ||
+      currentTenant.code !== nextTenantCode ||
+      currentTenant.logoUrl !== nextLogoUrl;
+
+    if (tenantChanged) {
+      this.currentTenantSubject.next({
+        id: nextTenantId,
+        name: nextTenantName,
+        code: nextTenantCode,
+        logoUrl: nextLogoUrl,
+        contact: tenantInfo.contact || currentTenant?.contact,
+        email: tenantInfo.email || currentTenant?.email,
+        address: tenantInfo.address || currentTenant?.address,
+        activeModules: currentTenant?.activeModules || ['CRM', 'FEES', 'ATTENDANCE', 'LEARNING', 'COMMUNICATION']
+      });
+    }
 
     const currentUser = this.currentUserSubject.value;
     if (currentUser) {
-      this.currentUserSubject.next({
-        ...currentUser,
-        instituteName: tenantInfo.name,
-        instituteLogo: tenantInfo.logoUrl,
-        instituteCode: tenantInfo.code
-      });
+      const userChanged =
+        currentUser.instituteName !== nextTenantName ||
+        currentUser.instituteLogo !== nextLogoUrl ||
+        currentUser.instituteCode !== nextTenantCode;
+
+      if (userChanged) {
+        this.currentUserSubject.next({
+          ...currentUser,
+          instituteName: nextTenantName,
+          instituteLogo: nextLogoUrl,
+          instituteCode: nextTenantCode
+        });
+      }
     }
   }
 

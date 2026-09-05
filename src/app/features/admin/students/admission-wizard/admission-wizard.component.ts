@@ -76,7 +76,7 @@ export class AdmissionWizardComponent implements OnInit {
       if (user) {
         const rawRole = user.rawRole || '';
         this.isGlobalAdmin = rawRole === 'GLOBAL_ADMIN' || rawRole === 'SUPER_ADMIN';
-        if (this.isGlobalAdmin) {
+        if (this.isGlobalAdmin && this.institutes.length === 0) {
           this.loadInstitutes();
         }
       }
@@ -122,9 +122,9 @@ export class AdmissionWizardComponent implements OnInit {
   }
 
   loadInstitutes() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+    this.authFacade.getGlobalInstitutes().subscribe({
       next: (res) => {
-        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+        this.institutes = Array.isArray(res) ? res : [];
       },
       error: (err) => console.error('Failed to load institutes:', err)
     });

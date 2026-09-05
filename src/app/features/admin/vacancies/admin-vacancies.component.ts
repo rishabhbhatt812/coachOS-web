@@ -207,7 +207,7 @@ export class AdminVacanciesComponent implements OnInit {
     this.authFacade.currentUser$.subscribe(u => {
       const userRole = (u?.rawRole || u?.role || '').toUpperCase();
       this.isSuperAdmin = userRole.includes('SUPER') || userRole.includes('GLOBAL') || userRole.includes('ADMIN');
-      if (this.isSuperAdmin) {
+      if (this.isSuperAdmin && this.institutes.length === 0) {
         this.loadInstitutes();
       }
       this.cdr.detectChanges();
@@ -235,9 +235,9 @@ export class AdminVacanciesComponent implements OnInit {
   }
 
   loadInstitutes() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+    this.authFacade.getGlobalInstitutes().subscribe({
       next: (res) => {
-        const list = Array.isArray(res) ? res : (res?.data || []);
+        const list = Array.isArray(res) ? res : [];
         this.institutes = list.map((i: any) => ({
           id: i.id || i.organizationId,
           name: i.name,

@@ -75,16 +75,18 @@ export class AdminCoursesComponent implements OnInit {
           if (!this.columns.some(c => c.key === 'instituteName')) {
             this.columns.splice(2, 0, { key: 'instituteName', header: 'Coaching Center' });
           }
-          this.loadInstitutes();
+          if (this.institutes.length === 0) {
+            this.loadInstitutes();
+          }
         }
       }
     });
   }
 
   loadInstitutes() {
-    this.http.get<any>(`${environment.apiUrl}/api/admin/GlobalAdmin/institutes`).subscribe({
+    this.authFacade.getGlobalInstitutes().subscribe({
       next: (res) => {
-        this.institutes = Array.isArray(res) ? res : (res?.data || []);
+        this.institutes = Array.isArray(res) ? res : [];
       },
       error: (err) => console.error('Failed to load institutes:', err)
     });
